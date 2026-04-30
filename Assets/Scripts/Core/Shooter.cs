@@ -31,15 +31,11 @@ public class Shooter : MonoBehaviour
 
     public void InitializeBalls(int level)
     {
-        // Difficulty Curve: 1-50 (60 balls), 800+ (40 balls)
         if (level <= 50) currentBalls = 60;
-        else if (level >= 800) currentBalls = 40;
-        else
-        {
-            // Linear interpolation
-            float t = (float)(level - 50) / (800 - 50);
-            currentBalls = Mathf.RoundToInt(Mathf.Lerp(60, 40, t));
-        }
+        else if (level <= 200) currentBalls = Mathf.RoundToInt(55 - ((float)(level - 51) / 149) * 5);
+        else if (level <= 400) currentBalls = Mathf.RoundToInt(50 - ((float)(level - 201) / 199) * 5);
+        else if (level <= 800) currentBalls = Mathf.RoundToInt(45 - ((float)(level - 401) / 399) * 5);
+        else currentBalls = 40;
         
         PrepareNextBall();
     }
@@ -127,12 +123,16 @@ public class Shooter : MonoBehaviour
         if (comboCount >= 6)
         {
             // Fireball Ready!
-            Debug.Log("Fireball Ready");
+            isFireballReady = true;
+            // Trigger Fireball UI Animation
         }
     }
+
+    private bool isFireballReady = false;
 
     public void OnMiss()
     {
         comboCount = 0;
+        isFireballReady = false;
     }
 }

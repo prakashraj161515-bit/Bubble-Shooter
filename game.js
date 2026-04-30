@@ -219,6 +219,13 @@ function releaseShoot(e) {
     ballsRemaining--;
     updateUI();
     prepareNextBall();
+    
+    // Check if Fireball was active
+    if (isFireballReady) {
+        // Fireball logic (clear path)
+        isFireballReady = false;
+        comboCount = 0;
+    }
 }
 
 function updateActiveBall() {

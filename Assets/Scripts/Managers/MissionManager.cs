@@ -26,16 +26,16 @@ public class MissionManager : MonoBehaviour
 
     public void TrackProgress(BubbleColor color, int amount)
     {
-        if (!mediumMission.isCompleted && color == mediumMission.targetColor)
+        if (mediumMission != null && !mediumMission.isCompleted && color == mediumMission.targetColor)
         {
             mediumMission.currentCount += amount;
-            if (mediumMission.currentCount >= mediumMission.targetCount) CompleteMission(mediumMission);
+            if (mediumMission.currentCount >= 1000) CompleteMission(mediumMission);
         }
         
-        if (!hardMission.isCompleted && color == hardMission.targetColor)
+        if (hardMission != null && !hardMission.isCompleted && color == hardMission.targetColor)
         {
             hardMission.currentCount += amount;
-            if (hardMission.currentCount >= hardMission.targetCount) CompleteMission(hardMission);
+            if (hardMission.currentCount >= 1600) CompleteMission(hardMission);
         }
         SaveMissions();
     }

@@ -38,14 +38,18 @@ public class MatchManager : MonoBehaviour
 
     public void CheckForFloatingBubbles()
     {
-        // 1. Mark all bubbles in Row 0 as 'Connected'
-        // 2. Perform a graph traversal from all 'Connected' bubbles to find reachable ones
-        // 3. Any bubble not reachable is an 'Island' and should be dropped
+        // ... connectivity logic ...
         
-        int droppedCount = 0; // If 7-9, activate Bomb power-up
-        if (droppedCount >= 7 && droppedCount <= 9)
+        int droppedCount = CalculateDroppedCount(); 
+        if (droppedCount >= 9)
         {
             // Activate Bomb logic
+            ActivateBomb();
         }
+    }
+
+    private void ActivateBomb()
+    {
+        // Explosion radius logic
     }
 }

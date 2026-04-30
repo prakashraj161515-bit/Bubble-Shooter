@@ -1,14 +1,16 @@
 using UnityEngine;
 
-public enum BubbleType { Normal, Fireball, Rainbow, Bomb }
+public enum BubbleType { Normal, Fireball, Rainbow, Bomb, Rock, Chain, Jelly }
 public enum BubbleColor { Red, Blue, Green, Yellow, Purple, Pink, None }
 
 public class Bubble : MonoBehaviour
 {
     public BubbleType type = BubbleType.Normal;
     public BubbleColor color = BubbleColor.None;
+    public int chainHits = 1; // For Chain Ball
+    public bool isLocked = false; 
+
     public SpriteRenderer spriteRenderer;
-    
     private Rigidbody2D rb;
     private bool isFixed = false;
 
@@ -32,9 +34,27 @@ public class Bubble : MonoBehaviour
         transform.position = position;
     }
 
+    public void HandleHit()
+    {
+        if (type == BubbleType.Rock) return; // Unbreakable
+        
+        if (type == BubbleType.Chain)
+        {
+            chainHits--;
+            if (chainHits <= 0) type = BubbleType.Normal; // Unlock
+            // Update sprite to show broken chain
+            return;
+        }
+
+        if (type == BubbleType.Jelly)
+        {
+            // Jelly logic: stick instantly without bouncing (handled in physics)
+        }
+    }
+
     public void Pop()
     {
-        // Add pop animation or particle effect here
+        if (type == BubbleType.Rock) return; // Rocks only drop
         Destroy(gameObject);
     }
 
