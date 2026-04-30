@@ -1,11 +1,10 @@
 using UnityEngine;
-using System;
 
 public class AdManager : MonoBehaviour
 {
     public static AdManager Instance;
 
-    private int adsShownThisLevel = 0;
+    int adsThisLevel = 0;
     private const int MAX_ADS_PER_LEVEL = 2;
 
     void Awake()
@@ -14,76 +13,85 @@ public class AdManager : MonoBehaviour
         else Destroy(gameObject);
     }
 
-    public void OnLevelStart()
+    public void ResetAds()
     {
-        adsShownThisLevel = 0;
+        adsThisLevel = 0;
     }
 
-    public void ShowInterstitialAd()
+    // Checking if we can show Interstitial Ad based on rules
+    public void ShowInterstitial()
     {
-        if (StoreManager.Instance.IsAdFreeActive())
+        // Rule: Disable interstitial ads if ad-free active
+        if (StoreManager.Instance != null && StoreManager.Instance.IsAdFreeActive())
         {
-            Debug.Log("Ad-free active. Skipping interstitial.");
+            Debug.Log("Ad-free active. Skipping ad.");
             return;
         }
 
-        if (adsShownThisLevel < MAX_ADS_PER_LEVEL)
+        // Rule: Max 2 ads per level
+        if (adsThisLevel < MAX_ADS_PER_LEVEL)
         {
             Debug.Log("Showing Interstitial Ad");
-            adsShownThisLevel++;
+            adsThisLevel++;
         }
     }
 
-    public void ShowRewardedAd(bool isNearWin, bool isStuck, Action<string> onRewardEarned)
+    public void ShowOutOfBalls()
     {
-        // Mock ad show
-        Debug.Log("Showing Rewarded Ad");
-        
-        string reward = DetermineSmartReward(isNearWin, isStuck);
-        onRewardEarned?.Invoke(reward);
+        // Rule: When balls finish, MUST show BOTH: 10 coins -> 5 balls, Watch ad -> 5 balls
+        Debug.Log("Show options: 10 coins OR watch ad for 5 balls");
+        // UIManager.Instance.ShowOutOfBallsPopup(); // Triggers the UI popup
     }
 
-    private string DetermineSmartReward(bool isNearWin, bool isStuck)
+    // Added smart parameters (isNearWin, isStuck) based on your strict rules
+    public void RewardAd(bool isNearWin = false, bool isStuck = false)
     {
-        // Give ONLY ONE reward randomly: (fireball / bomb / rainbow / exchange / 5 balls)
-        float rand = UnityEngine.Random.value;
+        // Rule: Rewarded ads give ONLY ONE item randomly
+        int rand;
 
+        // Smart logic: If near win -> increase chance of 5 balls
+        // If stuck -> increase chance of power-ups
         if (isNearWin)
         {
-            // Increase chance of 5 balls
-            if (rand < 0.6f) return "5_balls";
-            else if (rand < 0.7f) return "fireball";
-            else if (rand < 0.8f) return "bomb";
-            else if (rand < 0.9f) return "rainbow";
-            else return "exchange";
+            // 60% chance for balls (case 4), 40% for others
+            rand = Random.Range(0, 100) < 60 ? 4 : Random.Range(0, 4);
         }
         else if (isStuck)
         {
-            // Increase chance of power-ups
-            if (rand < 0.25f) return "fireball";
-            else if (rand < 0.5f) return "bomb";
-            else if (rand < 0.75f) return "rainbow";
-            else if (rand < 0.9f) return "exchange";
-            else return "5_balls";
+            // 80% chance for power-ups (0-3), 20% for balls
+            rand = Random.Range(0, 100) < 80 ? Random.Range(0, 4) : 4;
         }
         else
         {
-            // Normal distribution
-            if (rand < 0.2f) return "fireball";
-            else if (rand < 0.4f) return "bomb";
-            else if (rand < 0.6f) return "rainbow";
-            else if (rand < 0.8f) return "exchange";
-            else return "5_balls";
+            rand = Random.Range(0, 5); // Normal distribution
         }
-    }
 
-    public void OnBallsFinishedUI()
-    {
-        // Triggers UI with BOTH options
-        Debug.Log("Balls Finished UI triggered. Options:");
-        Debug.Log("1. Spend 10 coins -> 5 balls");
-        Debug.Log("2. Watch Ad -> 5 balls");
-        
-        // UI logic to show these buttons goes here (handled by UIManager)
+        switch (rand)
+        {
+            case 0:
+                Debug.Log("Reward: Fireball");
+                // Give fireball logic
+                break;
+            case 1:
+                Debug.Log("Reward: Bomb");
+                // Give bomb logic
+                break;
+            case 2:
+                Debug.Log("Reward: Rainbow");
+                // Give rainbow logic
+                break;
+            case 3:
+                Debug.Log("Reward: Exchange");
+                // Give exchange logic
+                break;
+            case 4:
+                Debug.Log("Reward: 5 Balls");
+                if (GameManager.Instance != null)
+                {
+                    GameManager.Instance.ballsRemaining += 5;
+                    // UIManager.Instance.UpdateBallCount(GameManager.Instance.ballsRemaining);
+                }
+                break;
+        }
     }
 }
