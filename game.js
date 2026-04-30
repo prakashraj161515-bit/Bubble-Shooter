@@ -190,13 +190,19 @@ function drawBubble(x, y, color, type) {
 function drawTrajectory() {
     if (isShooting) return;
     const startX = width / 2;
-    const startY = height - 40;
+    const startY = height - 50; // Exact visual center of the ball (20px bottom + 30px half height)
+    
+    const angle = Math.atan2(mouseY - startY, mouseX - startX);
+    
+    // Start drawing from the edge of the ball (radius ~15px)
+    const edgeX = startX + Math.cos(angle) * 15;
+    const edgeY = startY + Math.sin(angle) * 15;
     
     ctx.setLineDash([5, 10]);
-    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)'; // Slightly more visible
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(startX, startY);
+    ctx.moveTo(edgeX, edgeY);
     ctx.lineTo(mouseX, mouseY);
     ctx.stroke();
     ctx.setLineDash([]);
@@ -207,7 +213,7 @@ function shoot() {
     ballsRemaining--;
     
     const startX = width / 2;
-    const startY = height - 40;
+    const startY = height - 50; // Match trajectory center
     const angle = Math.atan2(mouseY - startY, mouseX - startX);
     
     activeBall = {
