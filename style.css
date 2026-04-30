@@ -204,56 +204,23 @@ body {
     font-weight: 900;
 }
 
-/* Powerups on the Left */
-.powerup-vertical-bar {
+/* Shooter & Powerups Wrapper */
+.shooter-wrapper {
     position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
+    bottom: 10px;
+    width: 100%;
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 15px;
     z-index: 10;
 }
 
-.p-icon {
-    width: 45px;
-    height: 45px;
-    background: rgba(255,255,255,0.8);
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.5rem;
-    box-shadow: var(--shadow);
+.shooter-top {
     position: relative;
-}
-
-.p-badge {
-    position: absolute;
-    bottom: -5px;
-    right: -5px;
-    background: var(--primary-blue);
-    color: white;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    font-size: 0.7rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: 900;
-    border: 2px solid white;
-}
-
-/* Shooter Area at Bottom */
-.shooter-area {
-    position: absolute;
-    bottom: 20px;
     width: 100%;
     display: flex;
     justify-content: center;
-    align-items: flex-end;
 }
 
 .cannon-base {
@@ -263,7 +230,6 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    position: relative;
 }
 
 .balls-left-badge {
@@ -281,9 +247,37 @@ body {
     align-items: center;
     font-weight: 900;
     border: 3px solid var(--light-blue);
+    box-shadow: var(--shadow);
 }
 .balls-left-badge span { font-size: 1.2rem; }
 .balls-left-badge small { font-size: 0.6rem; }
+
+/* Horizontal Powerups */
+.powerups-horizontal {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(8px);
+    padding: 10px 25px;
+    border-radius: 30px;
+    box-shadow: var(--shadow);
+}
+
+.p-icon {
+    width: 45px;
+    height: 45px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+    box-shadow: var(--shadow);
+    position: relative;
+    transition: transform 0.2s;
+}
+.p-icon:active { transform: scale(0.9); }
 
 /* Popups */
 .overlay-dark {

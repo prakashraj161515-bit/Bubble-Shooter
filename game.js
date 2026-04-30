@@ -207,18 +207,66 @@ function drawTrajectory() {
     const startX = center.x;
     const startY = center.y;
     
-    const angle = Math.atan2(mouseY - startY, mouseX - startX);
+    let angle = Math.atan2(mouseY - startY, mouseX - startX);
     
-    // Start drawing perfectly from the edge of the ball
-    const edgeX = startX + Math.cos(angle) * center.radius;
-    const edgeY = startY + Math.sin(angle) * center.radius;
+    // Prevent shooting strictly downwards
+    if (angle > 0) return;
     
     ctx.setLineDash([5, 10]);
-    ctx.strokeStyle = 'rgba(255,255,255,0.4)'; 
+    ctx.strokeStyle = 'rgba(255,255,255,0.6)'; 
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(edgeX, edgeY);
-    ctx.lineTo(mouseX, mouseY);
+    
+    // Start drawing from the edge of the ball
+    let currentX = startX + Math.cos(angle) * center.radius;
+    let currentY = startY + Math.sin(angle) * center.radius;
+    ctx.moveTo(currentX, currentY);
+    
+    let remainingLength = 600; // max length of trajectory
+    let bounces = 0;
+    
+    while (remainingLength > 0 && bounces < 3) {
+        bounces++;
+        let hitDist = Infinity;
+        let hitX = currentX + Math.cos(angle) * remainingLength;
+        let hitY = currentY + Math.sin(angle) * remainingLength;
+        let didBounce = false;
+        
+        // Check Left Wall collision
+        if (Math.cos(angle) < 0) {
+            let dx = BUBBLE_RADIUS - currentX;
+            let d = dx / Math.cos(angle);
+            if (d > 0 && d < remainingLength) {
+                hitDist = d;
+                hitX = BUBBLE_RADIUS;
+                hitY = currentY + Math.sin(angle) * d;
+                didBounce = true;
+            }
+        }
+        // Check Right Wall collision
+        else if (Math.cos(angle) > 0) {
+            let dx = (width - BUBBLE_RADIUS) - currentX;
+            let d = dx / Math.cos(angle);
+            if (d > 0 && d < remainingLength) {
+                hitDist = d;
+                hitX = width - BUBBLE_RADIUS;
+                hitY = currentY + Math.sin(angle) * d;
+                didBounce = true;
+            }
+        }
+        
+        ctx.lineTo(hitX, hitY);
+        
+        if (didBounce) {
+            remainingLength -= hitDist;
+            currentX = hitX;
+            currentY = hitY;
+            angle = Math.PI - angle; // Reflect angle horizontally
+        } else {
+            break; // Reached end of line or ceiling
+        }
+    }
+    
     ctx.stroke();
     ctx.setLineDash([]);
 }

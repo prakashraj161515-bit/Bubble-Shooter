@@ -56,21 +56,23 @@
 
             <canvas id="gameCanvas" style="flex: 1;"></canvas>
 
-            <!-- LEFT SIDE POWERUPS -->
-            <div class="powerup-vertical-bar">
-                <div class="p-icon">💣<div class="p-badge">x2</div></div>
-                <div class="p-icon">🔥<div class="p-badge">x2</div></div>
-                <div class="p-icon">🌈<div class="p-badge">x2</div></div>
-                <div class="p-icon">🔄<div class="p-badge">x2</div></div>
-            </div>
-
-            <div class="shooter-area">
-                <div class="cannon-base">
-                    <div id="active-ball" style="width: 30px; height: 30px; background: blue; border-radius: 50%;"></div>
+            <!-- SHOOTER & POWERUPS WRAPPER -->
+            <div class="shooter-wrapper">
+                <div class="shooter-top">
+                    <div class="cannon-base">
+                        <div id="active-ball" style="width: 30px; height: 30px; background: blue; border-radius: 50%;"></div>
+                    </div>
+                    <div class="balls-left-badge">
+                        <small>Balls Left</small>
+                        <span id="balls-text">25</span>
+                    </div>
                 </div>
-                <div class="balls-left-badge">
-                    <small>Balls Left</small>
-                    <span id="balls-text">25</span>
+                
+                <div class="powerups-horizontal">
+                    <div class="p-icon">💣<div class="p-badge">x2</div></div>
+                    <div class="p-icon">🔥<div class="p-badge">x2</div></div>
+                    <div class="p-icon">🌈<div class="p-badge">x2</div></div>
+                    <div class="p-icon">🔄<div class="p-badge">x2</div></div>
                 </div>
             </div>
         </div>
