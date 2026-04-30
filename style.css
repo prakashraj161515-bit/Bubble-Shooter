@@ -261,14 +261,14 @@ body {
 }
 
 .p-icon {
-    width: 55px;
-    height: 55px;
+    width: 60px;
+    height: 45px;
     background: white;
-    border-radius: 15px; /* Smooth rounded rectangle */
+    border-radius: 10px; /* Rectangular shape */
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 1.8rem;
+    font-size: 1.3rem; /* Smaller icon to fit the box */
     box-shadow: var(--shadow);
     position: relative;
     transition: transform 0.2s;

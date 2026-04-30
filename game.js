@@ -2,7 +2,7 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 let width, height;
-const BUBBLE_RADIUS = 22;
+const BUBBLE_RADIUS = 18; // Smaller ball size
 const COLUMNS = 9;
 const ROWS = 20;
 const COLORS = ['#ef4444', '#3b82f6', '#22c55e', '#eab308', '#a855f7'];
@@ -165,7 +165,7 @@ function getPos(x, y) {
     const startX = (width - (COLUMNS * BUBBLE_RADIUS * 2)) / 2 + BUBBLE_RADIUS;
     return {
         x: startX + x * BUBBLE_RADIUS * 2 + xOffset,
-        y: y * BUBBLE_RADIUS * 1.75 + BUBBLE_RADIUS + 20
+        y: y * BUBBLE_RADIUS * 1.75 + BUBBLE_RADIUS + 5 // Reduced top margin so grid is higher
     };
 }
 
