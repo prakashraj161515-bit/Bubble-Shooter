@@ -5,7 +5,7 @@ public class StoreManager : MonoBehaviour
 {
     public static StoreManager Instance;
 
-    private const string AD_FREE_EXPIRY_KEY = "AdFreeExpiryTicks";
+    long adFreeExpiry;
 
     void Awake()
     {
@@ -13,81 +13,84 @@ public class StoreManager : MonoBehaviour
         else Destroy(gameObject);
     }
 
-    // Tiers mapping
-    // Tier 1: ₹59 -> 100 coins + 7 days ad-free
-    // Tier 2: ₹99 -> 200 coins + items + 15 days ad-free
-    // Tier 3: ₹189 -> 400 coins + items + 30 days ad-free
-    // Tier 4: ₹699 -> 1600 coins + items + 120 days ad-free
+    // --- IAP Tiers as per exact rules ---
 
+    // ₹59 -> 100 coins + 7 days ad-free
     public void PurchaseTier1()
     {
-        EconomyManager.Instance.AddCoins(100);
-        AddAdFreeDays(7);
+        if (EconomyManager.Instance != null) EconomyManager.Instance.AddCoins(100);
+        BuyPack(7);
+        Debug.Log("Purchased Tier 1: 100 coins + 7 days ad-free");
     }
 
+    // ₹99 -> 200 coins + items + 15 days ad-free
     public void PurchaseTier2()
     {
-        EconomyManager.Instance.AddCoins(200);
-        // Grant items logic here
-        AddAdFreeDays(15);
+        if (EconomyManager.Instance != null) EconomyManager.Instance.AddCoins(200);
+        // Add items logic here (e.g., power-ups)
+        BuyPack(15);
+        Debug.Log("Purchased Tier 2: 200 coins + items + 15 days ad-free");
     }
 
+    // ₹189 -> 400 coins + items + 30 days ad-free
     public void PurchaseTier3()
     {
-        EconomyManager.Instance.AddCoins(400);
-        // Grant items logic here
-        AddAdFreeDays(30);
+        if (EconomyManager.Instance != null) EconomyManager.Instance.AddCoins(400);
+        // Add items logic here
+        BuyPack(30);
+        Debug.Log("Purchased Tier 3: 400 coins + items + 30 days ad-free");
     }
 
+    // ₹699 -> 1600 coins + items + 120 days ad-free
     public void PurchaseTier4()
     {
-        EconomyManager.Instance.AddCoins(1600);
-        // Grant items logic here
-        AddAdFreeDays(120);
+        if (EconomyManager.Instance != null) EconomyManager.Instance.AddCoins(1600);
+        // Add items logic here
+        BuyPack(120);
+        Debug.Log("Purchased Tier 4: 1600 coins + items + 120 days ad-free");
     }
 
-    private void AddAdFreeDays(int days)
-    {
-        DateTime currentExpiry = GetAdFreeExpiry();
-        DateTime newExpiry;
+    // --- Core Ad-Free Logic ---
 
-        if (currentExpiry > DateTime.UtcNow)
+    public void BuyPack(int days)
+    {
+        DateTime expiry;
+
+        // If already ad-free, extend the time. Otherwise, start from UtcNow.
+        if (IsAdFree())
         {
-            newExpiry = currentExpiry.AddDays(days);
+            long ticks = Convert.ToInt64(PlayerPrefs.GetString("adfree"));
+            expiry = new DateTime(ticks).AddDays(days);
         }
         else
         {
-            newExpiry = DateTime.UtcNow.AddDays(days);
+            expiry = DateTime.UtcNow.AddDays(days);
         }
-
-        PlayerPrefs.SetString(AD_FREE_EXPIRY_KEY, newExpiry.Ticks.ToString());
+        
+        adFreeExpiry = expiry.Ticks;
+        PlayerPrefs.SetString("adfree", adFreeExpiry.ToString());
         PlayerPrefs.Save();
-        Debug.Log($"Ad-Free extended until: {newExpiry}");
     }
 
-    private DateTime GetAdFreeExpiry()
+    public bool IsAdFree()
     {
-        string ticksStr = PlayerPrefs.GetString(AD_FREE_EXPIRY_KEY, "0");
-        if (long.TryParse(ticksStr, out long ticks))
-        {
-            return new DateTime(ticks, DateTimeKind.Utc);
-        }
-        return DateTime.MinValue;
+        if (!PlayerPrefs.HasKey("adfree")) return false;
+
+        long ticks = Convert.ToInt64(PlayerPrefs.GetString("adfree"));
+        DateTime expiry = new DateTime(ticks);
+
+        return DateTime.UtcNow < expiry;
     }
 
-    public bool IsAdFreeActive()
-    {
-        return GetAdFreeExpiry() > DateTime.UtcNow;
-    }
-
+    // Rule: Show remaining time
     public string GetRemainingAdFreeTime()
     {
-        DateTime expiry = GetAdFreeExpiry();
-        if (expiry > DateTime.UtcNow)
-        {
-            TimeSpan diff = expiry - DateTime.UtcNow;
-            return $"Ad-Free: {diff.Days} days left";
-        }
-        return "Ad-Free: Not Active";
+        if (!IsAdFree()) return "Ad-Free: Not Active";
+
+        long ticks = Convert.ToInt64(PlayerPrefs.GetString("adfree"));
+        DateTime expiry = new DateTime(ticks);
+        TimeSpan diff = expiry - DateTime.UtcNow;
+
+        return $"Ad-Free: {diff.Days} days left";
     }
 }
