@@ -3,105 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bubble Shooter - Exact UI</title>
+    <title>Bubble Shooter - Exact UI Concept</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="game-container">
         
-        <!-- Level Map Screen (Top Right Reference) -->
-        <div id="level-map" class="screen">
-            <div class="map-header">
-                <div class="mission-bar easy">
-                    <div class="mission-text">Collect Stars <span>18/20</span></div>
-                    <div class="gift-icon">🎁</div>
-                </div>
-                <div class="mission-bar hard">
-                    <div class="mission-text">Pop Red Bubbles <span>100/1100</span></div>
-                    <div class="gift-icon">🎁</div>
-                </div>
-                <div class="mission-bar extra-hard">
-                    <div class="mission-text">Pop Green Bubbles <span>615/2500</span></div>
-                    <div class="gift-icon">🎁</div>
+        <!-- 1. SPLASH SCREEN -->
+        <div id="splash-screen" class="screen">
+            <h1 class="logo-large">BUBBLE<span>SHOOTER</span></h1>
+            <!-- Abstract Cannon Shape -->
+            <div style="margin-top: auto; margin-bottom: 20px; text-align: center;">
+                <div style="width: 80px; height: 120px; background: var(--primary-blue); border-radius: 40px 40px 0 0; display: inline-block;">
+                    <div style="width: 40px; height: 40px; background: #f1c40f; border-radius: 50%; margin: -20px auto 0;"></div>
                 </div>
             </div>
-            <div class="map-scroll">
-                <div id="map-path-container">
-                    <!-- Level nodes 211 to 220 in S-shape -->
-                </div>
-            </div>
-            <button id="play-main-btn" class="level-play-badge">LEVEL 216</button>
         </div>
 
-        <!-- Gameplay Screen (Top Left Reference) -->
-        <div id="gameplay-ui" class="screen hidden">
-            <div class="game-top-nav">
-                <button id="menu-trigger">☰</button>
-                <div class="score-display">0</div>
-                <div class="coin-display">1283 +</div>
+        <!-- 2. HOME SCREEN (LEVEL MAP) -->
+        <div id="home-screen" class="screen hidden">
+            <div class="top-bar-clean">
+                <div class="status-pill">❤️ FULL</div>
+                <div class="status-pill">🪙 1250</div>
+                <button class="btn-pause" id="settings-trigger">⚙️</button>
             </div>
             
-            <div id="bubble-canvas-area">
-                <canvas id="gameCanvas"></canvas>
+            <div class="map-content">
+                <div class="map-path">
+                    <div class="level-node-blue" style="transform: translateX(-50px);">8 <div class="stars-under">⭐⭐⭐</div></div>
+                    <div class="level-node-blue" style="transform: translateX(50px);">7 <div class="stars-under">⭐⭐⭐</div></div>
+                    <div class="level-node-blue" style="transform: translateX(-20px);">6 <div class="stars-under">⭐⭐⭐</div></div>
+                    <div class="level-node-blue" style="transform: translateX(80px); border-color: #55efc4; transform: scale(1.1) translateX(80px);">5 <div class="stars-under">⭐⭐</div></div>
+                </div>
             </div>
 
-            <div class="game-footer">
-                <div class="shooter-wrapper">
-                    <div class="balls-count-circle">55</div>
-                    <!-- Aiming guide handled in JS -->
+            <div class="bottom-nav">
+                <button class="nav-item"><div class="nav-item-icon">🛒</div>STORE</button>
+                <button class="nav-item"><div class="nav-item-icon">📅</div>DAILY</button>
+                <button class="nav-item"><div class="nav-item-icon">🎡</div>SPIN</button>
+                <button class="nav-item"><div class="nav-item-icon">🎯</div>MISSIONS</button>
+                <button class="nav-item"><div class="nav-item-icon">⚡</div>POWERUPS</button>
+            </div>
+        </div>
+
+        <!-- 3. GAMEPLAY SCREEN -->
+        <div id="gameplay-ui" class="screen hidden">
+            <div class="game-header">
+                <button class="btn-pause" id="back-to-home">⏸</button>
+                <div class="score-bar">
+                    <div class="score-fill"></div>
                 </div>
-                <div class="powerup-row">
-                    <button class="p-btn bomb"><span class="badge">19</span></button>
-                    <button class="p-btn tick active"></button>
-                    <button class="p-btn rainbow"><span class="badge">2</span></button>
-                    <button class="p-btn fireball"><span class="badge">13</span></button>
+                <div class="target-badge">🎯 5/6</div>
+            </div>
+
+            <canvas id="gameCanvas" style="flex: 1;"></canvas>
+
+            <!-- LEFT SIDE POWERUPS -->
+            <div class="powerup-vertical-bar">
+                <div class="p-icon">💣<div class="p-badge">x2</div></div>
+                <div class="p-icon">🔥<div class="p-badge">x2</div></div>
+                <div class="p-icon">🌈<div class="p-badge">x2</div></div>
+                <div class="p-icon">🔄<div class="p-badge">x2</div></div>
+            </div>
+
+            <div class="shooter-area">
+                <div class="cannon-base">
+                    <div id="active-ball" style="width: 30px; height: 30px; background: blue; border-radius: 50%;"></div>
                 </div>
-                <div class="banner-ad">
-                    <img src="https://via.placeholder.com/320x50?text=Dream11.com+Play+Now" alt="ad">
+                <div class="balls-left-badge">
+                    <small>Balls Left</small>
+                    <span id="balls-text">25</span>
                 </div>
             </div>
         </div>
 
-        <!-- Settings Popup (Bottom Left Reference) -->
-        <div id="settings-popup" class="popup-overlay hidden">
-            <div class="popup-card settings-card">
-                <div class="popup-header blue">SETTINGS <button class="close-x">×</button></div>
-                <div class="settings-tabs">
-                    <button class="tab-btn active">⚙️</button>
-                    <button class="tab-btn">❓</button>
-                    <button class="tab-btn">🏆</button>
+        <!-- POPUPS -->
+
+        <!-- 5. LEVEL COMPLETE -->
+        <div id="level-complete-popup" class="overlay-dark hidden">
+            <div class="card-popup" style="background: var(--dark-blue);">
+                <div class="card-header-dark">
+                    <div class="stars-big">⭐⭐⭐</div>
+                    <h2>LEVEL 5<br>COMPLETED!</h2>
                 </div>
-                <div class="settings-body">
-                    <div class="large-icons">
-                        <button class="orange-icon">🔊</button>
-                        <button class="orange-icon">🔔</button>
-                        <button class="orange-icon">👁️</button>
-                    </div>
-                    <div class="toggle-row">
-                        <span>TARGETED ADS:</span>
-                        <div class="toggle on">ON</div>
-                    </div>
-                    <div class="mode-selector">
-                        <button class="mode-btn green">CLASSIC</button>
-                        <button class="mode-btn green active">LEVELS</button>
-                        <button class="mode-btn green">ARCADE</button>
+                <div class="card-body" style="background: white;">
+                    <div style="font-size: 1.5rem; font-weight: 900; color: var(--text-dark); margin-bottom: 15px;">REWARD<br>🪙 50</div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-green-large">NEXT</button>
+                        <button class="btn-blue-large close-popup">HOME</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Quit Popup (Bottom Right Reference) -->
-        <div id="quit-popup" class="popup-overlay hidden">
-            <div class="popup-card quit-card">
-                <div class="popup-header orange">QUIT GAME? <button class="close-x">×</button></div>
-                <div class="quit-body">
-                    <div class="bubble-group">🔵🟢🔴</div>
-                    <p>YOU WILL LOSE:</p>
-                    <div class="lose-icons">🏅 👑</div>
-                    <div class="quit-actions">
-                        <button class="retry-btn">🔄</button>
-                        <button class="exit-btn">EXIT</button>
+        <!-- 6. OUT OF BALLS -->
+        <div id="out-of-balls-popup" class="overlay-dark hidden">
+            <div class="card-popup">
+                <div class="card-header-dark" style="position: relative;">
+                    <button class="close-round close-popup">X</button>
+                    <h2>OUT OF BALLS!</h2>
+                </div>
+                <div class="card-body">
+                    <p style="font-weight: 700; color: #555; margin-bottom: 20px;">Get 5 extra balls</p>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-yellow-large">🪙 10</button>
+                        <button class="btn-green-large">▶ WATCH AD</button>
                     </div>
                 </div>
             </div>

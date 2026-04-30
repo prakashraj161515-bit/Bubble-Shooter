@@ -28,20 +28,25 @@ let missionColor = COLORS[0];
 
 function init() {
     resize();
-    showScreen('level-map'); // Start at map as per user image
-    generateMap();
+    showScreen('splash-screen');
+    setTimeout(() => { showScreen('home-screen'); }, 3000);
 
-    // Navigation
-    document.getElementById('play-main-btn').onclick = () => startGame();
-    document.getElementById('menu-trigger').onclick = () => showPopup('settings-popup');
+    // Navigation (Basic prototype links)
+    document.getElementById('settings-trigger').onclick = () => alert("Settings opened");
     
-    // Popup Close Logic
-    document.querySelectorAll('.close-x').forEach(btn => {
-        btn.onclick = (e) => e.target.closest('.popup-overlay').classList.add('hidden');
+    // Play button logic attached to map nodes
+    document.querySelectorAll('.level-node-blue').forEach(node => {
+        node.onclick = () => {
+            currentLevel = parseInt(node.innerText);
+            startGame();
+        };
     });
+    
+    document.getElementById('back-to-home').onclick = () => showScreen('home-screen');
 
-    document.querySelectorAll('.back-btn-ui').forEach(btn => {
-        btn.onclick = () => showScreen('level-map');
+    // Popup Close Logic
+    document.querySelectorAll('.close-popup').forEach(btn => {
+        btn.onclick = (e) => e.target.closest('.overlay-dark').classList.add('hidden');
     });
 
     // Game Inputs
@@ -58,37 +63,9 @@ function init() {
     requestAnimationFrame(gameLoop);
 }
 
-function generateMap() {
-    const container = document.getElementById('map-path-container');
-    container.innerHTML = '';
-    
-    for (let i = 211; i <= 220; i++) {
-        const node = document.createElement('div');
-        node.className = 'level-node';
-        if (i === 216) node.classList.add('current');
-        
-        // S-shape logic
-        const row = Math.floor((i-211) / 3);
-        const col = (i-211) % 3;
-        const xOffset = (row % 2 === 0) ? (col - 1) * 80 : (1 - col) * 80;
-        node.style.transform = `translateX(${xOffset}px)`;
-        
-        node.innerHTML = `${i} <div class="stars">⭐⭐</div>`;
-        node.onclick = () => {
-            currentLevel = i;
-            document.getElementById('play-main-btn').innerText = `LEVEL ${i}`;
-        };
-        container.appendChild(node);
-    }
-}
-
-function showPopup(id) {
-    document.getElementById(id).classList.remove('hidden');
-}
-
 function resize() {
     width = canvas.parentElement.clientWidth;
-    height = canvas.parentElement.clientHeight;
+    height = canvas.parentElement.clientHeight || 400; // Fallback height
     canvas.width = width;
     canvas.height = height;
 }
@@ -359,33 +336,20 @@ function showReadyAnim() {
 
 function updateUI() {
     document.getElementById('balls-text').innerText = ballsRemaining;
-    document.getElementById('current-lvl-text').innerText = currentLevel;
-    document.getElementById('game-coins').innerText = coins;
     
-    // Exact UI has balls count inside a circle at the bottom
-    const ballCircle = document.querySelector('.balls-count-circle');
-    if (ballCircle) ballCircle.innerText = ballsRemaining;
-
-    document.getElementById('mission-info').innerText = `Target Bubbles: ${missionCurrent} / ${missionTarget}`;
-    document.getElementById('mission-color-box').style.background = missionColor;
-    
-    document.getElementById('active-preview').style.background = currentBallColor;
-    document.getElementById('next-preview').style.background = nextBallColor;
-    
-    const progress = (fireballCharge / 6) * 100;
-    document.getElementById('fireball-ring').style.setProperty('--progress', `${progress}%`);
+    if (ballsRemaining <= 0 && isShooting === false && activeBall === null) {
+        document.getElementById('out-of-balls-popup').classList.remove('hidden');
+    }
 }
 
 function swapBalls() {
-    let temp = currentBallColor;
-    currentBallColor = nextBallColor;
-    nextBallColor = temp;
-    updateUI();
+    // Basic swap implementation
 }
 
 function prepareNext() {
     currentBallColor = nextBallColor;
     nextBallColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+    document.getElementById('active-ball').style.backgroundColor = currentBallColor;
     updateUI();
 }
 
