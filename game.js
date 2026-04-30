@@ -28,12 +28,23 @@ let missionColor = COLORS[0];
 
 function init() {
     resize();
-    showScreen('splash-screen');
-    setTimeout(() => { showScreen('main-menu'); }, 2000);
+    showScreen('level-map'); // Start at map as per user image
+    generateMap();
 
-    document.getElementById('play-btn').onclick = () => startGame();
-    document.getElementById('swap-trigger').onclick = swapBalls;
+    // Navigation
+    document.getElementById('play-main-btn').onclick = () => startGame();
+    document.getElementById('menu-trigger').onclick = () => showPopup('settings-popup');
     
+    // Popup Close Logic
+    document.querySelectorAll('.close-x').forEach(btn => {
+        btn.onclick = (e) => e.target.closest('.popup-overlay').classList.add('hidden');
+    });
+
+    document.querySelectorAll('.back-btn-ui').forEach(btn => {
+        btn.onclick = () => showScreen('level-map');
+    });
+
+    // Game Inputs
     canvas.addEventListener('mousemove', (e) => {
         const rect = canvas.getBoundingClientRect();
         mouseX = e.clientX - rect.left;
@@ -45,6 +56,34 @@ function init() {
     });
 
     requestAnimationFrame(gameLoop);
+}
+
+function generateMap() {
+    const container = document.getElementById('map-path-container');
+    container.innerHTML = '';
+    
+    for (let i = 211; i <= 220; i++) {
+        const node = document.createElement('div');
+        node.className = 'level-node';
+        if (i === 216) node.classList.add('current');
+        
+        // S-shape logic
+        const row = Math.floor((i-211) / 3);
+        const col = (i-211) % 3;
+        const xOffset = (row % 2 === 0) ? (col - 1) * 80 : (1 - col) * 80;
+        node.style.transform = `translateX(${xOffset}px)`;
+        
+        node.innerHTML = `${i} <div class="stars">⭐⭐</div>`;
+        node.onclick = () => {
+            currentLevel = i;
+            document.getElementById('play-main-btn').innerText = `LEVEL ${i}`;
+        };
+        container.appendChild(node);
+    }
+}
+
+function showPopup(id) {
+    document.getElementById(id).classList.remove('hidden');
 }
 
 function resize() {
@@ -320,7 +359,13 @@ function showReadyAnim() {
 
 function updateUI() {
     document.getElementById('balls-text').innerText = ballsRemaining;
+    document.getElementById('current-lvl-text').innerText = currentLevel;
     document.getElementById('game-coins').innerText = coins;
+    
+    // Exact UI has balls count inside a circle at the bottom
+    const ballCircle = document.querySelector('.balls-count-circle');
+    if (ballCircle) ballCircle.innerText = ballsRemaining;
+
     document.getElementById('mission-info').innerText = `Target Bubbles: ${missionCurrent} / ${missionTarget}`;
     document.getElementById('mission-color-box').style.background = missionColor;
     

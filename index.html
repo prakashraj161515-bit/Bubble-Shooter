@@ -3,77 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bubble Shooter Premium</title>
+    <title>Bubble Shooter - Exact UI</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="game-container">
         
-        <!-- Splash Screen -->
-        <div id="splash-screen" class="screen">
-            <h1 class="logo">BUBBLE<span>SHOOTER</span></h1>
-            <div class="loader-container"><div class="loader-bar"></div></div>
+        <!-- Level Map Screen (Top Right Reference) -->
+        <div id="level-map" class="screen">
+            <div class="map-header">
+                <div class="mission-bar easy">
+                    <div class="mission-text">Collect Stars <span>18/20</span></div>
+                    <div class="gift-icon">🎁</div>
+                </div>
+                <div class="mission-bar hard">
+                    <div class="mission-text">Pop Red Bubbles <span>100/1100</span></div>
+                    <div class="gift-icon">🎁</div>
+                </div>
+                <div class="mission-bar extra-hard">
+                    <div class="mission-text">Pop Green Bubbles <span>615/2500</span></div>
+                    <div class="gift-icon">🎁</div>
+                </div>
+            </div>
+            <div class="map-scroll">
+                <div id="map-path-container">
+                    <!-- Level nodes 211 to 220 in S-shape -->
+                </div>
+            </div>
+            <button id="play-main-btn" class="level-play-badge">LEVEL 216</button>
         </div>
 
-        <!-- Main Menu -->
-        <div id="main-menu" class="screen hidden">
-            <div class="menu-header">
-                <div class="coin-display">100 🪙</div>
-            </div>
-            <div class="menu-center">
-                <h2 class="title">LEVEL 1</h2>
-                <button id="play-btn" class="btn-premium">PLAY</button>
-            </div>
-            <div class="menu-footer">
-                <button id="map-btn" class="icon-btn">🗺️</button>
-                <button id="shop-btn" class="icon-btn">🛒</button>
-                <button id="spin-btn" class="icon-btn">🎡</button>
-            </div>
-        </div>
-
-        <!-- Gameplay UI -->
+        <!-- Gameplay Screen (Top Left Reference) -->
         <div id="gameplay-ui" class="screen hidden">
-            <div class="mission-progress">
-                <div id="mission-info" class="mission-text">Target Bubbles: 0 / 1000</div>
-                <div id="mission-color-box" style="width:20px;height:20px;border-radius:50%;background:red;"></div>
-            </div>
-
-            <div class="top-bar">
-                <button class="back-btn-ui">←</button>
-                <div class="coin-display"><span id="game-coins">100</span> 🪙</div>
+            <div class="game-top-nav">
+                <button id="menu-trigger">☰</button>
+                <div class="score-display">0</div>
+                <div class="coin-display">1283 +</div>
             </div>
             
-            <div id="game-area">
+            <div id="bubble-canvas-area">
                 <canvas id="gameCanvas"></canvas>
-                <div id="fx-layer"></div>
             </div>
 
-            <div class="gameplay-footer">
-                <div class="shooter-ui">
-                    <div class="balls-badge">
-                        <span id="balls-text">60</span>
-                        <small>BALLS</small>
-                    </div>
-                    
-                    <div class="swapper-container">
-                        <div id="next-preview" class="next-preview"></div>
-                        <div id="active-preview" class="active-ball-main" style="background:red;"></div>
-                        <button id="swap-trigger">🔄</button>
-                    </div>
-
-                    <div class="fireball-progress-ring" id="fireball-ring" style="--progress: 0%;"></div>
+            <div class="game-footer">
+                <div class="shooter-wrapper">
+                    <div class="balls-count-circle">55</div>
+                    <!-- Aiming guide handled in JS -->
                 </div>
-
-                <div class="powerup-bar">
-                    <button class="p-item" id="p-fire">🔥<span>10</span></button>
-                    <button class="p-item" id="p-bomb">💣<span>10</span></button>
-                    <button class="p-item" id="p-rainbow">🌈<span>10</span></button>
+                <div class="powerup-row">
+                    <button class="p-btn bomb"><span class="badge">19</span></button>
+                    <button class="p-btn tick active"></button>
+                    <button class="p-btn rainbow"><span class="badge">2</span></button>
+                    <button class="p-btn fireball"><span class="badge">13</span></button>
+                </div>
+                <div class="banner-ad">
+                    <img src="https://via.placeholder.com/320x50?text=Dream11.com+Play+Now" alt="ad">
                 </div>
             </div>
         </div>
 
-        <!-- Store, Map etc. omitted for brevity in prototype but logic remains -->
+        <!-- Settings Popup (Bottom Left Reference) -->
+        <div id="settings-popup" class="popup-overlay hidden">
+            <div class="popup-card settings-card">
+                <div class="popup-header blue">SETTINGS <button class="close-x">×</button></div>
+                <div class="settings-tabs">
+                    <button class="tab-btn active">⚙️</button>
+                    <button class="tab-btn">❓</button>
+                    <button class="tab-btn">🏆</button>
+                </div>
+                <div class="settings-body">
+                    <div class="large-icons">
+                        <button class="orange-icon">🔊</button>
+                        <button class="orange-icon">🔔</button>
+                        <button class="orange-icon">👁️</button>
+                    </div>
+                    <div class="toggle-row">
+                        <span>TARGETED ADS:</span>
+                        <div class="toggle on">ON</div>
+                    </div>
+                    <div class="mode-selector">
+                        <button class="mode-btn green">CLASSIC</button>
+                        <button class="mode-btn green active">LEVELS</button>
+                        <button class="mode-btn green">ARCADE</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quit Popup (Bottom Right Reference) -->
+        <div id="quit-popup" class="popup-overlay hidden">
+            <div class="popup-card quit-card">
+                <div class="popup-header orange">QUIT GAME? <button class="close-x">×</button></div>
+                <div class="quit-body">
+                    <div class="bubble-group">🔵🟢🔴</div>
+                    <p>YOU WILL LOSE:</p>
+                    <div class="lose-icons">🏅 👑</div>
+                    <div class="quit-actions">
+                        <button class="retry-btn">🔄</button>
+                        <button class="exit-btn">EXIT</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
     <script src="game.js"></script>
 </body>
