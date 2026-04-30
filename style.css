@@ -259,8 +259,7 @@ body {
 .cannon-base {
     width: 60px;
     height: 60px;
-    background: var(--primary-blue);
-    border-radius: 50% 50% 0 0;
+    background: transparent;
     display: flex;
     justify-content: center;
     align-items: center;
