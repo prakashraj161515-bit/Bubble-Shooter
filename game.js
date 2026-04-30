@@ -22,27 +22,28 @@ let isShooting = false;
 let mouseX, mouseY;
 
 // Mission State
-let missionTarget = 1000;
+let missionTarget = 10; // Simple target for testing
 let missionCurrent = 0;
 let missionColor = COLORS[0];
 
+let highestLevelUnlocked = parseInt(localStorage.getItem('bubble_highest_level')) || 1;
+
 function init() {
-    resize();
+    generateMap(); // initial map generation
+
     showScreen('splash-screen');
-    setTimeout(() => { showScreen('home-screen'); }, 3000);
+    setTimeout(() => { 
+        showScreen('home-screen'); 
+        generateMap(); // Ensure it renders correctly when shown
+    }, 3000);
 
     // Navigation (Basic prototype links)
     document.getElementById('settings-trigger').onclick = () => alert("Settings opened");
     
-    // Play button logic attached to map nodes
-    document.querySelectorAll('.level-node-blue').forEach(node => {
-        node.onclick = () => {
-            currentLevel = parseInt(node.innerText);
-            startGame();
-        };
-    });
-    
-    document.getElementById('back-to-home').onclick = () => showScreen('home-screen');
+    document.getElementById('back-to-home').onclick = () => {
+        showScreen('home-screen');
+        generateMap(); // Refresh on back
+    };
 
     // Popup Close Logic
     document.querySelectorAll('.close-popup').forEach(btn => {
@@ -77,10 +78,48 @@ function showScreen(id) {
 
 function startGame() {
     showScreen('gameplay-ui');
+    resize(); // Fixes canvas coordinate bug!
     ballsRemaining = 60;
     missionCurrent = 0;
+    missionTarget = 10 + (currentLevel * 5); // Simple scale
     generateLevel();
     updateUI();
+}
+
+function generateMap() {
+    const container = document.getElementById('map-path-container');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    // Generate 20 levels
+    for (let i = 20; i >= 1; i--) {
+        const node = document.createElement('div');
+        node.className = 'level-node-blue';
+        
+        // S-shape logic
+        const row = Math.floor((i-1) / 3);
+        const col = (i-1) % 3;
+        const xOffset = (row % 2 === 0) ? (col - 1) * 60 : (1 - col) * 60;
+        node.style.transform = `translateX(${xOffset}px)`;
+        
+        if (i > highestLevelUnlocked) {
+            // Locked style
+            node.style.background = '#95a5a6';
+            node.style.borderColor = '#7f8c8d';
+            node.innerHTML = `🔒`;
+        } else {
+            // Unlocked style
+            node.innerHTML = `${i} <div class="stars-under">⭐⭐⭐</div>`;
+            if (i === highestLevelUnlocked) node.style.borderColor = '#55efc4'; // Highlight current
+            
+            node.onclick = () => {
+                currentLevel = i;
+                startGame();
+            };
+        }
+        
+        container.appendChild(node);
+    }
 }
 
 function generateLevel() {
@@ -253,7 +292,8 @@ function processMatches(x, y) {
         matches.forEach(([mx, my]) => {
             spawnPopEffect(getPos(mx, my));
             grid[my][mx] = null;
-            if (color === missionColor) missionCurrent++;
+            // Simple logic: any pop adds to progress for now
+            missionCurrent++;
         });
         
         fireballCharge++;
@@ -264,6 +304,11 @@ function processMatches(x, y) {
         
         showCombo(matches.length);
         checkFloating();
+        
+        // Win condition
+        if (missionCurrent >= missionTarget) {
+            winLevel();
+        }
     } else {
         fireballCharge = 0;
     }
@@ -337,9 +382,41 @@ function showReadyAnim() {
 function updateUI() {
     document.getElementById('balls-text').innerText = ballsRemaining;
     
-    if (ballsRemaining <= 0 && isShooting === false && activeBall === null) {
+    const targetBadge = document.querySelector('.target-badge');
+    if (targetBadge) targetBadge.innerText = `🎯 ${missionCurrent}/${missionTarget}`;
+    
+    // Fill progress bar
+    const progressFill = document.querySelector('.score-fill');
+    if (progressFill) progressFill.style.width = `${Math.min(100, (missionCurrent / missionTarget) * 100)}%`;
+    
+    if (ballsRemaining <= 0 && isShooting === false && activeBall === null && missionCurrent < missionTarget) {
         document.getElementById('out-of-balls-popup').classList.remove('hidden');
     }
+}
+
+function winLevel() {
+    if (currentLevel === highestLevelUnlocked) {
+        highestLevelUnlocked++;
+        localStorage.setItem('bubble_highest_level', highestLevelUnlocked);
+    }
+    
+    // Show win popup
+    const winPopup = document.getElementById('level-complete-popup');
+    winPopup.querySelector('h2').innerHTML = `LEVEL ${currentLevel}<br>COMPLETED!`;
+    winPopup.classList.remove('hidden');
+    
+    // Wire up buttons
+    winPopup.querySelector('.btn-green-large').onclick = () => {
+        winPopup.classList.add('hidden');
+        currentLevel++;
+        startGame();
+    };
+    
+    winPopup.querySelector('.btn-blue-large').onclick = () => {
+        winPopup.classList.add('hidden');
+        showScreen('home-screen');
+        generateMap(); // Refresh map to show new unlocked level
+    };
 }
 
 function swapBalls() {
