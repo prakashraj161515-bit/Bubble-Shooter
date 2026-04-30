@@ -187,19 +187,34 @@ function drawBubble(x, y, color, type) {
     }
 }
 
+function getBallCenter() {
+    const ballEl = document.getElementById('active-ball');
+    if (!ballEl) return { x: width / 2, y: height - 50 };
+    
+    const rect = ballEl.getBoundingClientRect();
+    const canvasRect = canvas.getBoundingClientRect();
+    return {
+        x: rect.left + rect.width / 2 - canvasRect.left,
+        y: rect.top + rect.height / 2 - canvasRect.top,
+        radius: rect.width / 2
+    };
+}
+
 function drawTrajectory() {
     if (isShooting) return;
-    const startX = width / 2;
-    const startY = height - 50; // Exact visual center of the ball (20px bottom + 30px half height)
+    
+    const center = getBallCenter();
+    const startX = center.x;
+    const startY = center.y;
     
     const angle = Math.atan2(mouseY - startY, mouseX - startX);
     
-    // Start drawing from the edge of the ball (radius ~15px)
-    const edgeX = startX + Math.cos(angle) * 15;
-    const edgeY = startY + Math.sin(angle) * 15;
+    // Start drawing perfectly from the edge of the ball
+    const edgeX = startX + Math.cos(angle) * center.radius;
+    const edgeY = startY + Math.sin(angle) * center.radius;
     
     ctx.setLineDash([5, 10]);
-    ctx.strokeStyle = 'rgba(255,255,255,0.4)'; // Slightly more visible
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)'; 
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.moveTo(edgeX, edgeY);
@@ -212,8 +227,9 @@ function shoot() {
     isShooting = true;
     ballsRemaining--;
     
-    const startX = width / 2;
-    const startY = height - 50; // Match trajectory center
+    const center = getBallCenter();
+    const startX = center.x;
+    const startY = center.y;
     const angle = Math.atan2(mouseY - startY, mouseX - startX);
     
     activeBall = {
@@ -315,8 +331,8 @@ function processMatches(x, y) {
         showCombo(matches.length);
         checkFloating();
         
-        // Win condition
-        if (missionCurrent >= missionTarget) {
+        // Win condition: All bubbles cleared
+        if (isGridEmpty()) {
             winLevel();
         }
     } else {
@@ -330,6 +346,16 @@ function getNeighbors(x, y) {
         ? [[1,0], [-1,0], [0,1], [0,-1], [-1,1], [-1,-1]]
         : [[1,0], [-1,0], [0,1], [0,-1], [1,1], [1,-1]];
     return offsets.map(([ox, oy]) => [x + ox, y + oy]);
+}
+
+function isGridEmpty() {
+    for (let y = 0; y < grid.length; y++) {
+        if (!grid[y]) continue;
+        for (let x = 0; x < grid[y].length; x++) {
+            if (grid[y][x] !== null) return false;
+        }
+    }
+    return true;
 }
 
 function checkFloating() {
@@ -393,13 +419,25 @@ function updateUI() {
     document.getElementById('balls-text').innerText = ballsRemaining;
     
     const targetBadge = document.querySelector('.target-badge');
-    if (targetBadge) targetBadge.innerText = `🎯 ${missionCurrent}/${missionTarget}`;
+    if (targetBadge) targetBadge.innerText = `🎯 CLEAR ALL`;
     
-    // Fill progress bar
+    // Fill progress bar (based on remaining bubbles)
+    let total = 0, current = 0;
+    for (let y = 0; y < grid.length; y++) {
+        if (!grid[y]) continue;
+        for (let x = 0; x < grid[y].length; x++) {
+            total++;
+            if (grid[y][x] !== null) current++;
+        }
+    }
+    
     const progressFill = document.querySelector('.score-fill');
-    if (progressFill) progressFill.style.width = `${Math.min(100, (missionCurrent / missionTarget) * 100)}%`;
+    if (progressFill && total > 0) {
+        let cleared = total - current;
+        progressFill.style.width = `${(cleared / total) * 100}%`;
+    }
     
-    if (ballsRemaining <= 0 && isShooting === false && activeBall === null && missionCurrent < missionTarget) {
+    if (ballsRemaining <= 0 && isShooting === false && activeBall === null && current > 0) {
         document.getElementById('out-of-balls-popup').classList.remove('hidden');
     }
 }
