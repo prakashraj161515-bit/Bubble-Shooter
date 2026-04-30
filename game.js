@@ -1,6 +1,5 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const fxLayer = document.getElementById('fx-layer');
 
 let width, height;
 const BUBBLE_RADIUS = 22;
@@ -362,7 +361,7 @@ function spawnPopEffect(pos) {
     el.className = 'pop-effect';
     el.style.left = pos.x + 'px';
     el.style.top = pos.y + 'px';
-    fxLayer.appendChild(el);
+    document.getElementById('gameplay-ui').appendChild(el);
     setTimeout(() => el.remove(), 300);
 }
 
@@ -372,7 +371,7 @@ function showCombo(count) {
     el.innerText = `COMBO X${count}`;
     el.style.left = '50%';
     el.style.top = '40%';
-    fxLayer.appendChild(el);
+    document.getElementById('gameplay-ui').appendChild(el);
     setTimeout(() => el.remove(), 1000);
 }
 
