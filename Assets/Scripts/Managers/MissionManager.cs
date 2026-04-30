@@ -1,113 +1,159 @@
 using UnityEngine;
 using System;
-using System.Collections.Generic;
-
-[System.Serializable]
-public class Mission
-{
-    public enum MissionType { Easy, Medium, Hard }
-    public MissionType type;
-    public BubbleColor targetColor;
-    public int currentCount;
-    public int targetCount;
-    public bool isCompleted;
-}
 
 public class MissionManager : MonoBehaviour
 {
     public static MissionManager Instance;
 
-    public Mission easyMission;
-    public Mission mediumMission;
-    public Mission hardMission;
+    // We keep your variables for the current active color mission (which can serve as Medium/Hard)
+    // But we expand it slightly to handle all strict rules (Easy, Medium, Hard)
+    
+    [Header("Easy Mission: Collect Stars")]
+    public int easyTarget = 15;
+    public int easyProgress = 0;
+    public bool easyCompleted = false;
+
+    [Header("Medium Mission: Pop Color")]
+    public int mediumTarget = 1000;
+    public int mediumProgress = 0;
+    public string mediumColor;
+    public bool mediumCompleted = false;
+
+    [Header("Hard Mission: Pop Color")]
+    public int hardTarget = 1600;
+    public int hardProgress = 0;
+    public string hardColor;
+    public bool hardCompleted = false;
+
+    private readonly string[] colors = { "Red", "Blue", "Green", "Yellow", "Purple" };
 
     void Awake()
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
+        
         LoadMissions();
+    }
+
+    void Start()
+    {
+        // Only assign colors if the mission is new or just refreshed
+        if (string.IsNullOrEmpty(mediumColor) || mediumCompleted)
+        {
+            mediumColor = AssignColor();
+            mediumProgress = 0;
+            mediumCompleted = false;
+        }
+
+        if (string.IsNullOrEmpty(hardColor) || hardCompleted)
+        {
+            hardColor = AssignColor();
+            hardProgress = 0;
+            hardCompleted = false;
+        }
+
+        SaveMissions();
+    }
+
+    string AssignColor()
+    {
+        return colors[UnityEngine.Random.Range(0, colors.Length)];
+    }
+
+    // Call this when a star is collected
+    public void AddStarProgress(int amount = 1)
+    {
+        if (!easyCompleted)
+        {
+            easyProgress += amount;
+            if (easyProgress >= easyTarget)
+            {
+                CompleteMission("Easy");
+            }
+            SaveMissions();
+        }
+    }
+
+    // Call this when bubbles are popped
+    public void AddProgress(string hitColor, int amount = 1)
+    {
+        if (!mediumCompleted && hitColor == mediumColor)
+        {
+            mediumProgress += amount;
+            if (mediumProgress >= mediumTarget)
+            {
+                CompleteMission("Medium");
+            }
+        }
+
+        if (!hardCompleted && hitColor == hardColor)
+        {
+            hardProgress += amount;
+            if (hardProgress >= hardTarget)
+            {
+                CompleteMission("Hard");
+            }
+        }
+
+        SaveMissions();
+    }
+
+    void CompleteMission(string difficulty)
+    {
+        Debug.Log($"Mission Complete: {difficulty}");
+
+        if (difficulty == "Easy")
+        {
+            easyCompleted = true;
+            // Reward: 5 coins
+            if (EconomyManager.Instance != null) EconomyManager.Instance.AddCoins(5);
+        }
+        else if (difficulty == "Medium")
+        {
+            mediumCompleted = true;
+            // Reward: 1 bomb + 4 coins
+            if (EconomyManager.Instance != null) EconomyManager.Instance.AddCoins(4);
+            // Grant Bomb logic
+        }
+        else if (difficulty == "Hard")
+        {
+            hardCompleted = true;
+            // Reward: 1 bomb + 1 fireball + 1 rainbow + 5 coins
+            if (EconomyManager.Instance != null) EconomyManager.Instance.AddCoins(5);
+            // Grant Bomb, Fireball, Rainbow logic
+        }
+
+        SaveMissions();
+    }
+
+    // Persistence Logic to ensure missions don't refresh until completed
+    private void SaveMissions()
+    {
+        PlayerPrefs.SetInt("EasyProgress", easyProgress);
+        PlayerPrefs.SetInt("EasyCompleted", easyCompleted ? 1 : 0);
+
+        PlayerPrefs.SetInt("MediumProgress", mediumProgress);
+        PlayerPrefs.SetString("MediumColor", mediumColor);
+        PlayerPrefs.SetInt("MediumCompleted", mediumCompleted ? 1 : 0);
+
+        PlayerPrefs.SetInt("HardProgress", hardProgress);
+        PlayerPrefs.SetString("HardColor", hardColor);
+        PlayerPrefs.SetInt("HardCompleted", hardCompleted ? 1 : 0);
+
+        PlayerPrefs.Save();
     }
 
     private void LoadMissions()
     {
-        if (easyMission == null || easyMission.isCompleted) 
-        {
-            easyMission = new Mission { type = Mission.MissionType.Easy, targetCount = 15, currentCount = 0, isCompleted = false };
-        }
-        
-        if (mediumMission == null || mediumMission.isCompleted)
-        {
-            mediumMission = new Mission { type = Mission.MissionType.Medium, targetCount = 1000, currentCount = 0, isCompleted = false, targetColor = GetRandomColor() };
-        }
+        easyProgress = PlayerPrefs.GetInt("EasyProgress", 0);
+        easyCompleted = PlayerPrefs.GetInt("EasyCompleted", 0) == 1;
 
-        if (hardMission == null || hardMission.isCompleted)
-        {
-            hardMission = new Mission { type = Mission.MissionType.Hard, targetCount = 1600, currentCount = 0, isCompleted = false, targetColor = GetRandomColor() };
-        }
+        mediumProgress = PlayerPrefs.GetInt("MediumProgress", 0);
+        mediumColor = PlayerPrefs.GetString("MediumColor", "");
+        mediumCompleted = PlayerPrefs.GetInt("MediumCompleted", 0) == 1;
+
+        hardProgress = PlayerPrefs.GetInt("HardProgress", 0);
+        hardColor = PlayerPrefs.GetString("HardColor", "");
+        hardCompleted = PlayerPrefs.GetInt("HardCompleted", 0) == 1;
     }
-
-    public void TrackProgress(BubbleColor color, int amount)
-    {
-        if (mediumMission != null && !mediumMission.isCompleted && color == mediumMission.targetColor)
-        {
-            mediumMission.currentCount += amount;
-            if (mediumMission.currentCount >= 1000) CompleteMission(mediumMission);
-        }
-        
-        if (hardMission != null && !hardMission.isCompleted && color == hardMission.targetColor)
-        {
-            hardMission.currentCount += amount;
-            if (hardMission.currentCount >= 1600) CompleteMission(hardMission);
-        }
-        SaveMissions();
-    }
-
-    public void TrackStars(int amount)
-    {
-        if (easyMission != null && !easyMission.isCompleted)
-        {
-            easyMission.currentCount += amount;
-            if (easyMission.currentCount >= 15) CompleteMission(easyMission);
-        }
-        SaveMissions();
-    }
-
-    private void CompleteMission(Mission m)
-    {
-        m.isCompleted = true;
-        m.currentCount = m.targetCount;
-        
-        if (m.type == Mission.MissionType.Easy)
-        {
-            EconomyManager.Instance.AddCoins(5);
-        }
-        else if (m.type == Mission.MissionType.Medium)
-        {
-            EconomyManager.Instance.AddCoins(4);
-            // Give 1 bomb
-        }
-        else if (m.type == Mission.MissionType.Hard)
-        {
-            EconomyManager.Instance.AddCoins(5);
-            // Give 1 bomb, 1 fireball, 1 rainbow
-        }
-
-        Debug.Log($"Mission {m.type} Completed!");
-    }
-
-    public string GetProgressString(Mission.MissionType type)
-    {
-        if (type == Mission.MissionType.Easy) return $"Stars: {easyMission.currentCount} / {easyMission.targetCount}";
-        if (type == Mission.MissionType.Medium) return $"{mediumMission.targetColor} bubbles: {mediumMission.currentCount} / {mediumMission.targetCount}";
-        if (type == Mission.MissionType.Hard) return $"{hardMission.targetColor} bubbles: {hardMission.currentCount} / {hardMission.targetCount}";
-        return "";
-    }
-
-    private BubbleColor GetRandomColor()
-    {
-        Array values = Enum.GetValues(typeof(BubbleColor));
-        return (BubbleColor)values.GetValue(UnityEngine.Random.Range(0, values.Length - 1));
-    }
-
-    private void SaveMissions() { /* Save logic */ }
 }
