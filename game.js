@@ -35,6 +35,12 @@ function init() {
     document.getElementById('shop-btn').onclick = () => showScreen('store-screen');
     document.getElementById('spin-btn').onclick = () => showScreen('spin-screen');
     document.getElementById('daily-btn').onclick = () => alert("Daily Reward: +50 Coins!");
+    document.getElementById('swap-trigger').onclick = swapBalls;
+
+    // Powerups
+    document.getElementById('p-fire').onclick = () => activatePowerup('fire');
+    document.getElementById('p-bomb').onclick = () => activatePowerup('bomb');
+    document.getElementById('p-rainbow').onclick = () => activatePowerup('rainbow');
 
     document.querySelectorAll('.back-btn-ui').forEach(btn => {
         btn.onclick = () => showScreen('main-menu');
@@ -146,7 +152,20 @@ function getBubblePosition(x, y) {
 function drawBubble(x, y, color, type = 'NORMAL') {
     ctx.beginPath();
     ctx.arc(x, y, BUBBLE_RADIUS - 2, 0, Math.PI * 2);
-    ctx.fillStyle = color;
+    
+    if (color.includes('gradient')) {
+        let grad = ctx.createLinearGradient(x - BUBBLE_RADIUS, y, x + BUBBLE_RADIUS, y);
+        grad.addColorStop(0, 'red');
+        grad.addColorStop(0.2, 'orange');
+        grad.addColorStop(0.4, 'yellow');
+        grad.addColorStop(0.6, 'green');
+        grad.addColorStop(0.8, 'blue');
+        grad.addColorStop(1, 'violet');
+        ctx.fillStyle = grad;
+    } else {
+        ctx.fillStyle = color;
+    }
+    
     ctx.fill();
     
     if (type === 'ROCK') {
@@ -235,10 +254,114 @@ function updateActiveBall() {
 }
 
 function snapToGrid() {
-    // Logic to find nearest grid cell and place ball
-    // For now, let's just reset shooting
+    if (!activeBall) return;
+
+    // Find nearest grid cell
+    let minDist = Infinity;
+    let targetX = 0, targetY = 0;
+
+    for (let y = 0; y < ROWS; y++) {
+        if (!grid[y]) grid[y] = [];
+        const cols = y % 2 === 0 ? COLUMNS : COLUMNS - 1;
+        for (let x = 0; x < cols; x++) {
+            const pos = getBubblePosition(x, y);
+            const d = Math.sqrt((activeBall.x - pos.x)**2 + (activeBall.y - pos.y)**2);
+            if (d < minDist) {
+                minDist = d;
+                targetX = x;
+                targetY = y;
+            }
+        }
+    }
+
+    // Snap if space is empty
+    if (!grid[targetY][targetX]) {
+        grid[targetY][targetX] = { type: 'NORMAL', color: activeBall.color };
+        checkMatches(targetX, targetY);
+    }
+
     activeBall = null;
     isShooting = false;
+}
+
+function checkMatches(x, y) {
+    const color = grid[y][x].color;
+    let matches = [[x, y]];
+    let queue = [[x, y]];
+    let visited = new Set([`${x},${y}`]);
+
+    while (queue.length > 0) {
+        let [cx, cy] = queue.shift();
+        let neighbors = getNeighbors(cx, cy);
+        for (let [nx, ny] of neighbors) {
+            if (grid[ny] && grid[ny][nx] && grid[ny][nx].color === color && !visited.has(`${nx},${ny}`)) {
+                visited.add(`${nx},${ny}`);
+                matches.push([nx, ny]);
+                queue.push([nx, ny]);
+            }
+        }
+    }
+
+    if (matches.length >= 3) {
+        matches.forEach(([mx, my]) => grid[my][mx] = null);
+        coins += 10;
+        updateUI();
+        checkFloating();
+    }
+}
+
+function getNeighbors(x, y) {
+    const offsets = y % 2 === 0 
+        ? [[1,0], [-1,0], [0,1], [0,-1], [-1,1], [-1,-1]]
+        : [[1,0], [-1,0], [0,1], [0,-1], [1,1], [1,-1]];
+    return offsets.map(([ox, oy]) => [x + ox, y + oy]);
+}
+
+function checkFloating() {
+    // Basic drop logic: mark all connected to row 0
+    let connected = new Set();
+    let queue = [];
+    for (let x = 0; x < COLUMNS; x++) {
+        if (grid[0] && grid[0][x]) {
+            connected.add(`0,${x}`);
+            queue.push([x, 0]);
+        }
+    }
+
+    while (queue.length > 0) {
+        let [cx, cy] = queue.shift();
+        let neighbors = getNeighbors(cx, cy);
+        for (let [nx, ny] of neighbors) {
+            if (grid[ny] && grid[ny][nx] && !connected.has(`${nx},${ny}`)) {
+                connected.add(`${nx},${ny}`);
+                queue.push([nx, ny]);
+            }
+        }
+    }
+
+    // Drop any that aren't connected
+    for (let y = 0; y < grid.length; y++) {
+        for (let x = 0; x < (grid[y] ? grid[y].length : 0); x++) {
+            if (grid[y][x] && !connected.has(`${y},${x}`)) {
+                grid[y][x] = null; // Drop
+            }
+        }
+    }
+}
+
+function swapBalls() {
+    let temp = currentBallColor;
+    currentBallColor = nextBallColor;
+    nextBallColor = temp;
+    updateUI();
+}
+
+function activatePowerup(type) {
+    if (coins < 10) return;
+    coins -= 10;
+    if (type === 'fire') currentBallColor = '#ff4500'; // Orange-Red
+    if (type === 'rainbow') currentBallColor = 'linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet)'; 
+    updateUI();
 }
 
 function prepareNextBall() {
