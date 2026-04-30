@@ -82,6 +82,11 @@ function startGame() {
     ballsRemaining = 60;
     missionCurrent = 0;
     missionTarget = 10 + (currentLevel * 5); // Simple scale
+    
+    currentBallColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+    nextBallColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+    document.getElementById('active-ball').style.backgroundColor = currentBallColor;
+    
     generateLevel();
     updateUI();
 }
