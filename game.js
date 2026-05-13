@@ -23,8 +23,22 @@ let state = {
     currentLevel: 1,
     score: 0,
     powerups: { BOMB: 2, FIREBALL: 1, RAINBOW: 3 },
-    missions: { id: 1, target: 50, current: 0, type: 'POP_COLOR', color: COLORS[0] },
-    lastSpin: 0
+    stats: {
+        totalPops: 0,
+        totalShots: 0,
+        totalCoins: 100
+    },
+    settings: {
+        sound: true,
+        music: true,
+        vibration: true
+    },
+    dailyChallenge: {
+        id: new Date().toDateString(),
+        target: 30,
+        current: 0,
+        completed: false
+    }
 };
 
 // RUNTIME STATE
@@ -70,11 +84,23 @@ function init() {
 }
 
 function loadState() {
-    const saved = localStorage.getItem('bubble_shooter_state_v4');
+    const saved = localStorage.getItem('bubble_shooter_state_v5');
     if (saved) state = JSON.parse(saved);
+    
+    // Reset daily challenge if it's a new day
+    if (state.dailyChallenge.id !== new Date().toDateString()) {
+        state.dailyChallenge = {
+            id: new Date().toDateString(),
+            target: 30,
+            current: 0,
+            completed: false
+        };
+        saveState();
+    }
 }
+
 function saveState() {
-    localStorage.setItem('bubble_shooter_state_v4', JSON.stringify(state));
+    localStorage.setItem('bubble_shooter_state_v5', JSON.stringify(state));
     updateUI();
 }
 
@@ -93,7 +119,9 @@ function showScreen(id) {
         target.style.opacity = '1';
         target.style.transform = 'scale(1)';
     }, 10);
+    
     if (id === 'home-screen') generateMap();
+    if (id === 'achievements-screen') updateAchievements();
 }
 
 function openPopup(id) { document.getElementById(id).classList.remove('hidden'); }
@@ -106,9 +134,24 @@ function updateUI() {
     document.getElementById('rainbow-count').innerText = state.powerups.RAINBOW;
     document.getElementById('balls-text').innerText = ballsRemaining;
     document.getElementById('current-score').innerText = state.score.toLocaleString();
-    
-    // Goal
     document.getElementById('goal-text').innerText = `${currentGoal.current}/${currentGoal.target}`;
+}
+
+function updateAchievements() {
+    // Popper
+    const popFill = (state.stats.totalPops / 100) * 100;
+    document.getElementById('ach-pop-fill').style.width = `${Math.min(popFill, 100)}%`;
+    document.getElementById('ach-pop-text').innerText = `${state.stats.totalPops}/100`;
+    
+    // Shots
+    const shotFill = (state.stats.totalShots / 50) * 100; // Updated target
+    document.getElementById('ach-shot-fill').style.width = `${Math.min(shotFill, 100)}%`;
+    document.getElementById('ach-shot-text').innerText = `${state.stats.totalShots}/50`;
+    
+    // Coins
+    const coinFill = (state.stats.totalCoins / 1000) * 100;
+    document.getElementById('ach-coin-fill').style.width = `${Math.min(coinFill, 100)}%`;
+    document.getElementById('ach-coin-text').innerText = `${state.stats.totalCoins}/1000`;
 }
 
 function startGame(level) {
@@ -116,7 +159,6 @@ function startGame(level) {
     ballsRemaining = 60 - Math.floor(level / 5) * 2;
     if (ballsRemaining < 30) ballsRemaining = 30;
     
-    // Random Goal for the level
     currentGoal.color = COLORS[Math.floor(Math.random() * COLORS.length)];
     currentGoal.target = 5 + Math.floor(level / 2);
     currentGoal.current = 0;
@@ -163,11 +205,6 @@ function generateMap() {
         } else {
             if (i === state.highestLevel) node.classList.add('active');
             node.innerHTML = `${i}`;
-            const stars = document.createElement('div');
-            stars.style.fontSize = '0.5rem';
-            stars.style.color = '#f1c40f';
-            stars.innerHTML = '★★★';
-            node.appendChild(stars);
             node.onclick = () => startGame(i);
         }
         container.appendChild(node);
@@ -219,10 +256,6 @@ function drawBubble(x, y, color, type) {
     grad.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.fillStyle = grad;
     ctx.fill();
-
-    if (type === 'CHAIN') {
-        ctx.strokeStyle = 'white'; ctx.lineWidth = 2; ctx.stroke();
-    }
 }
 
 function drawTrajectory() {
@@ -259,6 +292,7 @@ function shoot() {
     if (isShooting) return;
     isShooting = true;
     ballsRemaining--;
+    state.stats.totalShots++;
     
     const center = getBallCenter();
     const angle = Math.atan2(mouseY - center.y, mouseX - center.x);
@@ -273,6 +307,7 @@ function shoot() {
     };
     activePowerup = null;
     updateUI();
+    saveState();
 }
 
 function updateBall() {
@@ -322,7 +357,13 @@ function snap() {
 function processBomb(tx, ty) {
     const neighbors = getNeighbors(tx, ty);
     neighbors.push([tx, ty]);
-    neighbors.forEach(([nx, ny]) => { if (grid[ny] && grid[ny][nx]) { grid[ny][nx] = null; state.score += 10; } });
+    neighbors.forEach(([nx, ny]) => { 
+        if (grid[ny] && grid[ny][nx]) { 
+            grid[ny][nx] = null; 
+            state.score += 10; 
+            state.stats.totalPops++; 
+        } 
+    });
     checkFloating();
     if (isGoalMet() || isGridEmpty()) winLevel();
 }
@@ -332,17 +373,16 @@ function processFireball(ax, ay) {
         for (let x = 0; x < grid[y].length; x++) {
             if (grid[y][x]) {
                 const pos = getPos(x, y);
-                if (Math.abs(pos.x - ax) < BUBBLE_RADIUS * 2.5) { grid[y][x] = null; state.score += 10; }
+                if (Math.abs(pos.x - ax) < BUBBLE_RADIUS * 2.5) { 
+                    grid[y][x] = null; 
+                    state.score += 10; 
+                    state.stats.totalPops++;
+                }
             }
         }
     }
     checkFloating();
     if (isGoalMet() || isGridEmpty()) winLevel();
-}
-
-function usePowerup(type) {
-    if (state.powerups[type] > 0) { state.powerups[type]--; activePowerup = type; saveState(); }
-    else { openPopup('shop-popup'); }
 }
 
 function processMatches(x, y) {
@@ -361,19 +401,16 @@ function processMatches(x, y) {
     }
     if (matches.length >= 3) {
         matches.forEach(([mx, my]) => {
-            if (grid[my][mx].color === currentGoal.color) { currentGoal.current++; }
+            if (grid[my][mx].color === currentGoal.color) currentGoal.current++;
             grid[my][mx] = null;
             state.score += 20;
+            state.stats.totalPops++;
         });
         checkFloating();
         if (isGoalMet() || isGridEmpty()) winLevel();
     }
     updateUI();
-}
-
-function getNeighbors(x, y) {
-    const offsets = y % 2 === 0 ? [[1,0], [-1,0], [0,1], [0,-1], [-1,1], [-1,-1]] : [[1,0], [-1,0], [0,1], [0,-1], [1,1], [1,-1]];
-    return offsets.map(([ox, oy]) => [x + ox, y + oy]);
+    saveState();
 }
 
 function checkFloating() {
@@ -389,15 +426,21 @@ function checkFloating() {
     }
     for (let y = 0; y < grid.length; y++) {
         for (let x = 0; x < grid[y].length; x++) {
-            if (grid[y][x] && grid[y][x].type !== 'ROCK' && !connected.has(`${x},${y}`)) { grid[y][x] = null; state.score += 5; }
+            if (grid[y][x] && grid[y][x].type !== 'ROCK' && !connected.has(`${x},${y}`)) { 
+                grid[y][x] = null; 
+                state.score += 5; 
+                state.stats.totalPops++;
+            }
         }
     }
 }
 
-function isGoalMet() {
-    return currentGoal.current >= currentGoal.target;
+function usePowerup(type) {
+    if (state.powerups[type] > 0) { state.powerups[type]--; activePowerup = type; saveState(); }
+    else { openPopup('shop-popup'); }
 }
 
+function isGoalMet() { return currentGoal.current >= currentGoal.target; }
 function isGridEmpty() {
     for (let y = 0; y < grid.length; y++) {
         for (let x = 0; x < grid[y].length; x++) { if (grid[y][x] && grid[y][x].type !== 'ROCK') return false; }
@@ -407,10 +450,14 @@ function isGridEmpty() {
 
 function winLevel() {
     state.coins += 50;
+    state.stats.totalCoins += 50;
     if (state.currentLevel === state.highestLevel) state.highestLevel++;
     saveState();
     openPopup('level-complete-popup');
-    document.getElementById('next-level-btn').onclick = () => { closePopup('level-complete-popup'); startGame(state.currentLevel + 1); };
+    document.getElementById('next-level-btn').onclick = () => { 
+        closePopup('level-complete-popup'); 
+        startGame(state.currentLevel + 1); 
+    };
 }
 
 function prepareNext() {
@@ -428,6 +475,11 @@ function swapBalls() {
     const temp = active.style.backgroundColor;
     active.style.backgroundColor = next.style.backgroundColor;
     next.style.backgroundColor = temp;
+}
+
+function getNeighbors(x, y) {
+    const offsets = y % 2 === 0 ? [[1,0], [-1,0], [0,1], [0,-1], [-1,1], [-1,-1]] : [[1,0], [-1,0], [0,1], [0,-1], [1,1], [1,-1]];
+    return offsets.map(([ox, oy]) => [x + ox, y + oy]);
 }
 
 function buyItem(type, cost) {
