@@ -3,143 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Bubble Shooter - iOS Premium</title>
+    <title>Bubble Shooter Premium</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="game-container">
         
         <!-- 1. SPLASH SCREEN -->
-        <div id="splash-screen" class="screen">
-            <h1 style="font-size: 2.5rem; font-weight: 900; color: #1d1d1f; margin-bottom: 10px;">Bubble</h1>
-            <p style="color: var(--system-blue); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.8rem;">Shooter Premium</p>
-            <div class="ios-spinner" style="margin-top: 40px;"></div>
+        <div id="splash-screen" class="screen" style="background: white; justify-content: center; align-items: center;">
+            <img src="bubble_shooter_logo_premium_1778697858318.png" class="menu-logo" alt="Logo">
+            <div style="width: 30px; height: 30px; border: 3px solid rgba(0,0,0,0.05); border-top-color: var(--dark-purple); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
         </div>
 
-        <!-- 2. HOME SCREEN -->
-        <div id="home-screen" class="screen hidden">
-            <nav class="top-nav">
-                <div class="status-pills">
-                    <div class="pill">❤️ <span>Full</span></div>
-                    <div class="pill">🪙 <span id="header-coins">1250</span></div>
-                </div>
-                <button class="btn-circle" id="settings-trigger">⚙️</button>
-            </nav>
+        <!-- 2. MAIN MENU -->
+        <div id="main-menu" class="screen hidden">
+            <div style="position: absolute; top: 20px; right: 20px;">
+                <button class="btn-powerup" style="width: 40px; height: 40px;">⚙️</button>
+            </div>
             
-            <div class="mission-card">
-                <div class="mission-details">
-                    <div class="mission-title">Daily Mission</div>
-                    <div class="mission-task" id="mission-text">Pop 50 Red Bubbles</div>
-                    <div class="progress-track">
-                        <div id="mission-fill" class="progress-bar" style="width: 30%;"></div>
-                    </div>
-                </div>
-                <div class="mission-gift">🎁</div>
+            <img src="bubble_shooter_logo_premium_1778697858318.png" class="menu-logo" alt="Logo">
+            
+            <div class="menu-buttons">
+                <button class="btn-main btn-play" onclick="showScreen('home-screen')">▶ Play</button>
+                <button class="btn-main btn-levels" onclick="showScreen('home-screen')">Levels</button>
+                <button class="btn-main btn-challenge">Daily Challenge</button>
             </div>
 
+            <div class="menu-footer">
+                <button class="tab-btn" onclick="openPopup('shop-popup')"><span style="font-size: 1.8rem;">🛒</span><span>Shop</span></button>
+                <button class="tab-btn" onclick="openPopup('spin-popup')"><span style="font-size: 1.8rem;">🎡</span><span>Spin</span></button>
+                <button class="tab-btn"><span style="font-size: 1.8rem;">🏆</span><span>Rewards</span></button>
+            </div>
+        </div>
+
+        <!-- 3. HOME SCREEN (LEVEL MAP) -->
+        <div id="home-screen" class="screen hidden">
+            <nav class="top-nav">
+                <div class="pill-status">❤️ <span>Full</span></div>
+                <div class="pill-status">🪙 <span id="header-coins">1250</span> <span style="color: var(--system-green);">+</span></div>
+                <button class="btn-powerup" style="width: 34px; height: 34px; font-size: 1rem;">⚙️</button>
+            </nav>
+
             <div class="map-view">
-                <div class="map-path" id="map-path-container">
+                <div id="map-path-container" style="display: flex; flex-direction: column-reverse; align-items: center; gap: 40px; padding-bottom: 100px;">
                     <!-- JS Generated Nodes -->
                 </div>
             </div>
 
             <footer class="tab-bar">
-                <button class="tab-item active" onclick="showScreen('home-screen')">
-                    <span class="tab-icon">🏠</span>
-                    <span>Home</span>
-                </button>
-                <button class="tab-item" onclick="openPopup('shop-popup')">
-                    <span class="tab-icon">🛍️</span>
-                    <span>Shop</span>
-                </button>
-                <button class="tab-item" onclick="openPopup('spin-popup')">
-                    <span class="tab-icon">🎡</span>
-                    <span>Spin</span>
-                </button>
-                <button class="tab-item">
-                    <span class="tab-icon">🎯</span>
-                    <span>Tasks</span>
-                </button>
-                <button class="tab-item">
-                    <span class="tab-icon">⚡</span>
-                    <span>Items</span>
-                </button>
+                <button class="tab-btn active" onclick="showScreen('home-screen')"><span>🏠</span><span>Home</span></button>
+                <button class="tab-btn" onclick="showScreen('main-menu')"><span>🗺️</span><span>Map</span></button>
+                <button class="tab-btn" onclick="openPopup('shop-popup')"><span>🛍️</span><span>Shop</span></button>
             </footer>
         </div>
 
-        <!-- 3. GAMEPLAY SCREEN -->
-        <div id="gameplay-ui" class="screen hidden">
+        <!-- 4. GAMEPLAY SCREEN -->
+        <div id="gameplay-ui" class="screen hidden" style="background: linear-gradient(180deg, #d4f1ff 0%, #ffffff 100%);">
             <header class="game-header">
-                <button class="btn-circle" id="back-to-home" style="width: 34px; height: 34px; font-size: 0.9rem;">✕</button>
-                <div class="level-badge">Level <span id="current-level-display">1</span></div>
-                <div class="progress-track" style="flex: 1;">
-                    <div class="progress-bar" id="game-progress-fill"></div>
+                <button class="btn-powerup" id="back-to-home" style="width: 36px; height: 36px; font-size: 0.9rem;">⏸</button>
+                
+                <div class="game-stat">
+                    <div class="stat-label">Score</div>
+                    <div class="stat-value" id="current-score">2,450</div>
+                </div>
+
+                <div class="goal-tracker">
+                    <span id="goal-icon">🎯</span>
+                    <span id="goal-text">0/6</span>
                 </div>
             </header>
 
             <canvas id="gameCanvas" style="flex: 1;"></canvas>
 
-            <div class="shooter-wrapper" style="background: var(--glass-bg); backdrop-filter: var(--glass-blur); padding: 20px 20px calc(20px + env(safe-area-inset-bottom)); border-top: 0.5px solid var(--glass-border);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <div style="width: 60px; height: 60px; background: rgba(0,0,0,0.05); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                        <div id="active-ball" style="width: 36px; height: 36px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.2);"></div>
-                    </div>
+            <div class="shooter-tray">
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 300px;">
+                    <div id="next-ball" style="width: 34px; height: 34px; border-radius: 50%; box-shadow: var(--shadow-soft);"></div>
                     
-                    <div style="background: white; padding: 10px 20px; border-radius: 20px; box-shadow: var(--shadow-soft); text-align: center;">
-                        <div style="font-size: 1.2rem; font-weight: 900; color: var(--system-blue);" id="balls-text">60</div>
-                        <div style="font-size: 0.6rem; font-weight: 700; color: var(--system-gray); text-transform: uppercase;">Balls Left</div>
+                    <div class="cannon-visual">
+                        <div id="active-ball" style="width: 50px; height: 50px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.3);"></div>
                     </div>
 
-                    <div id="next-ball" style="width: 28px; height: 28px; border-radius: 50%; opacity: 0.6; border: 2px solid white;"></div>
+                    <div style="text-align: center; background: white; padding: 5px 12px; border-radius: 15px; box-shadow: var(--shadow-soft);">
+                        <div id="balls-text" style="font-size: 1.1rem; font-weight: 900; color: var(--dark-purple);">60</div>
+                        <div style="font-size: 0.5rem; font-weight: 700; text-transform: uppercase;">Left</div>
+                    </div>
                 </div>
 
-                <div style="display: flex; justify-content: center; gap: 15px;">
-                    <button class="btn-circle" onclick="usePowerup('BOMB')" style="width: 50px; height: 50px; position: relative;">
-                        💣 <span style="position: absolute; top: -5px; right: -5px; background: var(--system-red); color: white; font-size: 0.6rem; padding: 2px 6px; border-radius: 10px;" id="bomb-count">2</span>
-                    </button>
-                    <button class="btn-circle" onclick="usePowerup('FIREBALL')" style="width: 50px; height: 50px; position: relative;">
-                        🔥 <span style="position: absolute; top: -5px; right: -5px; background: var(--system-red); color: white; font-size: 0.6rem; padding: 2px 6px; border-radius: 10px;" id="fireball-count">1</span>
-                    </button>
-                    <button class="btn-circle" onclick="usePowerup('RAINBOW')" style="width: 50px; height: 50px; position: relative;">
-                        🌈 <span style="position: absolute; top: -5px; right: -5px; background: var(--system-red); color: white; font-size: 0.6rem; padding: 2px 6px; border-radius: 10px;" id="rainbow-count">3</span>
-                    </button>
-                    <button class="btn-circle" onclick="swapBalls()" style="width: 50px; height: 50px;">🔄</button>
+                <div class="powerup-row">
+                    <button class="btn-powerup" onclick="usePowerup('BOMB')">💣<span class="count" id="bomb-count">2</span></button>
+                    <button class="btn-powerup" onclick="usePowerup('FIREBALL')">🔥<span class="count" id="fireball-count">1</span></button>
+                    <button class="btn-powerup" onclick="usePowerup('RAINBOW')">🌈<span class="count" id="rainbow-count">3</span></button>
+                    <button class="btn-powerup" onclick="swapBalls()">🔄</button>
                 </div>
             </div>
         </div>
 
         <!-- POPUPS -->
         <div id="shop-popup" class="popup-overlay hidden">
-            <div class="popup-content">
-                <div style="width: 40px; height: 4px; background: rgba(0,0,0,0.1); border-radius: 2px; margin: -10px auto 20px;"></div>
-                <h2 style="margin-bottom: 20px;">Premium Shop</h2>
+            <div class="popup-card">
+                <button class="btn-close-pop" onclick="closePopup('shop-popup')">✕</button>
+                <h2>Shop</h2>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                    <div style="background: var(--system-background); padding: 15px; border-radius: 20px; text-align: center;">
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 20px;">
                         <div style="font-size: 2rem; margin-bottom: 10px;">💣</div>
-                        <div style="font-weight: 700;">Bomb x3</div>
-                        <button class="btn-ios btn-primary" style="padding: 10px; font-size: 0.9rem;" onclick="buyItem('BOMB', 50)">🪙 50</button>
+                        <button class="btn-main" style="padding: 10px; font-size: 0.8rem; background: var(--grad-purple);" onclick="buyItem('BOMB', 50)">🪙 50</button>
                     </div>
-                    <div style="background: var(--system-background); padding: 15px; border-radius: 20px; text-align: center;">
-                        <div style="font-size: 2rem; margin-bottom: 10px;">🔥</div>
-                        <div style="font-weight: 700;">Fire x3</div>
-                        <button class="btn-ios btn-primary" style="padding: 10px; font-size: 0.9rem;" onclick="buyItem('FIREBALL', 50)">🪙 50</button>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 20px;">
+                        <div style="font-size: 2rem; margin-bottom: 10px;">🌈</div>
+                        <button class="btn-main" style="padding: 10px; font-size: 0.8rem; background: var(--grad-purple);" onclick="buyItem('RAINBOW', 50)">🪙 50</button>
                     </div>
                 </div>
-                <button class="btn-ios btn-secondary" onclick="closePopup('shop-popup')">Cancel</button>
             </div>
         </div>
 
         <div id="level-complete-popup" class="popup-overlay hidden">
-            <div class="popup-content">
-                <div style="font-size: 4rem; margin-bottom: 10px;">🏆</div>
-                <h2 style="margin-bottom: 10px;">Level Completed!</h2>
-                <p style="color: var(--system-gray); margin-bottom: 30px;">You earned 50 coins</p>
-                <button class="btn-ios btn-primary" id="next-level-btn">Next Level</button>
-                <button class="btn-ios btn-secondary" onclick="closePopup('level-complete-popup'); showScreen('home-screen');">Back to Map</button>
+            <div class="popup-card">
+                <div style="font-size: 4rem;">⭐🏆⭐</div>
+                <h2>Well Done!</h2>
+                <p style="margin-bottom: 20px;">Level Completed</p>
+                <button class="btn-main btn-play" id="next-level-btn" style="width: 100%;">Next Level</button>
             </div>
         </div>
 
     </div>
     <script src="game.js"></script>
+    <style> @keyframes spin { to { transform: rotate(360deg); } } </style>
 </body>
 </html>
