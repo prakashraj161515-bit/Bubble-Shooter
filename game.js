@@ -102,9 +102,14 @@ function resize() {
 }
 
 function showScreen(id) {
-    document.querySelectorAll('.screen').forEach(s => {
-        s.style.opacity = '0';
-        setTimeout(() => s.classList.add('hidden'), 300);
+    const screens = document.querySelectorAll('.screen');
+    screens.forEach(s => {
+        if (s.id !== id) {
+            s.style.opacity = '0';
+            setTimeout(() => {
+                if (s.style.opacity === '0') s.classList.add('hidden');
+            }, 300);
+        }
     });
     
     const target = document.getElementById(id);
