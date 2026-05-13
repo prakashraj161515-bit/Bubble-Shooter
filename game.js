@@ -2,46 +2,55 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 let width, height;
-const BUBBLE_RADIUS = 18; // Smaller ball size
+const BUBBLE_RADIUS = 20; 
 const COLUMNS = 9;
 const ROWS = 20;
-const COLORS = ['#ef4444', '#3b82f6', '#22c55e', '#eab308', '#a855f7'];
+
+// iOS System Colors
+const COLORS = [
+    '#FF3B30', // System Red
+    '#007AFF', // System Blue
+    '#34C759', // System Green
+    '#FF9500', // System Orange
+    '#AF52DE', // System Purple
+    '#FF2D55'  // System Pink
+];
 
 let grid = [];
 let ballsRemaining = 60;
 let currentLevel = 1;
-let coins = 100;
+let coins = 1250;
 let combo = 0;
-let fireballCharge = 0; // 0 to 6
-let currentBallColor = COLORS[0];
-let nextBallColor = COLORS[1];
+let fireballCharge = 0; 
+let currentBallColor = COLORS[1];
+let nextBallColor = COLORS[0];
 
 let activeBall = null;
 let isShooting = false;
 let mouseX, mouseY;
 
-// Mission State
-let missionTarget = 10; // Simple target for testing
-let missionCurrent = 0;
-let missionColor = COLORS[0];
-
 let highestLevelUnlocked = parseInt(localStorage.getItem('bubble_highest_level')) || 1;
 
 function init() {
-    generateMap(); // initial map generation
+    generateMap(); 
 
     showScreen('splash-screen');
     setTimeout(() => { 
         showScreen('home-screen'); 
-        generateMap(); // Ensure it renders correctly when shown
-    }, 3000);
+        generateMap(); 
+    }, 2000); // Reduced splash time for better UX
 
-    // Navigation (Basic prototype links)
-    document.getElementById('settings-trigger').onclick = () => alert("Settings opened");
+    // Navigation
+    document.getElementById('settings-trigger').onclick = () => {
+        // Haptic feel
+        document.getElementById('settings-trigger').style.transform = 'scale(0.9)';
+        setTimeout(() => document.getElementById('settings-trigger').style.transform = '', 100);
+        alert("Settings opened");
+    };
     
     document.getElementById('back-to-home').onclick = () => {
         showScreen('home-screen');
-        generateMap(); // Refresh on back
+        generateMap();
     };
 
     // Popup Close Logic
@@ -49,7 +58,7 @@ function init() {
         btn.onclick = (e) => e.target.closest('.overlay-dark').classList.add('hidden');
     });
 
-    // Game Inputs
+    // Desktop Inputs
     canvas.addEventListener('mousemove', (e) => {
         const rect = canvas.getBoundingClientRect();
         mouseX = e.clientX - rect.left;
@@ -60,27 +69,53 @@ function init() {
         if (!isShooting && ballsRemaining > 0) shoot();
     });
 
+    // iOS Touch Inputs
+    canvas.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        mouseX = touch.clientX - rect.left;
+        mouseY = touch.clientY - rect.top;
+        e.preventDefault();
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', (e) => {
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        mouseX = touch.clientX - rect.left;
+        mouseY = touch.clientY - rect.top;
+        e.preventDefault();
+    }, { passive: false });
+
+    canvas.addEventListener('touchend', (e) => {
+        if (!isShooting && ballsRemaining > 0) shoot();
+        e.preventDefault();
+    }, { passive: false });
+
     requestAnimationFrame(gameLoop);
 }
 
 function resize() {
     width = canvas.parentElement.clientWidth;
-    height = canvas.parentElement.clientHeight || 400; // Fallback height
+    height = canvas.parentElement.clientHeight || 400;
     canvas.width = width;
     canvas.height = height;
 }
 
 function showScreen(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-    document.getElementById(id).classList.remove('hidden');
+    document.querySelectorAll('.screen').forEach(s => {
+        s.style.opacity = '0';
+        setTimeout(() => s.classList.add('hidden'), 300);
+    });
+    
+    const target = document.getElementById(id);
+    target.classList.remove('hidden');
+    setTimeout(() => target.style.opacity = '1', 10);
 }
 
 function startGame() {
     showScreen('gameplay-ui');
-    resize(); // Fixes canvas coordinate bug!
+    resize();
     ballsRemaining = 60;
-    missionCurrent = 0;
-    missionTarget = 10 + (currentLevel * 5); // Simple scale
     
     currentBallColor = COLORS[Math.floor(Math.random() * COLORS.length)];
     nextBallColor = COLORS[Math.floor(Math.random() * COLORS.length)];
@@ -95,26 +130,25 @@ function generateMap() {
     if (!container) return;
     container.innerHTML = '';
     
-    // Generate 20 levels
     for (let i = 20; i >= 1; i--) {
         const node = document.createElement('div');
         node.className = 'level-node-blue';
         
-        // S-shape logic
         const row = Math.floor((i-1) / 3);
         const col = (i-1) % 3;
-        const xOffset = (row % 2 === 0) ? (col - 1) * 60 : (1 - col) * 60;
+        const xOffset = (row % 2 === 0) ? (col - 1) * 70 : (1 - col) * 70;
         node.style.transform = `translateX(${xOffset}px)`;
         
         if (i > highestLevelUnlocked) {
-            // Locked style
-            node.style.background = '#95a5a6';
-            node.style.borderColor = '#7f8c8d';
+            node.style.background = 'rgba(0,0,0,0.05)';
+            node.style.color = '#ccc';
             node.innerHTML = `🔒`;
         } else {
-            // Unlocked style
-            node.innerHTML = `${i} <div class="stars-under">⭐⭐⭐</div>`;
-            if (i === highestLevelUnlocked) node.style.borderColor = '#55efc4'; // Highlight current
+            node.innerHTML = `${i} <div class="stars-under">● ● ●</div>`;
+            if (i === highestLevelUnlocked) {
+                node.style.borderColor = 'var(--system-blue)';
+                node.style.boxShadow = '0 0 20px rgba(0,122,255,0.3)';
+            }
             
             node.onclick = () => {
                 currentLevel = i;
@@ -165,31 +199,32 @@ function getPos(x, y) {
     const startX = (width - (COLUMNS * BUBBLE_RADIUS * 2)) / 2 + BUBBLE_RADIUS;
     return {
         x: startX + x * BUBBLE_RADIUS * 2 + xOffset,
-        y: y * BUBBLE_RADIUS * 1.75 + BUBBLE_RADIUS + 5 // Reduced top margin so grid is higher
+        y: y * BUBBLE_RADIUS * 1.75 + BUBBLE_RADIUS + 20 
     };
 }
 
 function drawBubble(x, y, color, type) {
-    // Glossy Bubble
+    // Premium Minimalist Bubble
     ctx.beginPath();
-    ctx.arc(x, y, BUBBLE_RADIUS - 2, 0, Math.PI * 2);
+    ctx.arc(x, y, BUBBLE_RADIUS - 1, 0, Math.PI * 2);
     ctx.fillStyle = color;
     ctx.fill();
     
-    // Highlight
-    ctx.beginPath();
-    ctx.arc(x - 6, y - 6, 6, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    // Soft inner glow/highlight
+    const grad = ctx.createRadialGradient(x - 5, y - 5, 2, x, y, BUBBLE_RADIUS);
+    grad.addColorStop(0, 'rgba(255,255,255,0.3)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = grad;
     ctx.fill();
 
     if (type === 'ROCK') {
-        ctx.strokeStyle = '#444'; ctx.lineWidth = 4; ctx.stroke();
+        ctx.strokeStyle = '#8E8E93'; ctx.lineWidth = 3; ctx.stroke();
     }
 }
 
 function getBallCenter() {
     const ballEl = document.getElementById('active-ball');
-    if (!ballEl) return { x: width / 2, y: height - 50 };
+    if (!ballEl) return { x: width / 2, y: height - 120 };
     
     const rect = ballEl.getBoundingClientRect();
     const canvasRect = canvas.getBoundingClientRect();
@@ -201,28 +236,25 @@ function getBallCenter() {
 }
 
 function drawTrajectory() {
-    if (isShooting) return;
+    if (isShooting || !mouseX || !mouseY) return;
     
     const center = getBallCenter();
     const startX = center.x;
     const startY = center.y;
     
     let angle = Math.atan2(mouseY - startY, mouseX - startX);
-    
-    // Prevent shooting strictly downwards
     if (angle > 0) return;
     
-    ctx.setLineDash([5, 10]);
-    ctx.strokeStyle = 'rgba(255,255,255,0.6)'; 
-    ctx.lineWidth = 3;
+    ctx.setLineDash([4, 8]);
+    ctx.strokeStyle = 'rgba(0,0,0,0.2)'; 
+    ctx.lineWidth = 2;
     ctx.beginPath();
     
-    // Start drawing from the edge of the ball
     let currentX = startX + Math.cos(angle) * center.radius;
     let currentY = startY + Math.sin(angle) * center.radius;
     ctx.moveTo(currentX, currentY);
     
-    let remainingLength = 600; // max length of trajectory
+    let remainingLength = 800; 
     let bounces = 0;
     
     while (remainingLength > 0 && bounces < 3) {
@@ -232,26 +264,18 @@ function drawTrajectory() {
         let hitY = currentY + Math.sin(angle) * remainingLength;
         let didBounce = false;
         
-        // Check Left Wall collision
         if (Math.cos(angle) < 0) {
             let dx = BUBBLE_RADIUS - currentX;
             let d = dx / Math.cos(angle);
             if (d > 0 && d < remainingLength) {
-                hitDist = d;
-                hitX = BUBBLE_RADIUS;
-                hitY = currentY + Math.sin(angle) * d;
-                didBounce = true;
+                hitDist = d; hitX = BUBBLE_RADIUS; hitY = currentY + Math.sin(angle) * d; didBounce = true;
             }
         }
-        // Check Right Wall collision
         else if (Math.cos(angle) > 0) {
             let dx = (width - BUBBLE_RADIUS) - currentX;
             let d = dx / Math.cos(angle);
             if (d > 0 && d < remainingLength) {
-                hitDist = d;
-                hitX = width - BUBBLE_RADIUS;
-                hitY = currentY + Math.sin(angle) * d;
-                didBounce = true;
+                hitDist = d; hitX = width - BUBBLE_RADIUS; hitY = currentY + Math.sin(angle) * d; didBounce = true;
             }
         }
         
@@ -261,12 +285,9 @@ function drawTrajectory() {
             remainingLength -= hitDist;
             currentX = hitX;
             currentY = hitY;
-            angle = Math.PI - angle; // Reflect angle horizontally
-        } else {
-            break; // Reached end of line or ceiling
-        }
+            angle = Math.PI - angle;
+        } else { break; }
     }
-    
     ctx.stroke();
     ctx.setLineDash([]);
 }
@@ -283,8 +304,8 @@ function shoot() {
     activeBall = {
         x: startX,
         y: startY,
-        vx: Math.cos(angle) * 15,
-        vy: Math.sin(angle) * 15,
+        vx: Math.cos(angle) * 18,
+        vy: Math.sin(angle) * 18,
         color: currentBallColor
     };
     
@@ -295,20 +316,22 @@ function updateBall() {
     activeBall.x += activeBall.vx;
     activeBall.y += activeBall.vy;
 
-    // Wall bounce
-    if (activeBall.x < BUBBLE_RADIUS || activeBall.x > width - BUBBLE_RADIUS) {
+    if (activeBall.x <= BUBBLE_RADIUS) {
+        activeBall.x = BUBBLE_RADIUS;
+        activeBall.vx *= -1;
+    } else if (activeBall.x >= width - BUBBLE_RADIUS) {
+        activeBall.x = width - BUBBLE_RADIUS;
         activeBall.vx *= -1;
     }
 
     drawBubble(activeBall.x, activeBall.y, activeBall.color, 'NORMAL');
 
-    // Simple Collision (Improved)
     for (let y = 0; y < grid.length; y++) {
         for (let x = 0; x < grid[y].length; x++) {
             if (grid[y][x]) {
                 const pos = getPos(x, y);
                 const d = Math.sqrt((activeBall.x - pos.x)**2 + (activeBall.y - pos.y)**2);
-                if (d < BUBBLE_RADIUS * 1.8) {
+                if (d <= BUBBLE_RADIUS * 1.8) {
                     snap();
                     return;
                 }
@@ -316,11 +339,10 @@ function updateBall() {
         }
     }
     
-    if (activeBall.y < BUBBLE_RADIUS) snap();
+    if (activeBall.y <= BUBBLE_RADIUS + 20) snap();
 }
 
 function snap() {
-    // Find nearest empty spot
     let minDist = Infinity;
     let tx = 0, ty = 0;
     
@@ -328,6 +350,7 @@ function snap() {
         if (!grid[y]) grid[y] = [];
         const cols = y % 2 === 0 ? COLUMNS : COLUMNS - 1;
         for (let x = 0; x < cols; x++) {
+            if (grid[y][x]) continue;
             const pos = getPos(x, y);
             const d = Math.sqrt((activeBall.x - pos.x)**2 + (activeBall.y - pos.y)**2);
             if (d < minDist) {
@@ -366,25 +389,10 @@ function processMatches(x, y) {
         matches.forEach(([mx, my]) => {
             spawnPopEffect(getPos(mx, my));
             grid[my][mx] = null;
-            // Simple logic: any pop adds to progress for now
-            missionCurrent++;
         });
         
-        fireballCharge++;
-        if (fireballCharge >= 6) {
-            showReadyAnim();
-            fireballCharge = 6;
-        }
-        
-        showCombo(matches.length);
         checkFloating();
-        
-        // Win condition: All bubbles cleared
-        if (isGridEmpty()) {
-            winLevel();
-        }
-    } else {
-        fireballCharge = 0;
+        if (isGridEmpty()) winLevel();
     }
     updateUI();
 }
@@ -445,31 +453,9 @@ function spawnPopEffect(pos) {
     setTimeout(() => el.remove(), 300);
 }
 
-function showCombo(count) {
-    const el = document.createElement('div');
-    el.className = 'combo-popup';
-    el.innerText = `COMBO X${count}`;
-    el.style.left = '50%';
-    el.style.top = '40%';
-    document.getElementById('gameplay-ui').appendChild(el);
-    setTimeout(() => el.remove(), 1000);
-}
-
-function showReadyAnim() {
-    const el = document.createElement('div');
-    el.id = 'fireball-ready-anim';
-    el.innerText = 'READY!';
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 1000);
-}
-
 function updateUI() {
     document.getElementById('balls-text').innerText = ballsRemaining;
     
-    const targetBadge = document.querySelector('.target-badge');
-    if (targetBadge) targetBadge.innerText = `🎯 CLEAR ALL`;
-    
-    // Fill progress bar (based on remaining bubbles)
     let total = 0, current = 0;
     for (let y = 0; y < grid.length; y++) {
         if (!grid[y]) continue;
@@ -496,27 +482,21 @@ function winLevel() {
         localStorage.setItem('bubble_highest_level', highestLevelUnlocked);
     }
     
-    // Show win popup
     const winPopup = document.getElementById('level-complete-popup');
-    winPopup.querySelector('h2').innerHTML = `LEVEL ${currentLevel}<br>COMPLETED!`;
+    winPopup.querySelector('h2').innerText = `Level ${currentLevel} Completed`;
     winPopup.classList.remove('hidden');
     
-    // Wire up buttons
-    winPopup.querySelector('.btn-green-large').onclick = () => {
+    winPopup.querySelector('.btn-primary').onclick = () => {
         winPopup.classList.add('hidden');
         currentLevel++;
         startGame();
     };
     
-    winPopup.querySelector('.btn-blue-large').onclick = () => {
+    winPopup.querySelector('.btn-secondary').onclick = () => {
         winPopup.classList.add('hidden');
         showScreen('home-screen');
-        generateMap(); // Refresh map to show new unlocked level
+        generateMap();
     };
-}
-
-function swapBalls() {
-    // Basic swap implementation
 }
 
 function prepareNext() {

@@ -1,21 +1,37 @@
 :root {
-    --primary-blue: #0984e3;
-    --dark-blue: #2c3e50;
-    --light-blue: #74b9ff;
-    --green-btn: #55efc4;
-    --yellow-btn: #ffeaa7;
-    --bg-hills: linear-gradient(180deg, #81ecec 0%, #55efc4 100%);
-    --bg-game: linear-gradient(180deg, #74b9ff 0%, #a29bfe 100%);
-    --text-dark: #2d3436;
-    --white: #ffffff;
-    --shadow: 0 4px 10px rgba(0,0,0,0.2);
+    /* iOS System Colors */
+    --system-blue: #007AFF;
+    --system-red: #FF3B30;
+    --system-green: #34C759;
+    --system-orange: #FF9500;
+    --system-gray: #8E8E93;
+    --system-background: #F2F2F7;
+    --system-white: #FFFFFF;
+    
+    /* Glassmorphism */
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-blur: blur(20px);
+    --glass-border: rgba(255, 255, 255, 0.3);
+    
+    /* Background Mesh Gradient (iOS 15 style) */
+    --mesh-bg: radial-gradient(at 0% 0%, #74b9ff 0, transparent 60%),
+               radial-gradient(at 50% 10%, #a29bfe 0, transparent 60%),
+               radial-gradient(at 100% 0%, #ff7675 0, transparent 60%),
+               radial-gradient(at 10% 90%, #55efc4 0, transparent 60%),
+               radial-gradient(at 90% 90%, #fab1a0 0, transparent 60%),
+               radial-gradient(at 50% 50%, #dfe6e9 0, transparent 80%);
+               
+    --shadow: 0 8px 32px rgba(0,0,0,0.1);
+    --corner-radius: 12px;
+    --corner-radius-lg: 20px;
 }
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Outfit', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 body {
@@ -23,6 +39,8 @@ body {
     display: flex;
     justify-content: center;
     overflow: hidden;
+    height: 100vh;
+    color: #1d1d1f;
 }
 
 #game-container {
@@ -30,330 +48,376 @@ body {
     height: 100vh;
     max-width: 450px;
     position: relative;
-    background: var(--bg-hills);
+    background: var(--system-background);
+    background-image: var(--mesh-bg);
+    background-attachment: fixed;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
+/* Safe Area Support */
 .screen {
     position: absolute;
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
-    background-size: cover;
-    background-position: center;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    transition: opacity 0.3s ease;
 }
 
 .hidden { display: none !important; }
 
+/* Typography */
+h1, h2, h3 {
+    font-weight: 700;
+    letter-spacing: -0.022em;
+}
+
 /* Splash Screen */
 #splash-screen {
-    background: var(--bg-hills);
     align-items: center;
     justify-content: center;
+    background: var(--system-white);
+    z-index: 1000;
 }
 
 .logo-large {
-    font-size: 3rem;
-    font-weight: 900;
-    color: var(--primary-blue);
-    text-shadow: 2px 2px 0 #fff, -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 0 5px 15px rgba(0,0,0,0.3);
+    font-size: 2.5rem;
+    color: var(--system-blue);
     text-align: center;
-    line-height: 1;
 }
-.logo-large span { color: #f1c40f; display: block; }
 
-/* Top Bars (Home & Game) */
+/* iOS Navigation Bar */
 .top-bar-clean {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px;
-    background: rgba(255,255,255,0.4);
-    backdrop-filter: blur(5px);
-    z-index: 10;
+    padding: 10px 16px;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-bottom: 0.5px solid var(--glass-border);
+    z-index: 100;
 }
 
 .status-pill {
-    background: var(--white);
+    background: rgba(0,0,0,0.05);
     border-radius: 20px;
-    padding: 5px 15px;
+    padding: 4px 12px;
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-weight: 900;
-    color: var(--text-dark);
-    box-shadow: var(--shadow);
+    gap: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
 }
 
 /* Home Screen Map */
-#level-map {
-    background: var(--bg-hills);
-}
-
 .map-content {
     flex: 1;
-    position: relative;
     overflow-y: auto;
+    padding: 20px 0;
+    mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
 }
 
 .map-path {
-    position: relative;
-    padding: 50px 0;
     display: flex;
     flex-direction: column-reverse;
     align-items: center;
+    gap: 30px;
 }
 
 .level-node-blue {
-    width: 50px;
-    height: 50px;
-    background: var(--primary-blue);
+    width: 64px;
+    height: 64px;
+    background: var(--system-white);
     border-radius: 50%;
-    border: 3px solid #f1c40f;
-    color: white;
-    font-weight: 900;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: 20px 0;
+    font-weight: 700;
+    font-size: 1.2rem;
     box-shadow: var(--shadow);
+    color: var(--system-blue);
     position: relative;
+    border: 4px solid transparent;
+    transition: transform 0.2s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.level-node-blue:active {
+    transform: scale(0.9);
+}
+
+.level-node-blue[style*="border-color: var(--system-blue)"] {
+    animation: nodePulse 2s infinite;
+}
+
+@keyframes nodePulse {
+    0% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.4); }
+    70% { box-shadow: 0 0 0 15px rgba(0, 122, 255, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0); }
 }
 
 .level-node-blue .stars-under {
     position: absolute;
-    bottom: -15px;
-    font-size: 0.8rem;
+    bottom: -20px;
+    font-size: 0.7rem;
+    color: var(--system-orange);
 }
 
-/* Bottom Menu */
+/* iOS Tab Bar */
 .bottom-nav {
     display: flex;
     justify-content: space-around;
-    padding: 10px;
-    background: var(--white);
-    box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
-    border-radius: 20px 20px 0 0;
+    padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-top: 0.5px solid var(--glass-border);
 }
 
 .nav-item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: var(--primary-blue);
+    font-size: 0.65rem;
+    font-weight: 500;
+    color: var(--system-gray);
     background: none;
     border: none;
+    gap: 4px;
+    width: 20%;
+}
+
+.nav-item-active {
+    color: var(--system-blue);
 }
 
 .nav-item-icon {
-    width: 40px;
-    height: 40px;
-    background: #ecf0f1;
-    border-radius: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     font-size: 1.5rem;
-    margin-bottom: 5px;
+    margin-bottom: 2px;
 }
 
 /* Gameplay Screen */
-#gameplay-ui {
-    background: var(--bg-game);
-}
-
 .game-header {
     display: flex;
     align-items: center;
-    padding: 10px 15px;
-    gap: 15px;
+    padding: 10px 16px;
+    gap: 12px;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
 }
 
 .btn-pause {
-    background: var(--dark-blue);
-    color: white;
-    width: 40px;
-    height: 40px;
+    background: rgba(0,0,0,0.05);
+    color: var(--system-blue);
+    width: 36px;
+    height: 36px;
     border-radius: 10px;
     border: none;
-    font-weight: 900;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .score-bar {
     flex: 1;
-    height: 25px;
-    background: rgba(0,0,0,0.2);
-    border-radius: 15px;
-    position: relative;
+    height: 8px;
+    background: rgba(0,0,0,0.1);
+    border-radius: 4px;
     overflow: hidden;
 }
+
 .score-fill {
     height: 100%;
-    background: #f1c40f;
-    width: 50%;
+    background: var(--system-blue);
+    width: 0%;
+    transition: width 0.3s ease;
 }
 
 .target-badge {
-    background: var(--dark-blue);
-    color: white;
-    padding: 5px 10px;
-    border-radius: 15px;
-    font-weight: 900;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--system-gray);
 }
 
-/* Shooter & Powerups Wrapper */
+/* Shooter Area */
 .shooter-wrapper {
-    position: absolute;
-    bottom: 10px;
-    width: 100%;
+    padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-top: 0.5px solid var(--glass-border);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 15px;
-    z-index: 10;
+    gap: 16px;
 }
 
 .shooter-top {
-    position: relative;
     width: 100%;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .cannon-base {
     width: 60px;
     height: 60px;
-    background: transparent;
+    background: rgba(0,0,0,0.05);
+    border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
 .balls-left-badge {
-    position: absolute;
-    right: 20px;
-    bottom: 0;
-    width: 60px;
-    height: 60px;
-    background: var(--dark-blue);
-    border-radius: 50%;
-    color: white;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    font-weight: 900;
-    border: 3px solid var(--light-blue);
-    box-shadow: var(--shadow);
-}
-.balls-left-badge span { font-size: 1.2rem; }
-.balls-left-badge small { font-size: 0.6rem; }
-
-/* Horizontal Powerups */
-.powerups-horizontal {
-    display: flex;
-    flex-direction: row;
-    gap: 15px;
-    padding: 5px;
-}
-
-.p-icon {
-    width: 60px;
-    height: 45px;
-    background: white;
-    border-radius: 10px; /* Rectangular shape */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.3rem; /* Smaller icon to fit the box */
-    box-shadow: var(--shadow);
-    position: relative;
-    transition: transform 0.2s;
-}
-.p-icon:active { transform: scale(0.9); }
-
-/* Popups */
-.overlay-dark {
-    position: absolute;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 100;
-}
-
-.card-popup {
-    background: white;
+    background: var(--system-white);
+    padding: 8px 16px;
     border-radius: 20px;
-    width: 85%;
-    max-width: 350px;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    box-shadow: var(--shadow);
     text-align: center;
 }
 
-.card-header-dark {
-    background: var(--dark-blue);
-    padding: 20px;
+.balls-left-badge span {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--system-blue);
+}
+
+.balls-left-badge small {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--system-gray);
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+/* Powerups */
+.powerups-horizontal {
+    display: flex;
+    gap: 12px;
+}
+
+.p-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--system-white);
+    border-radius: 14px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.4rem;
+    box-shadow: var(--shadow);
+    position: relative;
+    transition: transform 0.1s;
+}
+
+.p-icon:active { transform: scale(0.92); }
+
+.p-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: var(--system-red);
     color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
 }
-.card-header-dark h2 { margin: 0; }
-.card-header-dark .stars-big { font-size: 2rem; color: #f1c40f; }
 
-.card-body { padding: 20px; }
+/* iOS Modals / Popups */
+.overlay-dark {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    justify-content: center;
+    align-items: flex-end; /* Action sheet style */
+    padding-bottom: 40px;
+    z-index: 1000;
+}
 
-.btn-green-large {
-    background: #0be881;
-    color: white;
-    border: none;
-    padding: 15px 30px;
-    border-radius: 25px;
-    font-weight: 900;
-    font-size: 1.1rem;
-    box-shadow: 0 5px 0 #05c46b;
+.card-popup {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: 24px;
+    width: 90%;
+    max-width: 400px;
+    padding: 24px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.card-header-dark h2 {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
+.stars-big {
+    font-size: 2.5rem;
+    margin-bottom: 16px;
+}
+
+/* iOS Style Buttons */
+.btn-ios {
     width: 100%;
-    margin-top: 10px;
+    padding: 16px;
+    border-radius: 14px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border: none;
+    margin-top: 12px;
+    transition: opacity 0.2s, transform 0.1s;
 }
 
-.btn-blue-large {
-    background: var(--primary-blue);
-    color: white;
-    border: none;
-    padding: 15px 30px;
-    border-radius: 25px;
-    font-weight: 900;
-    font-size: 1.1rem;
-    box-shadow: 0 5px 0 #0652dd;
-    width: 100%;
-    margin-top: 10px;
+.btn-ios:active {
+    opacity: 0.8;
+    transform: scale(0.98);
 }
 
-.btn-yellow-large {
-    background: #ffd32a;
-    color: var(--text-dark);
-    border: none;
-    padding: 15px 30px;
-    border-radius: 25px;
-    font-weight: 900;
-    font-size: 1.1rem;
-    box-shadow: 0 5px 0 #fbc531;
-    width: 100%;
-    margin-top: 10px;
-}
+.btn-primary { background: var(--system-blue); color: white; }
+.btn-secondary { background: rgba(0,0,0,0.05); color: var(--system-blue); }
+.btn-success { background: var(--system-green); color: white; }
+.btn-warning { background: var(--system-orange); color: white; }
 
 .close-round {
     position: absolute;
-    top: -10px;
-    right: -10px;
+    top: 16px;
+    right: 16px;
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    background: var(--dark-blue);
-    color: white;
-    border: 2px solid white;
-    font-weight: 900;
+    background: rgba(0,0,0,0.1);
+    border: none;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Pop Effect */
+.pop-effect {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background: white;
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    animation: popAnim 0.3s ease-out forwards;
+    pointer-events: none;
+    z-index: 50;
+}
+
+@keyframes popAnim {
+    0% { transform: translate(-50%, -50%) scale(0); opacity: 0.8; }
+    100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
 }
