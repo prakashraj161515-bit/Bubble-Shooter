@@ -32,7 +32,7 @@ let ballsRemaining = 60;
 let activeBall = null;
 let isShooting = false;
 let mouseX, mouseY;
-let activePowerup = null; // 'BOMB', 'FIREBALL', etc.
+let activePowerup = null;
 
 function init() {
     loadState();
@@ -42,6 +42,7 @@ function init() {
     showScreen('splash-screen');
     setTimeout(() => { 
         showScreen('home-screen'); 
+        generateMap(); // Refresh map
     }, 2000);
 
     // Inputs
@@ -67,29 +68,32 @@ function init() {
     requestAnimationFrame(gameLoop);
 }
 
-// PERSISTENCE
 function loadState() {
-    const saved = localStorage.getItem('bubble_shooter_state_v2');
+    const saved = localStorage.getItem('bubble_shooter_state_v3');
     if (saved) state = JSON.parse(saved);
 }
 function saveState() {
-    localStorage.setItem('bubble_shooter_state_v2', JSON.stringify(state));
+    localStorage.setItem('bubble_shooter_state_v3', JSON.stringify(state));
     updateUI();
 }
 
-// UI HELPERS
 function showScreen(id) {
     const screens = document.querySelectorAll('.screen');
     screens.forEach(s => {
         if (s.id !== id) {
             s.style.opacity = '0';
-            setTimeout(() => { if (s.style.opacity === '0') s.classList.add('hidden'); }, 300);
+            s.style.transform = 'scale(1.05)';
+            setTimeout(() => { if (s.style.opacity === '0') s.classList.add('hidden'); }, 400);
         }
     });
     const target = document.getElementById(id);
     target.classList.remove('hidden');
-    setTimeout(() => target.style.opacity = '1', 10);
+    setTimeout(() => {
+        target.style.opacity = '1';
+        target.style.transform = 'scale(1)';
+    }, 10);
 }
+
 function openPopup(id) { document.getElementById(id).classList.remove('hidden'); }
 function closePopup(id) { document.getElementById(id).classList.add('hidden'); }
 
@@ -107,18 +111,13 @@ function updateUI() {
 }
 
 function getColorName(hex) {
-    if (hex === COLORS[0]) return 'Red';
-    if (hex === COLORS[1]) return 'Blue';
-    if (hex === COLORS[2]) return 'Green';
-    if (hex === COLORS[3]) return 'Orange';
-    if (hex === COLORS[4]) return 'Purple';
-    return 'Pink';
+    const names = {'#FF3B30':'Red', '#007AFF':'Blue', '#34C759':'Green', '#FF9500':'Orange', '#AF52DE':'Purple', '#FF2D55':'Pink'};
+    return names[hex] || 'Bubbles';
 }
 
-// GAMEPLAY CORE
 function startGame(level) {
     state.currentLevel = level;
-    ballsRemaining = 60 - Math.floor(level / 5) * 2; // Difficulty scaling
+    ballsRemaining = 60 - Math.floor(level / 5) * 2;
     if (ballsRemaining < 30) ballsRemaining = 30;
     
     generateLevel(level);
@@ -137,15 +136,9 @@ function generateLevel(level) {
         const cols = y % 2 === 0 ? COLUMNS : COLUMNS - 1;
         for (let x = 0; x < cols; x++) {
             let type = 'NORMAL';
-            // Add special bubbles in later levels
             if (level > 5 && Math.random() < 0.05) type = 'ROCK';
             if (level > 10 && Math.random() < 0.05) type = 'CHAIN';
-            
-            grid[y][x] = {
-                type: type,
-                color: COLORS[Math.floor(Math.random() * COLORS.length)],
-                hits: type === 'CHAIN' ? 2 : 1
-            };
+            grid[y][x] = { type, color: COLORS[Math.floor(Math.random() * COLORS.length)], hits: type === 'CHAIN' ? 2 : 1 };
         }
     }
 }
@@ -157,19 +150,19 @@ function generateMap() {
     
     for (let i = 20; i >= 1; i--) {
         const node = document.createElement('div');
-        node.className = 'level-node-blue';
+        node.className = 'level-node';
         
         const row = Math.floor((i-1) / 3);
         const col = (i-1) % 3;
-        const xOffset = (row % 2 === 0) ? (col - 1) * 80 : (1 - col) * 80;
+        const xOffset = (row % 2 === 0) ? (col - 1) * 85 : (1 - col) * 85;
         node.style.transform = `translateX(${xOffset}px)`;
         
         if (i > state.highestLevel) {
-            node.style.opacity = '0.5';
+            node.classList.add('locked');
             node.innerHTML = `🔒`;
         } else {
-            node.innerHTML = `Level ${i} <div class="stars-under">● ● ●</div>`;
-            if (i === state.highestLevel) node.style.borderColor = 'var(--system-blue)';
+            if (i === state.highestLevel) node.classList.add('active');
+            node.innerHTML = `${i} <div class="stars-row"><span>★</span><span>★</span><span>★</span></div>`;
             node.onclick = () => startGame(i);
         }
         container.appendChild(node);
@@ -206,32 +199,25 @@ function drawGrid() {
 function getPos(x, y) {
     const xOffset = y % 2 !== 0 ? BUBBLE_RADIUS : 0;
     const startX = (width - (COLUMNS * BUBBLE_RADIUS * 2)) / 2 + BUBBLE_RADIUS;
-    return {
-        x: startX + x * BUBBLE_RADIUS * 2 + xOffset,
-        y: y * BUBBLE_RADIUS * 1.75 + BUBBLE_RADIUS + 40 
-    };
+    return { x: startX + x * BUBBLE_RADIUS * 2 + xOffset, y: y * BUBBLE_RADIUS * 1.75 + BUBBLE_RADIUS + 40 };
 }
 
 function drawBubble(x, y, color, type) {
     ctx.beginPath();
     ctx.arc(x, y, BUBBLE_RADIUS - 1, 0, Math.PI * 2);
-    
-    if (type === 'ROCK') ctx.fillStyle = '#8E8E93';
-    else if (type === 'CHAIN') ctx.fillStyle = color;
-    else ctx.fillStyle = color;
-    
+    ctx.fillStyle = (type === 'ROCK') ? '#8E8E93' : color;
     ctx.fill();
-
-    // Gloss
-    const grad = ctx.createRadialGradient(x - 6, y - 6, 2, x, y, BUBBLE_RADIUS);
-    grad.addColorStop(0, 'rgba(255,255,255,0.4)');
+    
+    // Gloss effect
+    const grad = ctx.createRadialGradient(x - 5, y - 5, 2, x, y, BUBBLE_RADIUS);
+    grad.addColorStop(0, 'rgba(255,255,255,0.3)');
     grad.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.fillStyle = grad;
     ctx.fill();
 
     if (type === 'CHAIN') {
         ctx.strokeStyle = 'white'; ctx.lineWidth = 2; ctx.stroke();
-        ctx.font = '10px Arial'; ctx.fillStyle = 'white'; ctx.textAlign='center'; ctx.fillText('⛓', x, y+4);
+        ctx.fillStyle = 'white'; ctx.font = '10px Arial'; ctx.textAlign='center'; ctx.fillText('⛓', x, y+4);
     }
 }
 
@@ -241,12 +227,13 @@ function drawTrajectory() {
     let angle = Math.atan2(mouseY - center.y, mouseX - center.x);
     if (angle > 0) return;
 
-    ctx.setLineDash([5, 8]);
-    ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+    ctx.setLineDash([4, 6]);
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+    ctx.lineWidth = 2;
     ctx.beginPath();
     let curX = center.x, curY = center.y;
     let dx = Math.cos(angle) * 10, dy = Math.sin(angle) * 10;
-    for(let i=0; i<40; i++) {
+    for(let i=0; i<30; i++) {
         curX += dx; curY += dy;
         if (curX < BUBBLE_RADIUS || curX > width - BUBBLE_RADIUS) dx *= -1;
         if (i % 2 === 0) ctx.lineTo(curX, curY);
@@ -257,7 +244,11 @@ function drawTrajectory() {
 }
 
 function getBallCenter() {
-    return { x: width / 2, y: height - 120, radius: BUBBLE_RADIUS };
+    const ballEl = document.getElementById('active-ball');
+    if (!ballEl) return { x: width / 2, y: height - 120, radius: BUBBLE_RADIUS };
+    const rect = ballEl.getBoundingClientRect();
+    const canvasRect = canvas.getBoundingClientRect();
+    return { x: rect.left + rect.width / 2 - canvasRect.left, y: rect.top + rect.height / 2 - canvasRect.top, radius: BUBBLE_RADIUS };
 }
 
 function shoot() {
@@ -276,7 +267,6 @@ function shoot() {
         color: activePowerup === 'RAINBOW' ? 'RAINBOW' : document.getElementById('active-ball').style.backgroundColor,
         powerup: activePowerup
     };
-    
     activePowerup = null;
     updateUI();
 }
@@ -284,23 +274,15 @@ function shoot() {
 function updateBall() {
     activeBall.x += activeBall.vx;
     activeBall.y += activeBall.vy;
-
-    // Walls
     if (activeBall.x <= BUBBLE_RADIUS || activeBall.x >= width - BUBBLE_RADIUS) activeBall.vx *= -1;
-
-    // Drawing the shooting ball
     drawBubble(activeBall.x, activeBall.y, activeBall.color === 'RAINBOW' ? '#ffffff' : activeBall.color, 'NORMAL');
 
-    // Collision
     for (let y = 0; y < grid.length; y++) {
         for (let x = 0; x < grid[y].length; x++) {
             if (grid[y][x]) {
                 const pos = getPos(x, y);
                 const d = Math.sqrt((activeBall.x - pos.x)**2 + (activeBall.y - pos.y)**2);
-                if (d <= BUBBLE_RADIUS * 1.8) {
-                    snap();
-                    return;
-                }
+                if (d <= BUBBLE_RADIUS * 1.8) { snap(); return; }
             }
         }
     }
@@ -325,41 +307,28 @@ function snap() {
             }
         }
         grid[ty][tx] = { type: 'NORMAL', color: activeBall.color, hits: 1 };
-        
         if (activeBall.powerup === 'BOMB') processBomb(tx, ty);
         else processMatches(tx, ty);
     }
-    
     activeBall = null;
     isShooting = false;
     prepareNext();
 }
 
-// POWERUP LOGIC
 function processBomb(tx, ty) {
-    triggerShake();
     const neighbors = getNeighbors(tx, ty);
     neighbors.push([tx, ty]);
-    neighbors.forEach(([nx, ny]) => {
-        if (grid[ny] && grid[ny][nx]) {
-            spawnPopEffect(getPos(nx, ny));
-            grid[ny][nx] = null;
-        }
-    });
+    neighbors.forEach(([nx, ny]) => { if (grid[ny] && grid[ny][nx]) { grid[ny][nx] = null; } });
     checkFloating();
     if (isGridEmpty()) winLevel();
 }
 
 function processFireball(ax, ay) {
-    triggerShake();
     for (let y = 0; y < grid.length; y++) {
         for (let x = 0; x < grid[y].length; x++) {
             if (grid[y][x]) {
                 const pos = getPos(x, y);
-                if (Math.abs(pos.x - ax) < BUBBLE_RADIUS * 2) {
-                    spawnPopEffect(pos);
-                    grid[y][x] = null;
-                }
+                if (Math.abs(pos.x - ax) < BUBBLE_RADIUS * 2.5) { grid[y][x] = null; }
             }
         }
     }
@@ -368,152 +337,63 @@ function processFireball(ax, ay) {
 }
 
 function usePowerup(type) {
-    if (state.powerups[type] > 0) {
-        state.powerups[type]--;
-        activePowerup = type;
-        saveState();
-    } else {
-        openPopup('shop-popup');
-    }
+    if (state.powerups[type] > 0) { state.powerups[type]--; activePowerup = type; saveState(); }
+    else { openPopup('shop-popup'); }
 }
 
-// MATCHING & PHYSICS
 function processMatches(x, y) {
     const bubble = grid[y][x];
-    if (bubble.color === 'RAINBOW') {
-        // Rainbow logic: match neighbors color
-        const n = getNeighbors(x, y).find(([nx, ny]) => grid[ny] && grid[ny][nx]);
-        if (n) bubble.color = grid[n[1]][n[0]].color;
-    }
-    
     let matches = [[x, y]];
     let queue = [[x, y]];
     let visited = new Set([`${x},${y}`]);
-
     while (queue.length > 0) {
         let [cx, cy] = queue.shift();
         let neighbors = getNeighbors(cx, cy);
         for (let [nx, ny] of neighbors) {
             if (grid[ny] && grid[ny][nx] && grid[ny][nx].color === bubble.color && !visited.has(`${nx},${ny}`)) {
-                visited.add(`${nx},${ny}`);
-                matches.push([nx, ny]);
-                queue.push([nx, ny]);
+                visited.add(`${nx},${ny}`); matches.push([nx, ny]); queue.push([nx, ny]);
             }
         }
     }
-
     if (matches.length >= 3) {
         matches.forEach(([mx, my]) => {
-            if (grid[my][mx].type === 'CHAIN' && grid[my][mx].hits > 1) {
-                grid[my][mx].hits--;
-            } else {
-                spawnPopEffect(getPos(mx, my));
-                if (grid[my][mx].color === state.missions.color) {
-                    state.missions.current++;
-                    if (state.missions.current >= state.missions.target) completeMission();
-                }
-                grid[my][mx] = null;
-            }
+            if (grid[my][mx].color === state.missions.color) { state.missions.current++; if (state.missions.current >= state.missions.target) completeMission(); }
+            grid[my][mx] = null;
         });
         checkFloating();
         if (isGridEmpty()) winLevel();
     }
+    updateUI();
 }
 
 function getNeighbors(x, y) {
-    const offsets = y % 2 === 0 
-        ? [[1,0], [-1,0], [0,1], [0,-1], [-1,1], [-1,-1]]
-        : [[1,0], [-1,0], [0,1], [0,-1], [1,1], [1,-1]];
+    const offsets = y % 2 === 0 ? [[1,0], [-1,0], [0,1], [0,-1], [-1,1], [-1,-1]] : [[1,0], [-1,0], [0,1], [0,-1], [1,1], [1,-1]];
     return offsets.map(([ox, oy]) => [x + ox, y + oy]);
 }
 
 function checkFloating() {
     let connected = new Set();
     let queue = [];
-    for (let x = 0; x < COLUMNS; x++) {
-        if (grid[0] && grid[0][x]) {
-            connected.add(`0,${x}`);
-            queue.push([x, 0]);
-        }
-    }
+    for (let x = 0; x < COLUMNS; x++) { if (grid[0] && grid[0][x]) { connected.add(`0,${x}`); queue.push([x, 0]); } }
     while (queue.length > 0) {
         let [cx, cy] = queue.shift();
         let neighbors = getNeighbors(cx, cy);
         for (let [nx, ny] of neighbors) {
-            if (grid[ny] && grid[ny][nx] && !connected.has(`${nx},${ny}`)) {
-                connected.add(`${nx},${ny}`);
-                queue.push([nx, ny]);
-            }
+            if (grid[ny] && grid[ny][nx] && !connected.has(`${nx},${ny}`)) { connected.add(`${nx},${ny}`); queue.push([nx, ny]); }
         }
     }
     for (let y = 0; y < grid.length; y++) {
         for (let x = 0; x < grid[y].length; x++) {
-            if (grid[y][x] && grid[y][x].type !== 'ROCK' && !connected.has(`${x},${y}`)) {
-                grid[y][x] = null;
-            }
+            if (grid[y][x] && grid[y][x].type !== 'ROCK' && !connected.has(`${x},${y}`)) { grid[y][x] = null; }
         }
     }
 }
 
 function isGridEmpty() {
     for (let y = 0; y < grid.length; y++) {
-        for (let x = 0; x < grid[y].length; x++) {
-            if (grid[y][x] && grid[y][x].type !== 'ROCK') return false;
-        }
+        for (let x = 0; x < grid[y].length; x++) { if (grid[y][x] && grid[y][x].type !== 'ROCK') return false; }
     }
     return true;
-}
-
-// FEEDBACK & EFFECTS
-function spawnPopEffect(pos) {
-    const el = document.createElement('div');
-    el.className = 'pop-effect';
-    el.style.left = pos.x + 'px';
-    el.style.top = pos.y + 'px';
-    document.getElementById('gameplay-ui').appendChild(el);
-    setTimeout(() => el.remove(), 300);
-}
-
-function triggerShake() {
-    const container = document.getElementById('game-container');
-    container.classList.add('shake');
-    setTimeout(() => container.classList.remove('shake'), 400);
-}
-
-// META-GAME
-function spinWheel() {
-    const btn = document.getElementById('spin-btn');
-    if (btn.disabled) return;
-    btn.disabled = true;
-    
-    const wheel = document.getElementById('wheel');
-    const randDeg = 1800 + Math.floor(Math.random() * 360);
-    wheel.style.transform = `rotate(${randDeg}deg)`;
-    
-    setTimeout(() => {
-        const actualDeg = randDeg % 360;
-        // Simple mapping based on sectors
-        if (actualDeg < 60) state.coins += 100;
-        else if (actualDeg < 120) state.powerups.BOMB++;
-        else if (actualDeg < 180) state.coins += 50;
-        else if (actualDeg < 240) state.powerups.FIREBALL++;
-        else if (actualDeg < 300) state.coins += 10;
-        else state.powerups.RAINBOW++;
-        
-        saveState();
-        alert("You won a prize!");
-        btn.disabled = false;
-    }, 4000);
-}
-
-function buyItem(type, cost) {
-    if (state.coins >= cost) {
-        state.coins -= cost;
-        state.powerups[type] += 3;
-        saveState();
-    } else {
-        alert("Not enough coins!");
-    }
 }
 
 function completeMission() {
@@ -522,31 +402,21 @@ function completeMission() {
     state.missions.current = 0;
     state.missions.color = COLORS[Math.floor(Math.random() * COLORS.length)];
     saveState();
-    alert("Mission Complete! +100🪙");
 }
 
 function winLevel() {
     state.coins += 50;
     if (state.currentLevel === state.highestLevel) state.highestLevel++;
     saveState();
-    
-    const popup = document.getElementById('level-complete-popup');
-    popup.classList.remove('hidden');
-    document.getElementById('next-level-btn').onclick = () => {
-        closePopup('level-complete-popup');
-        startGame(state.currentLevel + 1);
-    };
+    openPopup('level-complete-popup');
+    document.getElementById('next-level-btn').onclick = () => { closePopup('level-complete-popup'); startGame(state.currentLevel + 1); };
 }
 
 function prepareNext() {
     const active = document.getElementById('active-ball');
     const next = document.getElementById('next-ball');
-    
-    if (next.style.backgroundColor) {
-        active.style.backgroundColor = next.style.backgroundColor;
-    } else {
-        active.style.backgroundColor = COLORS[Math.floor(Math.random() * COLORS.length)];
-    }
+    if (next.style.backgroundColor) active.style.backgroundColor = next.style.backgroundColor;
+    else active.style.backgroundColor = COLORS[Math.floor(Math.random() * COLORS.length)];
     next.style.backgroundColor = COLORS[Math.floor(Math.random() * COLORS.length)];
     updateUI();
 }
@@ -557,6 +427,11 @@ function swapBalls() {
     const temp = active.style.backgroundColor;
     active.style.backgroundColor = next.style.backgroundColor;
     next.style.backgroundColor = temp;
+}
+
+function buyItem(type, cost) {
+    if (state.coins >= cost) { state.coins -= cost; state.powerups[type] += 3; saveState(); }
+    else { alert("Not enough coins!"); }
 }
 
 window.onload = init;
