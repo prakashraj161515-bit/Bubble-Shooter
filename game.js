@@ -5,7 +5,8 @@
 // ══════════════════════════════════════════
 
 let canvas, ctx, scoreVal, currentBallEl, nextBallEl, goalText;
-const R = 19, rowHeight = 34, SPEED = 16;
+const R = 18, rowHeight = 32, SPEED = 16;
+
 
 const COLORS = ['#ff4d4d', '#ffcc00', '#33cc33', '#3399ff', '#cc33ff', '#ff8c1a'];
 
@@ -85,13 +86,14 @@ function startGame() {
     S.ammo = 50; S.score = 2450; S.objective.count = 0;
     bubbles = [];
     let rows = 11; 
-    const spacingX = 38.5; 
-    const spacingY = 33; 
+    const spacingX = 36; 
+    const spacingY = 31; 
+    const sideMargin = (390 - (9 * spacingX + R*2)) / 2;
     
     for (let row = 0; row < rows; row++) {
         const isOffset = row % 2 !== 0;
         const width = isOffset ? 9 : 10;
-        const startX = isOffset ? (spacingX/2) + 2.5 : 2.5; 
+        const startX = sideMargin + (isOffset ? spacingX/2 : 0); 
         
         for (let col = 0; col < width; col++) {
             const x = startX + col * spacingX;
@@ -102,6 +104,7 @@ function startGame() {
     prepNext();
     updateUI();
 }
+
 
 
 
