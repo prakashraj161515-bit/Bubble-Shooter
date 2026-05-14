@@ -1,7 +1,7 @@
 'use strict';
 // ══════════════════════════════════════════
-//  BUBBLE SHOOTER PREMIUM — game.js v19
-//  Forest Map Engine | Stars & Locks Logic
+//  BUBBLE SHOOTER PREMIUM — game.js v20
+//  EXACT COPY — S-Curve Map Rendering
 // ══════════════════════════════════════════
 
 let canvas, ctx, scoreVal, currentBallEl, nextBallEl, goalText;
@@ -11,7 +11,7 @@ const COLORS = ['#ff4d4d', '#ffcc00', '#33cc33', '#3399ff', '#cc33ff', '#ff8c1a'
 let S = {
     score: 2450, coins: 1250, ammo: 50,
     currentLevel: Number(localStorage.getItem('bs_level')) || 1,
-    unlockedLevels: Number(localStorage.getItem('bs_unlocked')) || 4, // Default to 4 unlocked
+    unlockedLevels: Number(localStorage.getItem('bs_unlocked')) || 4,
     consecutiveFails: 0,
     objective: { count: 0, total: 6 },
     settings: { sound: true, music: true }
@@ -32,40 +32,42 @@ function showScreen(id) {
     updateUI();
 }
 
-// ──────── RENDER FOREST MAP (EXACT COPY) ────────
+// ──────── RENDER MAP (THE S-CURVE FIX) ────────
 function renderMap() {
     const path = document.getElementById('levelPath');
     if (!path) return;
     path.innerHTML = '';
     
-    // We show a scrollable list of levels
-    const totalLevelsToShow = Math.min(S.unlockedLevels + 15, 5000);
+    const totalLevels = Math.min(S.unlockedLevels + 15, 5000);
+    const center = 155; // Center of the 390px width minus node half-width
+    const amplitude = 100; // How far it zig-zags
+    const frequency = 250; // Vertical distance for a full wave
     
-    for (let i = 1; i <= totalLevelsToShow; i++) {
+    for (let i = 1; i <= totalLevels; i++) {
         const node = document.createElement('div');
-        node.className = 'map-node-premium';
+        node.className = 'node-pro';
         
-        if (i < S.unlockedLevels) {
-            node.classList.add('done');
-            node.innerHTML = `<span>${i}</span><div class="stars-under">⭐⭐⭐</div>`;
-        } else if (i === S.unlockedLevels) {
-            node.classList.add('active'); // No 'done' class, uses yellow/stars style
-            node.classList.add('done'); // Actually active in screenshot is green-ish but yellow in CSS
-            node.innerHTML = `<span>${i}</span><div class="stars-under">⭐⭐⭐</div>`;
-        } else {
-            node.classList.add('locked');
-            node.innerHTML = `<span>${i}</span><div class="locks-under">🔒🔒🔒</div>`;
-        }
+        // Calculate S-curve position
+        const yPos = i * 140; // Spacing between levels
+        const xPos = center + Math.sin(yPos / frequency) * amplitude;
+        
+        node.style.top = `${yPos}px`;
+        node.style.left = `${xPos}px`;
         
         if (i <= S.unlockedLevels) {
+            node.classList.add('unlocked');
+            node.innerHTML = `<span>${i}</span><div class="stars-row">⭐⭐⭐</div>`;
             node.onclick = () => { S.currentLevel = i; startGame(); };
+        } else {
+            node.innerHTML = `<span>${i}</span><div class="locks-row">🔒🔒🔒</div>`;
         }
+        
         path.appendChild(node);
     }
     
     // Auto-scroll to active level
     setTimeout(() => {
-        const activeNode = document.querySelector('.map-node-premium.active');
+        const activeNode = document.querySelectorAll('.node-pro.unlocked')[S.unlockedLevels-1];
         if (activeNode) activeNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 100);
 }
@@ -87,7 +89,6 @@ function init() {
     setTimeout(() => {
         const splash = document.getElementById('splashScreen');
         if(splash) {
-            splash.style.transition = 'opacity 0.5s';
             splash.style.opacity = '0';
             setTimeout(() => { splash.style.display = 'none'; showScreen('mapScreen'); }, 500);
         }
@@ -97,10 +98,6 @@ function init() {
         const r = canvas.getBoundingClientRect(); mouseX = e.clientX - r.left; mouseY = e.clientY - r.top; 
     });
     canvas.addEventListener('click', shoot);
-    canvas.addEventListener('touchstart', e => { 
-        e.preventDefault(); const r = canvas.getBoundingClientRect(); 
-        mouseX = e.touches[0].clientX - r.left; mouseY = e.touches[0].clientY - r.top; shoot(); 
-    }, {passive:false});
 }
 
 function startGame() {
@@ -129,12 +126,12 @@ function swapBubbles() {
 }
 
 function shoot() {
-    if (projectile || !isGameActive || S.ammo <= 0) return;
+    if (projectile || !isGameActive) return;
     initAudio();
     const sx = canvas.width / 2, sy = canvas.height - 40;
     const ang = Math.atan2(mouseY - sy, mouseX - sx); if (ang > 0) return;
     projectile = { x: sx, y: sy, color: activeColor, vx: Math.cos(ang) * SPEED, vy: Math.sin(ang) * SPEED };
-    S.ammo--; prepNext(); updateUI();
+    prepNext(); updateUI();
 }
 
 function snap() {
@@ -161,15 +158,16 @@ function snap() {
         bubbles.filter(b => b.y < 60 && b.alive).forEach(mark);
         bubbles.forEach(b => { if(b.alive && !con.has(b)) b.falling = true; });
     }
-    projectile = null; checkEnd(); updateUI();
+    projectile = null;
+    checkEnd(); updateUI();
 }
 
 function checkEnd() {
     const remaining = bubbles.filter(b => b.alive);
     if (remaining.length === 0 || S.objective.count >= S.objective.total) {
-        S.coins += 100; if (S.currentLevel === S.unlockedLevels) S.unlockedLevels++;
+        if (S.currentLevel === S.unlockedLevels) S.unlockedLevels++;
         alert("LEVEL CLEAR! 🎉"); showScreen('mapScreen');
-    } else if (S.ammo <= 0 && !projectile) { alert("OUT OF BALLS! ❌"); showScreen('mapScreen'); }
+    }
 }
 
 function updateUI() {
@@ -192,7 +190,6 @@ function drawBall(x, y, color, r = R) {
     const grad = ctx.createRadialGradient(x-r*0.3, y-r*0.3, r*0.1, x, y, r);
     grad.addColorStop(0, '#fff'); grad.addColorStop(0.2, color); grad.addColorStop(1, shadeColor(color, -40));
     ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fillStyle = grad; ctx.fill();
-    ctx.beginPath(); ctx.ellipse(x-r*0.4, y-r*0.4, r*0.3, r*0.15, Math.PI/4, 0, Math.PI*2); ctx.fillStyle='rgba(255,255,255,0.3)'; ctx.fill();
     ctx.restore();
 }
 
@@ -236,5 +233,5 @@ function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || win
 function playSFX(type) { if (!audioCtx) return; const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.connect(g); g.connect(audioCtx.destination); if(type === 'pop') { o.frequency.setValueAtTime(600, audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.1); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1); o.start(); o.stop(audioCtx.currentTime + 0.1); } }
 function saveState() { localStorage.setItem('bs_level', S.currentLevel); localStorage.setItem('bs_unlocked', S.unlockedLevels); }
 function loadState() { const l = localStorage.getItem('bs_level'); if(l) S.currentLevel = Number(l); const u = localStorage.getItem('bs_unlocked'); if(u) S.unlockedLevels = Number(u); }
-function toggleShop() { alert("SHOP OPENING..."); }
+function toggleShop() { alert("SHOP COMING SOON!"); }
 document.addEventListener('DOMContentLoaded', init);

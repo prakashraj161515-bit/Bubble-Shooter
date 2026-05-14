@@ -18,39 +18,39 @@
     <h1 style="font-size: 35px; font-weight: 900; color: #ffcf3e; text-shadow: 0 6px 0 #d49e00;">SHOOTER</h1>
   </div>
 
-  <!-- FOREST MAP SCREEN (EXACT COPY) -->
+  <!-- PIXEL-PERFECT MAP (FOREST THEME) -->
   <div id="mapScreen" class="screen hidden map-screen">
     
-    <header class="map-top-bar">
-      <div class="map-pill">❤️ 5 <span>FULL</span></div>
-      <div class="map-pill coins">🪙 <span id="map-coins">1250</span> <div class="add-btn">+</div></div>
-      <button class="gear-btn" onclick="showScreen('settingsScreen')">⚙️</button>
+    <header class="map-header-pro">
+      <div class="hud-item">❤️ 5 <span>FULL</span></div>
+      <div class="hud-item gold">🪙 <span id="map-coins">1250</span> <div class="plus-btn">+</div></div>
+      <button class="set-btn" onclick="showScreen('settingsScreen')">⚙️</button>
     </header>
 
-    <div class="world-card-wrap">
-      <div class="world-card">
+    <div class="world-banner">
+      <div class="banner-card">
         <h2>GREEN FOREST</h2>
-        <div class="world-progress">
-          <div class="fill"></div>
+        <div class="prog-container">
+          <div class="prog-fill"></div>
           <span style="z-index: 1;">30/90</span>
         </div>
       </div>
     </div>
 
-    <div class="map-scroller" id="mapScrollArea">
-      <div class="winding-path" id="levelPath">
-        <!-- Nodes generated via JS -->
+    <div class="map-view" id="mapScrollArea">
+      <div class="path-canvas" id="levelPath">
+        <!-- Nodes generated via JS to follow the 'S' curve exactly -->
       </div>
     </div>
 
-    <footer class="bottom-tab-bar">
-      <div class="tab-item" onclick="showScreen('splashScreen')"><i>🏠</i><span>HOME</span></div>
-      <div class="tab-item active"><i>🗺️</i><span>MAP</span></div>
-      <div class="tab-item" onclick="toggleShop()"><i>🛒</i><span>SHOP</span></div>
+    <footer class="bottom-nav-pro">
+      <div class="nav-item" onclick="showScreen('splashScreen')"><i>🏠</i>HOME</div>
+      <div class="nav-item active"><i>🗺️</i>MAP</div>
+      <div class="nav-item" onclick="toggleShop()"><i>🛒</i>SHOP</div>
     </footer>
   </div>
 
-  <!-- GAMEPLAY SCREEN (PREVIOUS PIXEL-PERFECT FIX) -->
+  <!-- GAMEPLAY SCREEN (PIXEL-PERFECT) -->
   <div id="gameplayScreen" class="screen hidden game-play-bg">
     <header class="top-hud">
       <button class="hud-btn" onclick="showScreen('mapScreen')">⏸</button>
