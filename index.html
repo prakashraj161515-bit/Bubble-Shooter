@@ -12,69 +12,75 @@
 
 <div class="game-container">
 
-  <!-- FOREST MAP SCREEN (RESTORED) -->
+  <!-- MAP SCREEN (RESTORED FOREST) -->
   <div id="mapScreen" class="screen map-screen">
-    <header class="map-top-bar">
-      <div class="map-pill">❤️ 5 <span>FULL</span></div>
-      <div class="map-pill" style="color: #ffb300;">🪙 <span id="map-coins">1250</span></div>
-      <button class="hud-round-btn" style="width: 45px; height: 45px;" onclick="showScreen('settingsScreen')">⚙️</button>
+    <header class="hud-top-premium" style="background:#fff; padding: 50px 20px 15px;">
+      <div class="hud-item" style="background:#eef2ff; padding:8px 15px; border-radius:20px; font-weight:800;">❤️ 5 <span>FULL</span></div>
+      <div class="hud-item" style="background:#eef2ff; padding:8px 15px; border-radius:20px; font-weight:800; color:#ffb300;">🪙 <span id="map-coins">1250</span></div>
+      <button class="hud-btn-p" style="width:45px; height:45px;" onclick="showScreen('settingsScreen')">⚙️</button>
     </header>
-
-    <div class="map-scroller" id="mapScrollArea">
-      <div class="path-list" id="levelPath">
-        <!-- 100 levels generated via JS -->
-      </div>
-    </div>
-
-    <footer class="bottom-tab-bar">
-      <div class="tab-item"><i>🏠</i><span>HOME</span></div>
-      <div class="tab-item active"><i>🗺️</i><span>MAP</span></div>
-      <div class="tab-item"><i>🛒</i><span>SHOP</span></div>
+    <div class="map-scroller" id="mapScrollArea"><div id="levelPath" style="position:relative;"></div></div>
+    <footer style="height:90px; background:#fff; display:flex; justify-content:space-around; align-items:center; border-top:1px solid #eee;">
+      <div style="text-align:center; color:#aaa; font-size:10px; font-weight:800;"><i>🏠</i><br>HOME</div>
+      <div style="text-align:center; color:#7b6cff; font-size:10px; font-weight:800;"><i>🗺️</i><br>MAP</div>
+      <div style="text-align:center; color:#aaa; font-size:10px; font-weight:800;"><i>🛒</i><br>SHOP</div>
     </footer>
   </div>
 
-  <!-- GAMEPLAY SCREEN (EXACT COPY) -->
+  <!-- GAMEPLAY SCREEN (THE PHOTO CLONE) -->
   <div id="gameplayScreen" class="screen hidden play-bg">
-    <header class="hud-top">
-      <button class="hud-round-btn" onclick="showScreen('mapScreen')">⏸</button>
-      <div class="panel-score">
-        <span>SCORE</span>
+    
+    <header class="hud-top-premium">
+      <button class="hud-btn-p" onclick="showScreen('mapScreen')">⏸</button>
+      <div class="score-box-p">
+        <span style="font-size:9px; font-weight:800; color:#aaa;">SCORE</span>
         <h3 id="score">2,450</h3>
-        <div class="star-track"><div class="fill"></div></div>
+        <div class="score-bar-p"><div class="fill"></div></div>
       </div>
-      <div class="panel-goal">
+      <div class="goal-box-p">
         <div style="text-align: center;">
           <span style="font-size: 8px; font-weight: 800; color: #aaa;">GOAL</span>
           <div style="display: flex; align-items: center; gap: 8px;">
-            <div style="width: 30px; height: 30px; background: radial-gradient(circle at 10px 10px, #e1baff, #c76bff); border-radius: 50%;"></div>
-            <h3 id="goal-val" style="font-size: 20px; color: #4a4a8c;">0/6</h3>
+            <div class="goal-icon-p"></div>
+            <h3 id="goal-val" style="font-size: 22px; color: #4a4a8c;">0/6</h3>
           </div>
         </div>
       </div>
-      <button class="hud-round-btn" onclick="showScreen('settingsScreen')">⚙️</button>
+      <button class="hud-btn-p" onclick="showScreen('settingsScreen')">⚙️</button>
     </header>
 
-    <canvas id="gameCanvas" width="390" height="450"></canvas>
+    <canvas id="gameCanvas" width="390" height="480"></canvas>
 
-    <footer class="hud-bottom">
-      <div class="wave-top"></div>
-      <div class="hud-controls">
-        <div class="powerup-box">
-          <img src="https://img.icons8.com/color/96/bomb.png" alt="bomb">
-          <span class="badge-num">2</span>
+    <footer class="hud-bottom-p">
+      <!-- THE SMOOTH WAVE SVG -->
+      <svg class="wave-svg" viewBox="0 0 390 60" preserveAspectRatio="none">
+        <path d="M0,60 L0,40 C0,40 60,0 130,0 C200,0 260,40 320,40 C380,40 390,40 390,40 L390,60 Z" />
+      </svg>
+      
+      <div class="controls-wrap-p">
+        <!-- Powerup Bomb -->
+        <div class="pu-box-p">
+          <img src="https://img.icons8.com/plasticine/200/bomb.png" alt="bomb">
+          <span class="pu-badge-p">2</span>
         </div>
-        <div class="main-cannon">
-          <div id="currentBall" style="width: 70px; height: 70px; border-radius: 50%;"></div>
-          <div style="position: absolute; bottom: -5px; right: 0; width: 40px; height: 40px; background: #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 2px solid #eef2ff;" onclick="swapBubbles()">
-            <div id="nextBall" style="width: 25px; height: 25px; border-radius: 50%;"></div>
+
+        <!-- Main Cannon -->
+        <div class="cannon-wrap-p">
+          <div id="currentBall" class="cannon-ball-p"></div>
+          <div class="swap-box-p" onclick="swapBubbles()">
+            <div id="nextBall" class="swap-ball-p"></div>
+            <img class="swap-icon-p" src="https://img.icons8.com/ios-glyphs/60/7b6cff/synchronize.png" alt="swap">
           </div>
         </div>
-        <div class="powerup-box">
-          <img src="https://img.icons8.com/color/96/rainbow.png" alt="rainbow">
-          <span class="badge-num">1</span>
+
+        <!-- Powerup Rainbow -->
+        <div class="pu-box-p">
+          <img src="https://img.icons8.com/color/200/rainbow.png" alt="rainbow">
+          <span class="pu-badge-p">1</span>
         </div>
       </div>
     </footer>
+
   </div>
 
 </div>

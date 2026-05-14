@@ -1,7 +1,7 @@
 'use strict';
 // ══════════════════════════════════════════
-//  BUBBLE SHOOTER PREMIUM — game.js v23
-//  Restored Map Engine | S-Curve Logic
+//  BUBBLE SHOOTER PREMIUM — game.js v24
+//  EXACT PHOTO CLONE — Ultra Glossy Engine
 // ══════════════════════════════════════════
 
 let canvas, ctx, scoreVal, currentBallEl, nextBallEl, goalText;
@@ -12,7 +12,6 @@ let S = {
     score: 2450, coins: 1250, ammo: 50,
     currentLevel: Number(localStorage.getItem('bs_level')) || 1,
     unlockedLevels: Number(localStorage.getItem('bs_unlocked')) || 4,
-    consecutiveFails: 0,
     objective: { count: 0, total: 6 },
     settings: { sound: true, music: true }
 };
@@ -32,40 +31,27 @@ function showScreen(id) {
     updateUI();
 }
 
-// ──────── RENDER 100 LEVELS (RESTORED ENGINE) ────────
+// ──────── MAP ENGINE (UNCHANGED) ────────
 function renderMap() {
     const path = document.getElementById('levelPath');
     if (!path) return;
     path.innerHTML = '';
-    
     const totalLevels = 100;
-    const center = 155; 
-    const amplitude = 100; 
-    const frequency = 300; 
-    
+    const center = 155, amplitude = 100, frequency = 300;
     path.style.height = `${totalLevels * 150}px`;
-    
     for (let i = 1; i <= totalLevels; i++) {
         const node = document.createElement('div');
-        node.className = 'node-premium'; // Matches Restored CSS
-        
+        node.className = 'node-premium';
         const yPos = i * 140; 
         const xPos = center + Math.sin(yPos / frequency) * amplitude;
-        
-        node.style.top = `${yPos}px`;
-        node.style.left = `${xPos}px`;
-        
+        node.style.top = `${yPos}px`; node.style.left = `${xPos}px`;
         if (i <= S.unlockedLevels) {
             node.classList.add('unlocked');
-            node.innerHTML = `<span>${i}</span><div class="stars-under">⭐⭐⭐</div>`;
+            node.innerHTML = `<span>${i}</span><div style="position:absolute;bottom:-22px;width:100%;text-align:center;font-size:14px;color:#ffcf3e;">⭐⭐⭐</div>`;
             node.onclick = () => { S.currentLevel = i; startGame(); };
-        } else {
-            node.innerHTML = `<span>${i}</span><div class="locks-under">🔒🔒🔒</div>`;
-        }
-        
+        } else { node.innerHTML = `<span>${i}</span><div style="position:absolute;bottom:-20px;width:100%;text-align:center;color:#999;font-size:14px;">🔒🔒🔒</div>`; }
         path.appendChild(node);
     }
-    
     setTimeout(() => {
         const activeNode = document.querySelectorAll('.node-premium.unlocked')[S.unlockedLevels-1];
         if (activeNode) activeNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -167,13 +153,11 @@ function updateUI() {
     if(goalText) goalText.innerText = `${S.objective.count}/${S.objective.total}`;
     if(currentBallEl) {
         const c = activeColor;
-        currentBallEl.style.background = `radial-gradient(circle at 30% 30%, #fff, ${c} 45%, ${shadeColor(c, -40)})`;
-        currentBallEl.style.boxShadow = 'inset -5px -5px 15px rgba(0,0,0,0.3), 0 10px 20px rgba(0,0,0,0.1)';
+        currentBallEl.style.background = `radial-gradient(circle at 30% 30%, #fff 0%, ${c} 40%, ${shadeColor(c, -50)} 100%)`;
     }
     if(nextBallEl) {
         const c = reserveColor;
-        nextBallEl.style.background = `radial-gradient(circle at 30% 30%, #fff, ${c} 45%, ${shadeColor(c, -40)})`;
-        nextBallEl.style.boxShadow = 'inset -2px -2px 8px rgba(0,0,0,0.3)';
+        nextBallEl.style.background = `radial-gradient(circle at 30% 30%, #fff 0%, ${c} 40%, ${shadeColor(c, -50)} 100%)`;
     }
     const mc = document.getElementById('map-coins');
     if(mc) mc.innerText = S.coins.toLocaleString();
@@ -185,37 +169,36 @@ function prepNext() {
     updateUI();
 }
 
+// ──────── ULTRA-GLOSSY 3D BUBBLES ────────
 function drawBall(x, y, color, r = R) {
     ctx.save();
     // Shadow
-    ctx.shadowColor = 'rgba(0,0,0,0.2)';
-    ctx.shadowBlur = 8; ctx.shadowOffsetY = 4;
+    ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 5;
     
-    // Main 3D Glossy Body
-    const grad = ctx.createRadialGradient(x - r*0.3, y - r*0.3, r*0.05, x, y, r);
-    grad.addColorStop(0, '#fff'); // Sharp Highlight
-    grad.addColorStop(0.2, shadeColor(color, 20));
+    // Core Gradient
+    const grad = ctx.createRadialGradient(x - r*0.35, y - r*0.35, r*0.05, x, y, r);
+    grad.addColorStop(0, '#fff'); // Main Gloss Point
+    grad.addColorStop(0.2, shadeColor(color, 30));
     grad.addColorStop(0.5, color);
-    grad.addColorStop(1, shadeColor(color, -50)); // Dark depth
+    grad.addColorStop(1, shadeColor(color, -60)); // Depth
 
     ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fillStyle = grad; ctx.fill();
     
-    // Top-Left Gloss Reflection
+    // Top-Left Ellipse Shine
     ctx.beginPath();
-    ctx.ellipse(x - r*0.4, y - r*0.4, r*0.35, r*0.2, Math.PI/4, 0, Math.PI*2);
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.ellipse(x - r*0.4, y - r*0.4, r*0.4, r*0.25, Math.PI/4, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
     ctx.fill();
 
-    // Bottom-Right Rim Light
+    // Bottom Rim Glow
     ctx.beginPath();
-    ctx.arc(x, y, r * 0.8, 0.5, 2.5);
-    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-    ctx.lineWidth = 2;
+    ctx.arc(x, y, r * 0.85, 0.8, 2.5);
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.lineWidth = 2.5;
     ctx.stroke();
 
     ctx.restore();
 }
-
 
 function shadeColor(color, percent) {
     let f=parseInt(color.slice(1),16),t=percent<0?0:255,p=percent<0?percent*-1:percent,R=f>>16,G=f>>8&0x00FF,B=f&0x0000FF;
@@ -241,7 +224,7 @@ function animate() {
             for(let i=0; i<15; i++) {
                 const dotX = sx + Math.cos(ang) * (i * 25);
                 const dotY = sy + Math.sin(ang) * (i * 25);
-                ctx.beginPath(); ctx.arc(dotX, dotY, 2, 0, Math.PI*2); ctx.fillStyle = 'rgba(123, 108, 255, 0.6)'; ctx.fill();
+                ctx.beginPath(); ctx.arc(dotX, dotY, 2.5, 0, Math.PI*2); ctx.fillStyle = 'rgba(123, 108, 255, 0.7)'; ctx.fill();
             }
         }
     }
