@@ -5,286 +5,153 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Bubble Shooter Premium</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div id="game-container">
 
-<!-- ══ SPLASH ══ -->
-<div id="splash-screen" class="screen" onclick="showScreen('main-menu')">
-    <img src="bubble_shooter_logo_premium_1778697858318.png" class="logo-anim" alt="Bubble Shooter">
-    <div class="spinner"></div>
-    <div style="margin-top:20px; color:#666; font-size:0.8rem; opacity:0.6;">Tap to start</div>
-</div>
-
-<!-- ══ MAIN MENU ══ -->
-<div id="main-menu" class="screen hidden">
-    <nav class="top-nav-row">
-        <button class="icon-btn" onclick="openPopup('settings-popup')">⚙️</button>
-        <button class="icon-btn gold" onclick="openPopup('shop-popup')">👑</button>
-    </nav>
-    <img src="bubble_shooter_logo_premium_1778697858318.png" class="logo-anim" alt="Bubble Shooter">
-    <div class="menu-btns">
-        <button class="btn-glossy yellow big" onclick="showScreen('home-screen')">▶ PLAY</button>
-        <button class="btn-glossy purple" onclick="showScreen('levels-screen')">LEVELS</button>
-        <button class="btn-glossy purple" onclick="openPopup('daily-challenge-popup')">DAILY CHALLENGE</button>
-    </div>
-    <footer class="menu-footer">
-        <button class="footer-tab" onclick="openPopup('shop-popup')"><div class="footer-icon">🛒</div><span>Shop</span></button>
-        <button class="footer-tab" onclick="showScreen('spin-screen')"><div class="footer-icon">🎡</div><span>Spin</span></button>
-        <button class="footer-tab" onclick="showScreen('achievements-screen')"><div class="footer-icon">🏆</div><span>Rewards</span></button>
-    </footer>
-</div>
-
-<!-- ══ MAP SCREEN ══ -->
-<div id="home-screen" class="screen hidden map-screen">
-    <nav class="map-nav">
-        <div class="pill-row">
-            <div class="pill">❤️ FULL</div>
-            <div class="pill">🪙 <span id="header-coins">0</span></div>
+    <!-- 1. SPLASH SCREEN -->
+    <div id="splash-screen" class="screen" onclick="showScreen('main-menu')">
+        <div class="logo-glow"></div>
+        <div class="logo-wrap">
+            <h1 class="logo-top">BUBBLE</h1>
+            <h1 class="logo-bottom">SHOOTER</h1>
         </div>
-        <button class="icon-btn sm" onclick="openPopup('settings-popup')">⚙️</button>
-    </nav>
-    <div class="world-banner">
-        <div class="world-name">🌿 GREEN FOREST</div>
-        <div class="world-bar-wrap"><div class="world-bar-fill" id="world-bar"></div></div>
-        <div class="world-prog-label" id="world-prog-label">0/90</div>
-    </div>
-    <div class="map-scroll" id="map-scroll">
-        <canvas id="mapCanvas" class="map-canvas"></canvas>
-        <div id="map-nodes" class="map-nodes"></div>
-    </div>
-    <footer class="tab-bar">
-        <button class="tab-btn active" onclick="showScreen('home-screen')">🏠<span>Home</span></button>
-        <button class="tab-btn" onclick="showScreen('levels-screen')">🗺️<span>Map</span></button>
-        <button class="tab-btn" onclick="openPopup('shop-popup')">🛍️<span>Shop</span></button>
-    </footer>
-</div>
-
-<!-- ══ LEVELS SCREEN ══ -->
-<div id="levels-screen" class="screen hidden" style="background:#fff;">
-    <header class="screen-header">
-        <button class="back-btn" onclick="showScreen('main-menu')">❮</button>
-        <h1>LEVELS</h1>
-    </header>
-    <div class="world-tabs">
-        <div class="world-tab active green">🌿 Green Forest</div>
-        <div class="world-tab locked blue">❄️ Snow Land 🔒</div>
-        <div class="world-tab locked orange">🏜️ Desert 🔒</div>
-    </div>
-    <div id="levels-grid" class="levels-grid"></div>
-</div>
-
-<!-- ══ ACHIEVEMENTS SCREEN ══ -->
-<div id="achievements-screen" class="screen hidden" style="background:#f8f9ff;">
-    <header class="screen-header">
-        <button class="back-btn" onclick="showScreen('main-menu')">❮</button>
-        <h1>ACHIEVEMENTS</h1>
-    </header>
-    <div class="ach-list">
-        <div class="ach-card">
-            <div class="ach-icon" style="background:#fff8e1;">🌟</div>
-            <div class="ach-body">
-                <div class="ach-title">Bubble Popper</div>
-                <div class="ach-sub">Pop 100 Bubbles</div>
-                <div class="prog-bar"><div class="prog-fill purple" id="ach-pop-fill"></div></div>
-            </div>
-            <div class="ach-count" id="ach-pop-text">0/100</div>
-        </div>
-        <div class="ach-card">
-            <div class="ach-icon" style="background:#e8f5fd;">🎯</div>
-            <div class="ach-body">
-                <div class="ach-title">Sharpshooter</div>
-                <div class="ach-sub">Make 10 Perfect Shots</div>
-                <div class="prog-bar"><div class="prog-fill purple" id="ach-shot-fill"></div></div>
-            </div>
-            <div class="ach-count" id="ach-shot-text">0/10</div>
-        </div>
-        <div class="ach-card">
-            <div class="ach-icon" style="background:#fef9e7;">🪙</div>
-            <div class="ach-body">
-                <div class="ach-title">Collector</div>
-                <div class="ach-sub">Collect 1000 Coins</div>
-                <div class="prog-bar"><div class="prog-fill orange" id="ach-coin-fill"></div></div>
-            </div>
-            <div class="ach-count" id="ach-coin-text">0/1000</div>
-        </div>
-        <div class="ach-card">
-            <div class="ach-icon" style="background:#eafaf1;">🏅</div>
-            <div class="ach-body">
-                <div class="ach-title">Level Master</div>
-                <div class="ach-sub">Complete 10 Levels</div>
-                <div class="prog-bar"><div class="prog-fill green" id="ach-level-fill"></div></div>
-            </div>
-            <div class="ach-count" id="ach-level-text">0/10</div>
-        </div>
-        <div class="ach-card">
-            <div class="ach-icon" style="background:#fdecea;">📅</div>
-            <div class="ach-body">
-                <div class="ach-title">Daily Player</div>
-                <div class="ach-sub">Play 7 Days in a Row</div>
-                <div class="prog-bar"><div class="prog-fill red" style="width:43%;"></div></div>
-            </div>
-            <div class="ach-count">3/7</div>
+        <div class="loading-container">
+            <div class="loading-bar"><div class="loading-fill"></div></div>
+            <span class="loading-text">Loading premium assets...</span>
         </div>
     </div>
-</div>
 
-<!-- ══ SPIN SCREEN ══ -->
-<div id="spin-screen" class="screen hidden" style="background:#f4f7ff; align-items:center;">
-    <header class="screen-header">
-        <button class="back-btn" onclick="showScreen('main-menu')">❮</button>
-        <h1>SPIN &amp; WIN</h1>
-    </header>
-    <div class="spin-area">
-        <div class="spin-pointer">▼</div>
-        <canvas id="wheelCanvas" width="280" height="280" class="wheel-canvas"></canvas>
+    <!-- 2. MAIN MENU -->
+    <div id="main-menu" class="screen hidden">
+        <nav class="top-nav-row">
+            <button class="icon-btn" onclick="openPopup('settings-popup')">⚙️</button>
+            <button class="icon-btn gold" onclick="showScreen('profile-screen')">👤</button>
+        </nav>
+        <div class="menu-content">
+            <div class="logo-wrap mini">
+                <h1 class="logo-top">BUBBLE</h1>
+                <h1 class="logo-bottom">SHOOTER</h1>
+            </div>
+            <div class="menu-btns">
+                <button class="btn-glossy yellow big" onclick="showScreen('home-screen')">▶ PLAY</button>
+                <button class="btn-glossy purple" onclick="showScreen('leaderboard-screen')">🏆 LEADERBOARD</button>
+                <button class="btn-glossy purple" onclick="showScreen('tournament-screen')">⚔️ TOURNAMENT</button>
+            </div>
+        </div>
+        <footer class="menu-footer">
+            <button class="footer-tab" onclick="openPopup('shop-popup')">🛒 Shop</button>
+            <button class="footer-tab" onclick="showScreen('spin-screen')">🎡 Spin</button>
+            <button class="footer-tab" onclick="showScreen('reward-screen')">🎁 Rewards</button>
+        </footer>
     </div>
-    <button id="spin-btn" class="btn-glossy yellow big mt20" onclick="spinWheel()">SPIN</button>
-    <p id="spins-left-text" class="spins-label">You have 3 spins left today</p>
-</div>
 
-<!-- ══ GAMEPLAY ══ (pixel-perfect match to reference) -->
-<div id="gameplay-ui" class="screen hidden gameplay-bg">
-
-    <!-- HUD: Pause | Score+Stars | Goal+Gear -->
-    <header class="game-hud">
-        <button class="hud-pause" onclick="showScreen('home-screen')">⏸</button>
-
-        <div class="hud-center">
-            <div class="hud-label">SCORE</div>
-            <div class="hud-value" id="current-score">0</div>
-            <div class="hud-stars">
-                <span class="hud-star">⭐</span>
-                <div class="hud-star-bar"><div class="hud-star-fill"></div></div>
-                <span class="hud-star dim">⭐</span>
-                <span class="hud-star dim">⭐</span>
-            </div>
+    <!-- 3. PROFILE SCREEN -->
+    <div id="profile-screen" class="screen hidden">
+        <header class="screen-header">
+            <button class="back-btn" onclick="showScreen('main-menu')">❮</button>
+            <h1>PROFILE</h1>
+        </header>
+        <div class="profile-card">
+            <div class="avatar-large">👤</div>
+            <h2>Bubble Master</h2>
+            <div class="level-pill">LEVEL 24</div>
         </div>
-
-        <div class="hud-right">
-            <div class="hud-goal-pill">
-                <div class="goal-bubble" id="goal-bubble" style="background:#a29bfe;"></div>
-                <span id="goal-text">0/6</span>
-            </div>
-            <button class="hud-gear" onclick="openPopup('settings-popup')">⚙️</button>
+        <div class="stats-grid">
+            <div class="stat-card"><h3>245</h3><span>LEVELS</span></div>
+            <div class="stat-card"><h3>12K</h3><span>COINS</span></div>
+            <div class="stat-card"><h3>98</h3><span>WINS</span></div>
+            <div class="stat-card"><h3>7</h3><span>STREAK</span></div>
         </div>
-    </header>
+    </div>
 
-    <!-- Canvas fills remaining space -->
-    <canvas id="gameCanvas" style="flex:1; display:block; z-index:1; position:relative;"></canvas>
+    <!-- 4. LEADERBOARD -->
+    <div id="leaderboard-screen" class="screen hidden">
+        <header class="screen-header">
+            <button class="back-btn" onclick="showScreen('main-menu')">❮</button>
+            <h1>LEADERBOARD</h1>
+        </header>
+        <div class="lb-list">
+            <div class="lb-row gold"><span>👑 1</span><span>Alex</span><span>24,500</span></div>
+            <div class="lb-row silver"><span>🥈 2</span><span>Emma</span><span>21,900</span></div>
+            <div class="lb-row user"><span>3</span><span>You</span><span>19,200</span></div>
+            <div class="lb-row"><span>4</span><span>John</span><span>18,500</span></div>
+            <div class="lb-row"><span>5</span><span>Sarah</span><span>17,200</span></div>
+        </div>
+    </div>
 
-    <!-- Lavender shooter tray -->
-    <div class="shooter-tray">
-        <div class="tray-row">
+    <!-- 5. REWARD SCREEN -->
+    <div id="reward-screen" class="screen hidden reward-bg">
+        <div class="magic-glow"></div>
+        <h1 class="reward-title">REWARD READY!</h1>
+        <div class="chest-box">🎁</div>
+        <button class="btn-glossy yellow big" onclick="showScreen('main-menu')">CLAIM REWARD</button>
+    </div>
 
-            <!-- Bomb powerup -->
-            <div class="powerup-btn" onclick="usePowerup('BOMB')">
-                <span class="pu-icon">💣</span>
-                <span class="pu-badge" id="bomb-count">2</span>
+    <!-- 6. TOURNAMENT SCREEN -->
+    <div id="tournament-screen" class="screen hidden tourney-bg">
+        <header class="screen-header white">
+            <button class="back-btn" onclick="showScreen('main-menu')">❮</button>
+            <h1>TOURNAMENT</h1>
+        </header>
+        <div class="tourney-card">
+            <div class="trophy-large">🏆</div>
+            <h4>GRAND PRIZE</h4>
+            <h3>50,000 COINS</h3>
+        </div>
+        <div class="timer-pill">ENDS IN: 02D 14H 23M</div>
+        <button class="btn-glossy green big mt40">JOIN NOW</button>
+    </div>
+
+    <!-- 7. GAMEPLAY SCREEN -->
+    <div id="gameplay-ui" class="screen hidden gameplay-bg">
+        <header class="game-hud">
+            <button class="hud-pause" onclick="showScreen('home-screen')">⏸</button>
+            <div class="hud-center">
+                <div class="hud-label">SCORE</div>
+                <div class="hud-value" id="current-score">0</div>
+                <div class="hud-stars">
+                    <span class="hud-star">⭐</span>
+                    <div class="hud-star-bar"><div class="hud-star-fill"></div></div>
+                </div>
             </div>
+            <div class="hud-right">
+                <div class="hud-goal-pill">
+                    <div class="goal-bubble" id="goal-bubble"></div>
+                    <span id="goal-text">0/6</span>
+                </div>
+            </div>
+        </header>
 
-            <!-- Cannon with active ball + next ball below -->
+        <canvas id="gameCanvas"></canvas>
+
+        <div class="shooter-tray">
+            <div class="powerup-row">
+                <div class="power-btn" onclick="usePowerup('BOMB')">💣<span class="badge" id="bomb-count">0</span></div>
+                <div class="power-btn" onclick="usePowerup('FIREBALL')">🔥<span class="badge">0</span></div>
+                <div class="power-btn" onclick="usePowerup('RAINBOW')">🌈<span class="badge" id="rainbow-count">0</span></div>
+            </div>
             <div class="cannon">
                 <div id="active-ball" class="active-ball"></div>
                 <div id="next-ball" class="next-ball"></div>
             </div>
+        </div>
+    </div>
 
-            <!-- Rainbow powerup -->
-            <div class="powerup-btn" onclick="usePowerup('RAINBOW')">
-                <span class="pu-icon">🌈</span>
-                <span class="pu-badge" id="rainbow-count">3</span>
-            </div>
-
+    <!-- POPUPS -->
+    <div id="settings-popup" class="overlay hidden">
+        <div class="modal">
+            <button class="modal-close" onclick="closePopup('settings-popup')">✕</button>
+            <h2>SETTINGS</h2>
+            <div class="setting-row"><span>🔊 Sound</span><div class="toggle on"></div></div>
+            <div class="setting-row"><span>🎵 Music</span><div class="toggle on"></div></div>
+            <button class="btn-glossy red w100 mt20">LOG OUT</button>
         </div>
     </div>
 
 </div>
-
-<!-- ══ POPUPS ══ -->
-
-<!-- Daily Challenge -->
-<div id="daily-challenge-popup" class="overlay hidden">
-    <div class="modal">
-        <button class="modal-close" onclick="closePopup('daily-challenge-popup')">✕</button>
-        <h2>DAILY CHALLENGE</h2>
-        <p class="modal-sub">Complete today's challenge and get amazing rewards!</p>
-        <div class="tier-row">
-            <div class="tier-bar-bg"><div class="tier-bar-fill" style="width:45%"></div></div>
-            <div class="tier-box done">🎁<div class="tier-num">10</div></div>
-            <div class="tier-box">🎁<div class="tier-num">20</div></div>
-            <div class="tier-box">🎁<div class="tier-num">30</div></div>
-        </div>
-        <div class="challenge-task">
-            <div class="task-label">CHALLENGE TASK</div>
-            <div class="task-row">
-                <span style="font-size:1.5rem;">🟣</span>
-                <div style="flex:1;">
-                    <div class="task-name">Pop 30 Purple Bubbles</div>
-                    <div class="prog-bar sm"><div class="prog-fill orange" style="width:60%;"></div></div>
-                </div>
-                <span class="task-count">18/30</span>
-            </div>
-        </div>
-        <button class="btn-glossy yellow big w100 mt20" onclick="startGame(1);closePopup('daily-challenge-popup')">PLAY</button>
-    </div>
-</div>
-
-<!-- Shop -->
-<div id="shop-popup" class="overlay hidden">
-    <div class="modal wide">
-        <button class="modal-close" onclick="closePopup('shop-popup')">✕</button>
-        <h2>SHOP</h2>
-        <div class="section-label">⚡ POWER UPS</div>
-        <div class="shop-grid">
-            <div class="shop-card"><div class="shop-icon">💣</div><div class="shop-name">Bomb</div><button class="btn-glossy purple sm" onclick="buyItem('BOMB',50)">🪙 50</button></div>
-            <div class="shop-card"><div class="shop-icon">🌈</div><div class="shop-name">Color Ball</div><button class="btn-glossy purple sm" onclick="buyItem('RAINBOW',50)">🪙 50</button></div>
-            <div class="shop-card"><div class="shop-icon">🔥</div><div class="shop-name">Fireball</div><button class="btn-glossy purple sm" onclick="buyItem('FIREBALL',50)">🪙 50</button></div>
-        </div>
-        <div class="section-label mt20">🪙 COINS</div>
-        <div class="coin-grid">
-            <div class="coin-card"><div class="coin-icon">💰</div><div class="coin-amt">500</div><div class="coin-price">₹49</div></div>
-            <div class="coin-card best"><div class="coin-icon">💰</div><div class="coin-amt">1200</div><div class="coin-price">₹99</div></div>
-            <div class="coin-card"><div class="coin-icon">💰</div><div class="coin-amt">2500</div><div class="coin-price">₹199</div></div>
-            <div class="coin-card best"><div class="best-badge">BEST VALUE</div><div class="coin-icon">💰</div><div class="coin-amt">5500</div><div class="coin-price">₹399</div></div>
-        </div>
-        <div class="no-ads-row">
-            <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:1.5rem;">🚫</span><div><div style="font-weight:800;font-size:.9rem;">No Ads</div><div style="font-size:.7rem;color:#999;">Enjoy ad-free gameplay</div></div></div>
-            <button class="btn-glossy red sm">₹99</button>
-        </div>
-    </div>
-</div>
-
-<!-- Settings -->
-<div id="settings-popup" class="overlay hidden">
-    <div class="modal">
-        <button class="modal-close" onclick="closePopup('settings-popup')">✕</button>
-        <h2>SETTINGS</h2>
-        <div class="settings-list">
-            <div class="setting-row"><div class="setting-label">🔊 Sound</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-            <div class="setting-row"><div class="setting-label">🎵 Music</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-            <div class="setting-row"><div class="setting-label">📳 Vibration</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-            <div class="setting-row"><div class="setting-label">🔔 Notifications</div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
-            <div class="setting-row link"><div class="setting-label">⭐ Rate Us</div><span>›</span></div>
-            <div class="setting-row link"><div class="setting-label">🔒 Privacy Policy</div><span>›</span></div>
-            <div class="setting-row link"><div class="setting-label">ℹ️ About Us</div><span>›</span></div>
-        </div>
-        <button class="btn-glossy red big w100 mt20">LOG OUT</button>
-    </div>
-</div>
-
-<!-- Level Complete -->
-<div id="level-complete-popup" class="overlay hidden">
-    <div class="modal center">
-        <div style="font-size:3.5rem; margin-bottom:10px;">⭐🏆⭐</div>
-        <h2>WELL DONE!</h2>
-        <p class="modal-sub">Level Completed! +50 🪙</p>
-        <button class="btn-glossy yellow big w100 mt20" id="next-level-btn">NEXT LEVEL ›</button>
-    </div>
-</div>
-
-</div><!-- #game-container -->
 <script src="game.js"></script>
 </body>
 </html>
