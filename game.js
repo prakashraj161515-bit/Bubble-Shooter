@@ -1,13 +1,10 @@
 'use strict';
 // ══════════════════════════════════════════
-//  BUBBLE SHOOTER PREMIUM — game.js
-//  State v7 | Complete & final
+//  BUBBLE SHOOTER PREMIUM — game.js  v8
 // ══════════════════════════════════════════
+// Canvas refs — assigned in init() after DOM is ready
+let canvas, ctx, wCanvas, wCtx;
 
-const canvas  = document.getElementById('gameCanvas');
-const ctx     = canvas.getContext('2d');
-const wCanvas = document.getElementById('wheelCanvas');
-const wCtx    = wCanvas.getContext('2d');
 
 // ──────── CONSTANTS ────────
 const R       = 20;        // bubble radius
@@ -97,6 +94,12 @@ function playSound(type) {
 //  INIT
 // ══════════════════════════════════════════
 function init() {
+    // Assign canvas refs now that DOM is ready
+    canvas  = document.getElementById('gameCanvas');
+    ctx     = canvas.getContext('2d');
+    wCanvas = document.getElementById('wheelCanvas');
+    wCtx    = wCanvas.getContext('2d');
+
     load();
     generateMap();
     generateLevels();
@@ -429,12 +432,15 @@ function ballCenter() {
 // ══════════════════════════════════════════
 function shoot() {
     if (shooting) return;
+    initAudio();
     shooting=true; ballsLeft--; S.stats.totalShots++;
     const cen=ballCenter();
     const ang=Math.atan2(my-cen.y,mx-cen.x);
     const col=document.getElementById('active-ball').style.backgroundColor;
     activeBall={ x:cen.x,y:cen.y, vx:Math.cos(ang)*SPEED,vy:Math.sin(ang)*SPEED, color:col, pu:activePU };
-    activePU=null; updateUI(); save();
+    activePU=null;
+    playSound('shoot');
+    updateUI(); save();
 }
 
 function moveBall() {
@@ -679,17 +685,7 @@ function tickConfetti() {
 }
 
 // ══════════════════════════════════════════
-//  SHOOT OVERRIDE (with sound)
-// ══════════════════════════════════════════
-const _origShoot = shoot;
-function shoot() {
-    initAudio();
-    _origShoot();
-    playSound('shoot');
-}
-
-// ══════════════════════════════════════════
 //  BOOTSTRAP
 // ══════════════════════════════════════════
-window.onload  = init;
-window.onresize= resize;
+window.onload   = init;
+window.onresize = resize;
