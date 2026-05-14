@@ -33,20 +33,21 @@ body { background: #dce1ff; display: flex; justify-content: center; align-items:
 }
 
 .score-box-p { 
-  background: #fff; border-radius: 25px; padding: 5px 15px; text-align: center; width: 125px; 
-  box-shadow: 0 5px 15px rgba(0,0,0,0.03); border: 1.5px solid #fff;
+  background: #fff; border-radius: 20px; padding: 3px 12px; text-align: center; width: 110px; 
+  box-shadow: 0 4px 10px rgba(0,0,0,0.02); border: 1.5px solid #fff;
 }
-.score-box-p span { font-size: 8px; font-weight: 900; color: #4a4a8c; letter-spacing: 1px; opacity: 0.7; }
-.score-box-p h3 { font-size: 20px; color: #4a4a8c; font-weight: 900; margin: -2px 0; }
-.score-bar-p { height: 10px; background: #eef2ff; border-radius: 10px; margin-top: 5px; position: relative; }
+.score-box-p span { font-size: 7px; font-weight: 900; color: #4a4a8c; letter-spacing: 1px; opacity: 0.6; }
+.score-box-p h3 { font-size: 18px; color: #4a4a8c; font-weight: 900; margin: -3px 0; }
+.score-bar-p { height: 8px; background: #eef2ff; border-radius: 10px; margin-top: 3px; position: relative; }
 .score-bar-p .fill { height: 100%; width: 45%; background: linear-gradient(90deg, #ffcf3e, #ff9900); border-radius: 10px; }
-.score-bar-p::after { content: '⭐'; position: absolute; left: 40%; top: -10px; font-size: 11px; }
+.score-bar-p::after { content: '⭐'; position: absolute; left: 40%; top: -11px; font-size: 10px; }
 
 .goal-box-p { 
-  background: #fff; border-radius: 25px; padding: 5px 15px; display: flex; align-items: center; gap: 8px; 
-  box-shadow: 0 5px 15px rgba(0,0,0,0.03); border: 1.5px solid #fff;
+  background: #fff; border-radius: 20px; padding: 3px 12px; display: flex; align-items: center; gap: 6px; 
+  box-shadow: 0 4px 10px rgba(0,0,0,0.02); border: 1.5px solid #fff;
 }
-.goal-icon-p { width: 30px; height: 30px; background: radial-gradient(circle at 8px 8px, #e1baff, #c76bff); border-radius: 50%; box-shadow: inset -1px -1px 4px rgba(0,0,0,0.2); }
+.goal-icon-p { width: 25px; height: 25px; background: radial-gradient(circle at 6px 6px, #e1baff, #c76bff); border-radius: 50%; box-shadow: inset -1px -1px 3px rgba(0,0,0,0.2); }
+
 
 
 /* THE SMOOTH WAVE (FIXED) */

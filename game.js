@@ -83,22 +83,26 @@ function startGame() {
     showScreen('gameplayScreen');
     S.ammo = 50; S.score = 2450; S.objective.count = 0;
     bubbles = [];
-    let rows = 9;
-    const spacingX = 40; // Diameter is 40 (2*R), so this makes them touch
-    const spacingY = 35; // Vertical overlap for hex grid
+    let rows = 10; // More rows to fill space
+    const spacingX = 40; 
+    const spacingY = 34; // Tighter vertical overlap for better zig-zag feel
+    
     for (let row = 0; row < rows; row++) {
-        const width = 8 - (row < 5 ? 0 : (row - 4));
-        const rowOff = (row % 2) ? (spacingX/2) : 0;
-        const startX = 40 + rowOff + (row < 5 ? 0 : (row - 4) * (spacingX/2));
+        // Full width rows: 9 or 10 bubbles alternating
+        const isOffset = row % 2 !== 0;
+        const width = isOffset ? 9 : 10;
+        const startX = isOffset ? 20 : 0; 
+        
         for (let col = 0; col < width; col++) {
-            const x = startX + col * spacingX;
-            const y = row * spacingY + 50; // Started a bit lower for slimmer HUD
+            const x = startX + col * spacingX + 5; // Added small padding
+            const y = row * spacingY + 30; // Started higher up
             bubbles.push({ x, y, color: COLORS[Math.floor(Math.random()*COLORS.length)], alive: true, falling: false });
         }
     }
     prepNext();
     updateUI();
 }
+
 
 
 function swapBubbles() {
