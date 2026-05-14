@@ -6,14 +6,14 @@ const BUBBLE_RADIUS = 20;
 const COLUMNS = 9;
 const ROWS = 20;
 
-// iOS System Colors
+// Vibrant Reference Colors
 const COLORS = [
-    '#FF3B30', // Red
-    '#007AFF', // Blue
-    '#34C759', // Green
-    '#FF9500', // Orange
-    '#AF52DE', // Purple
-    '#FF2D55'  // Pink
+    '#FF3D71', // Pinkish Red
+    '#3366FF', // Blue
+    '#00D68F', // Green
+    '#FFAA00', // Orange
+    '#A29BFE', // Purple
+    '#FF708D'  // Light Pink
 ];
 
 // PERSISTENT DATA
@@ -23,22 +23,9 @@ let state = {
     currentLevel: 1,
     score: 0,
     powerups: { BOMB: 2, FIREBALL: 1, RAINBOW: 3 },
-    stats: {
-        totalPops: 0,
-        totalShots: 0,
-        totalCoins: 100
-    },
-    settings: {
-        sound: true,
-        music: true,
-        vibration: true
-    },
-    dailyChallenge: {
-        id: new Date().toDateString(),
-        target: 30,
-        current: 0,
-        completed: false
-    }
+    stats: { totalPops: 0, totalShots: 0, totalCoins: 100 },
+    settings: { sound: true, music: true, vibration: true },
+    dailyChallenge: { id: new Date().toDateString(), target: 30, current: 0, completed: false }
 };
 
 // RUNTIME STATE
@@ -56,11 +43,8 @@ function init() {
     generateMap(); 
 
     showScreen('splash-screen');
-    setTimeout(() => { 
-        showScreen('main-menu'); 
-    }, 2500);
+    setTimeout(() => { showScreen('main-menu'); }, 2500);
 
-    // Inputs
     canvas.addEventListener('mousemove', e => {
         const rect = canvas.getBoundingClientRect();
         mouseX = e.clientX - rect.left;
@@ -69,8 +53,6 @@ function init() {
     canvas.addEventListener('mouseup', () => {
         if (!isShooting && ballsRemaining > 0 && !activeBall) shoot();
     });
-
-    // Touch support
     canvas.addEventListener('touchstart', e => {
         const rect = canvas.getBoundingClientRect();
         mouseX = e.touches[0].clientX - rect.left;
@@ -86,19 +68,7 @@ function init() {
 function loadState() {
     const saved = localStorage.getItem('bubble_shooter_state_v5');
     if (saved) state = JSON.parse(saved);
-    
-    // Reset daily challenge if it's a new day
-    if (state.dailyChallenge.id !== new Date().toDateString()) {
-        state.dailyChallenge = {
-            id: new Date().toDateString(),
-            target: 30,
-            current: 0,
-            completed: false
-        };
-        saveState();
-    }
 }
-
 function saveState() {
     localStorage.setItem('bubble_shooter_state_v5', JSON.stringify(state));
     updateUI();
@@ -115,13 +85,8 @@ function showScreen(id) {
     });
     const target = document.getElementById(id);
     target.classList.remove('hidden');
-    setTimeout(() => {
-        target.style.opacity = '1';
-        target.style.transform = 'scale(1)';
-    }, 10);
-    
+    setTimeout(() => { target.style.opacity = '1'; target.style.transform = 'scale(1)'; }, 10);
     if (id === 'home-screen') generateMap();
-    if (id === 'achievements-screen') updateAchievements();
 }
 
 function openPopup(id) { document.getElementById(id).classList.remove('hidden'); }
@@ -135,23 +100,6 @@ function updateUI() {
     document.getElementById('balls-text').innerText = ballsRemaining;
     document.getElementById('current-score').innerText = state.score.toLocaleString();
     document.getElementById('goal-text').innerText = `${currentGoal.current}/${currentGoal.target}`;
-}
-
-function updateAchievements() {
-    // Popper
-    const popFill = (state.stats.totalPops / 100) * 100;
-    document.getElementById('ach-pop-fill').style.width = `${Math.min(popFill, 100)}%`;
-    document.getElementById('ach-pop-text').innerText = `${state.stats.totalPops}/100`;
-    
-    // Shots
-    const shotFill = (state.stats.totalShots / 50) * 100; // Updated target
-    document.getElementById('ach-shot-fill').style.width = `${Math.min(shotFill, 100)}%`;
-    document.getElementById('ach-shot-text').innerText = `${state.stats.totalShots}/50`;
-    
-    // Coins
-    const coinFill = (state.stats.totalCoins / 1000) * 100;
-    document.getElementById('ach-coin-fill').style.width = `${Math.min(coinFill, 100)}%`;
-    document.getElementById('ach-coin-text').innerText = `${state.stats.totalCoins}/1000`;
 }
 
 function startGame(level) {
@@ -172,15 +120,21 @@ function startGame(level) {
 
 function generateLevel(level) {
     grid = [];
-    const rows = 8 + Math.floor(level / 10);
-    for (let y = 0; y < rows; y++) {
+    const maxRows = 10 + Math.floor(level / 5);
+    for (let y = 0; y < maxRows; y++) {
         grid[y] = [];
-        const cols = y % 2 === 0 ? COLUMNS : COLUMNS - 1;
+        // Create Trapezoid Shape: wider at top, narrower at bottom
+        const indent = Math.floor(y / 2);
+        const cols = (y % 2 === 0 ? COLUMNS : COLUMNS - 1) - indent;
+        
+        if (cols <= 0) break;
+
         for (let x = 0; x < cols; x++) {
-            let type = 'NORMAL';
-            if (level > 5 && Math.random() < 0.05) type = 'ROCK';
-            if (level > 10 && Math.random() < 0.05) type = 'CHAIN';
-            grid[y][x] = { type, color: COLORS[Math.floor(Math.random() * COLORS.length)], hits: type === 'CHAIN' ? 2 : 1 };
+            grid[y][x + Math.floor(indent/2)] = { 
+                type: 'NORMAL', 
+                color: COLORS[Math.floor(Math.random() * COLORS.length)], 
+                hits: 1 
+            };
         }
     }
 }
@@ -189,22 +143,17 @@ function generateMap() {
     const container = document.getElementById('map-path-container');
     if (!container) return;
     container.innerHTML = '';
-    
     for (let i = 20; i >= 1; i--) {
         const node = document.createElement('div');
         node.className = 'level-node';
-        
         const row = Math.floor((i-1) / 3);
         const col = (i-1) % 3;
         const xOffset = (row % 2 === 0) ? (col - 1) * 80 : (1 - col) * 80;
         node.style.transform = `translateX(${xOffset}px)`;
-        
-        if (i > state.highestLevel) {
-            node.classList.add('locked');
-            node.innerHTML = `🔒`;
-        } else {
+        if (i > state.highestLevel) { node.classList.add('locked'); node.innerHTML = `🔒`; }
+        else {
             if (i === state.highestLevel) node.classList.add('active');
-            node.innerHTML = `${i}`;
+            node.innerHTML = `${i} <div style="font-size: 0.5rem; color: #f1c40f;">★★★</div>`;
             node.onclick = () => startGame(i);
         }
         container.appendChild(node);
@@ -241,20 +190,28 @@ function drawGrid() {
 function getPos(x, y) {
     const xOffset = y % 2 !== 0 ? BUBBLE_RADIUS : 0;
     const startX = (width - (COLUMNS * BUBBLE_RADIUS * 2)) / 2 + BUBBLE_RADIUS;
-    return { x: startX + x * BUBBLE_RADIUS * 2 + xOffset, y: y * BUBBLE_RADIUS * 1.75 + BUBBLE_RADIUS + 40 };
+    return { x: startX + x * BUBBLE_RADIUS * 2 + xOffset, y: y * BUBBLE_RADIUS * 1.75 + BUBBLE_RADIUS + 20 };
 }
 
 function drawBubble(x, y, color, type) {
+    // 1. Base Bubble
     ctx.beginPath();
     ctx.arc(x, y, BUBBLE_RADIUS - 1, 0, Math.PI * 2);
-    ctx.fillStyle = (type === 'ROCK') ? '#8E8E93' : color;
+    ctx.fillStyle = color;
     ctx.fill();
-    
-    // Gloss
-    const grad = ctx.createRadialGradient(x - 5, y - 5, 2, x, y, BUBBLE_RADIUS);
-    grad.addColorStop(0, 'rgba(255,255,255,0.4)');
-    grad.addColorStop(1, 'rgba(255,255,255,0)');
+
+    // 2. Glossy Radial Gradient (3D Effect)
+    const grad = ctx.createRadialGradient(x - BUBBLE_RADIUS/3, y - BUBBLE_RADIUS/3, BUBBLE_RADIUS/10, x, y, BUBBLE_RADIUS);
+    grad.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
+    grad.addColorStop(0.2, 'rgba(255, 255, 255, 0.2)');
+    grad.addColorStop(1, 'rgba(0, 0, 0, 0.2)');
     ctx.fillStyle = grad;
+    ctx.fill();
+
+    // 3. Strong Top Highlight (The "Shine")
+    ctx.beginPath();
+    ctx.ellipse(x - BUBBLE_RADIUS/3, y - BUBBLE_RADIUS/3, BUBBLE_RADIUS/4, BUBBLE_RADIUS/6, -Math.PI/4, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
     ctx.fill();
 }
 
@@ -264,20 +221,18 @@ function drawTrajectory() {
     let angle = Math.atan2(mouseY - center.y, mouseX - center.x);
     if (angle > 0) return;
 
-    ctx.setLineDash([4, 6]);
-    ctx.strokeStyle = 'rgba(108, 92, 231, 0.3)';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
+    ctx.fillStyle = 'rgba(162, 155, 254, 0.5)'; // Light purple dots
     let curX = center.x, curY = center.y;
-    let dx = Math.cos(angle) * 10, dy = Math.sin(angle) * 10;
-    for(let i=0; i<30; i++) {
+    let dx = Math.cos(angle) * 12, dy = Math.sin(angle) * 12;
+    for(let i=0; i<25; i++) {
         curX += dx; curY += dy;
         if (curX < BUBBLE_RADIUS || curX > width - BUBBLE_RADIUS) dx *= -1;
-        if (i % 2 === 0) ctx.lineTo(curX, curY);
-        else ctx.moveTo(curX, curY);
+        if (i % 2 === 0) {
+            ctx.beginPath();
+            ctx.arc(curX, curY, 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
-    ctx.stroke();
-    ctx.setLineDash([]);
 }
 
 function getBallCenter() {
@@ -293,15 +248,11 @@ function shoot() {
     isShooting = true;
     ballsRemaining--;
     state.stats.totalShots++;
-    
     const center = getBallCenter();
     const angle = Math.atan2(mouseY - center.y, mouseX - center.x);
-    
     activeBall = {
-        x: center.x,
-        y: center.y,
-        vx: Math.cos(angle) * 18,
-        vy: Math.sin(angle) * 18,
+        x: center.x, y: center.y,
+        vx: Math.cos(angle) * 18, vy: Math.sin(angle) * 18,
         color: activePowerup === 'RAINBOW' ? 'RAINBOW' : document.getElementById('active-ball').style.backgroundColor,
         powerup: activePowerup
     };
@@ -330,9 +281,8 @@ function updateBall() {
 }
 
 function snap() {
-    if (activeBall.powerup === 'FIREBALL') {
-        processFireball(activeBall.x, activeBall.y);
-    } else {
+    if (activeBall.powerup === 'FIREBALL') processFireball(activeBall.x, activeBall.y);
+    else {
         let minDist = Infinity;
         let tx = 0, ty = 0;
         for (let y = 0; y < ROWS; y++) {
@@ -349,21 +299,13 @@ function snap() {
         if (activeBall.powerup === 'BOMB') processBomb(tx, ty);
         else processMatches(tx, ty);
     }
-    activeBall = null;
-    isShooting = false;
-    prepareNext();
+    activeBall = null; isShooting = false; prepareNext();
 }
 
 function processBomb(tx, ty) {
     const neighbors = getNeighbors(tx, ty);
     neighbors.push([tx, ty]);
-    neighbors.forEach(([nx, ny]) => { 
-        if (grid[ny] && grid[ny][nx]) { 
-            grid[ny][nx] = null; 
-            state.score += 10; 
-            state.stats.totalPops++; 
-        } 
-    });
+    neighbors.forEach(([nx, ny]) => { if (grid[ny] && grid[ny][nx]) { grid[ny][nx] = null; state.score += 10; state.stats.totalPops++; } });
     checkFloating();
     if (isGoalMet() || isGridEmpty()) winLevel();
 }
@@ -373,11 +315,7 @@ function processFireball(ax, ay) {
         for (let x = 0; x < grid[y].length; x++) {
             if (grid[y][x]) {
                 const pos = getPos(x, y);
-                if (Math.abs(pos.x - ax) < BUBBLE_RADIUS * 2.5) { 
-                    grid[y][x] = null; 
-                    state.score += 10; 
-                    state.stats.totalPops++;
-                }
+                if (Math.abs(pos.x - ax) < BUBBLE_RADIUS * 2.5) { grid[y][x] = null; state.score += 10; state.stats.totalPops++; }
             }
         }
     }
@@ -409,8 +347,7 @@ function processMatches(x, y) {
         checkFloating();
         if (isGoalMet() || isGridEmpty()) winLevel();
     }
-    updateUI();
-    saveState();
+    updateUI(); saveState();
 }
 
 function checkFloating() {
@@ -426,11 +363,7 @@ function checkFloating() {
     }
     for (let y = 0; y < grid.length; y++) {
         for (let x = 0; x < grid[y].length; x++) {
-            if (grid[y][x] && grid[y][x].type !== 'ROCK' && !connected.has(`${x},${y}`)) { 
-                grid[y][x] = null; 
-                state.score += 5; 
-                state.stats.totalPops++;
-            }
+            if (grid[y][x] && grid[y][x].type !== 'ROCK' && !connected.has(`${x},${y}`)) { grid[y][x] = null; state.score += 5; state.stats.totalPops++; }
         }
     }
 }
@@ -449,15 +382,11 @@ function isGridEmpty() {
 }
 
 function winLevel() {
-    state.coins += 50;
-    state.stats.totalCoins += 50;
+    state.coins += 50; state.stats.totalCoins += 50;
     if (state.currentLevel === state.highestLevel) state.highestLevel++;
     saveState();
     openPopup('level-complete-popup');
-    document.getElementById('next-level-btn').onclick = () => { 
-        closePopup('level-complete-popup'); 
-        startGame(state.currentLevel + 1); 
-    };
+    document.getElementById('next-level-btn').onclick = () => { closePopup('level-complete-popup'); startGame(state.currentLevel + 1); };
 }
 
 function prepareNext() {
