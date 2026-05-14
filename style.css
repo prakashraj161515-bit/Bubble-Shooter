@@ -1,8 +1,8 @@
 :root {
   --p-purple: #7b6cff;
-  --p-yellow: #ffcf3e;
-  --p-green: #3ddc84;
-  --light-bg: linear-gradient(180deg, #f8f9ff 0%, #e0e7ff 100%);
+  --p-light-purple: #eef2ff;
+  --p-hud-bg: rgba(255, 255, 255, 0.8);
+  --p-shadow: 0 10px 30px rgba(0,0,0,0.05);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
@@ -17,47 +17,54 @@ body { background: #dce1ff; display: flex; justify-content: center; align-items:
 .screen { position: absolute; inset: 0; display: flex; flex-direction: column; z-index: 10; }
 .hidden { display: none !important; }
 
-/* MAP SCREEN */
-.light-bg { background: var(--light-bg); }
-.map-header { padding: 60px 20px 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); z-index: 100; position: absolute; top: 0; width: 100%; }
-.pill { background: #fff; padding: 10px 18px; border-radius: 20px; font-weight: 800; color: #ffb300; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-
-.map-content { 
-  flex: 1; overflow-y: scroll; padding: 120px 20px 100px; scroll-behavior: smooth;
-  scrollbar-width: none; /* Firefox */
+/* SKY BACKGROUND */
+.play-bg { 
+  background: linear-gradient(180deg, #6b8eff 0%, #a2b9ff 50%, #fff 100%); 
+  position: relative;
 }
-.map-content::-webkit-scrollbar { display: none; /* Chrome/Safari */ }
-
-/* THE WINDING PATH */
-.path-list {
-  display: flex; flex-direction: column-reverse; gap: 40px; position: relative; padding: 40px 0;
-}
-.path-list::before {
-  content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 8px; background: rgba(0,0,0,0.05); border-radius: 10px; transform: translateX(-50%);
+.play-bg::after {
+  content: '☁️☁️☁️'; position: absolute; bottom: 180px; width: 100%; text-align: center; font-size: 100px; opacity: 0.2; pointer-events: none;
 }
 
-.node {
-  width: 70px; height: 70px; border-radius: 50%; background: #fff;
-  display: flex; flex-direction: column; justify-content: center; align-items: center;
-  font-weight: 900; font-size: 24px; color: #ccc; box-shadow: 0 8px 0 #f0f0f0, 0 10px 20px rgba(0,0,0,0.05);
-  cursor: pointer; position: relative; z-index: 2; transition: transform 0.2s;
+/* TOP HUD (Exact Copy) */
+.game-hud {
+  padding: 50px 15px 15px; display: flex; align-items: center; justify-content: space-between;
+  background: var(--p-hud-bg); backdrop-filter: blur(20px); border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.03); z-index: 50;
 }
-.node:active { transform: scale(0.9); }
-.node.done { background: var(--p-green); color: #fff; box-shadow: 0 8px 0 #2ea663; }
-.node.active { background: var(--p-yellow); color: #fff; box-shadow: 0 8px 0 #d49e00; transform: scale(1.15); }
-.node.locked { opacity: 0.6; pointer-events: none; }
+.hud-round-btn { width: 45px; height: 45px; background: #eef2ff; border-radius: 50%; border: none; font-size: 20px; color: var(--p-purple); box-shadow: inset 0 -3px 0 #ddd; cursor: pointer; }
 
-/* Zig-Zag Alignment */
-.node:nth-child(4n+1) { align-self: center; margin-left: -100px; }
-.node:nth-child(4n+2) { align-self: center; margin-left: 0; }
-.node:nth-child(4n+3) { align-self: center; margin-left: 100px; }
-.node:nth-child(4n+4) { align-self: center; margin-left: 0; }
+.score-panel { background: #fff; border-radius: 25px; padding: 10px 20px; text-align: center; box-shadow: var(--p-shadow); width: 130px; }
+.score-panel span { font-size: 10px; font-weight: 800; color: #aaa; letter-spacing: 1px; }
+.score-panel h3 { font-size: 24px; color: #4a4a8c; font-weight: 900; }
+.star-progress { height: 10px; background: #eee; border-radius: 5px; margin-top: 5px; position: relative; }
+.star-progress .fill { height: 100%; width: 40%; background: linear-gradient(90deg, #ffcf3e, #ffb300); border-radius: 5px; }
+.star-progress .mark { position: absolute; top: -5px; font-size: 10px; color: #ccc; }
 
-.floating-shop { position: absolute; right: 20px; bottom: 40px; z-index: 200; animation: bounce 2s infinite; cursor: pointer; }
-.shop-inner { width: 70px; height: 70px; background: var(--p-purple); border-radius: 25px; display: flex; justify-content: center; align-items: center; font-size: 30px; box-shadow: 0 10px 0 #5a4bd6; }
-@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+.goal-panel { background: #fff; border-radius: 25px; padding: 10px 15px; display: flex; align-items: center; gap: 10px; box-shadow: var(--p-shadow); min-width: 90px; }
+.goal-bubble { width: 30px; height: 30px; background: radial-gradient(circle at 10px 10px, #e1baff, #c76bff); border-radius: 50%; box-shadow: 0 5px 10px rgba(0,0,0,0.1); }
 
-/* GAMEPLAY HUD */
-.game-hud { padding: 60px 20px 20px; display: flex; justify-content: space-between; align-items: center; background: #fff; }
-.hud-box { background: #f9faff; padding: 10px 25px; border-radius: 20px; text-align: center; }
-.cannon-area { height: 210px; background: #f9faff; border-radius: 40px 40px 0 0; display: flex; justify-content: center; align-items: center; }
+/* SHOOTER HUD (The Wave Design) */
+.shooter-area {
+  position: absolute; bottom: 0; width: 100%; height: 200px;
+  background: rgba(255,255,255,0.8); backdrop-filter: blur(20px);
+  border-top-left-radius: 45px; border-top-right-radius: 45px;
+  display: flex; justify-content: center; align-items: center; z-index: 100;
+}
+.shooter-wave {
+  width: 100%; height: 60px; position: absolute; top: -30px;
+  background: rgba(255,255,255,0.8); backdrop-filter: blur(20px);
+  border-radius: 50% 50% 0 0;
+}
+
+.controls-wrap { display: flex; align-items: flex-end; gap: 20px; position: relative; padding-bottom: 20px; }
+.pu-box { width: 85px; height: 85px; background: #fff; border-radius: 25px; display: flex; justify-content: center; align-items: center; position: relative; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+.pu-badge { position: absolute; bottom: -5px; right: -5px; background: var(--p-purple); color: #fff; font-size: 10px; padding: 4px 8px; border-radius: 10px; font-weight: 800; }
+
+.main-shooter { width: 100px; height: 100px; background: #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); position: relative; z-index: 10; margin-bottom: 30px; }
+.current-ball { width: 65px; height: 65px; border-radius: 50%; box-shadow: inset -5px -5px 10px rgba(0,0,0,0.1); }
+.swap-small { position: absolute; bottom: -5px; right: 10px; width: 35px; height: 35px; background: #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 2px solid #eef2ff; box-shadow: 0 5px 10px rgba(0,0,0,0.1); }
+.reserve-ball { width: 25px; height: 25px; border-radius: 50%; }
+
+/* BUBBLES IN CANVAS (Engine will use these colors) */
+canvas { flex: 1; z-index: 10; }
