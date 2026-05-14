@@ -4,320 +4,295 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Bubble Shooter Premium</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="game-container">
-        
-        <!-- SPLASH -->
-        <div id="splash-screen" class="screen" style="background: #fff; justify-content: center; align-items: center; z-index: 2000;">
-            <img src="bubble_shooter_logo_premium_1778697858318.png" class="logo-anim" alt="Logo">
-        </div>
+<div id="game-container">
 
-        <!-- MAIN MENU -->
-        <div id="main-menu" class="screen hidden">
-            <nav style="display: flex; justify-content: space-between; padding: 20px; width: 100%;">
-                <button class="btn-glossy" style="width: 44px; padding: 0; height: 44px; background: white;" onclick="openPopup('settings-popup')">⚙️</button>
-                <button class="btn-glossy" style="width: 44px; padding: 0; height: 44px; background: var(--grad-purple);">👑</button>
-            </nav>
-            <img src="bubble_shooter_logo_premium_1778697858318.png" class="logo-anim" alt="Logo">
-            <div style="display: flex; flex-direction: column; gap: 15px; width: 75%;">
-                <button class="btn-glossy" style="background: var(--grad-yellow); font-size: 1.5rem; padding: 20px;" onclick="showScreen('home-screen')">▶ PLAY</button>
-                <button class="btn-glossy" style="background: var(--grad-purple); font-size: 1.1rem;" onclick="showScreen('levels-screen')">LEVELS</button>
-                <button class="btn-glossy" style="background: var(--grad-purple); font-size: 1.1rem;" onclick="openPopup('daily-challenge-popup')">DAILY CHALLENGE</button>
-            </div>
-            <footer style="position: absolute; bottom: 40px; display: flex; gap: 20px;">
-                <button class="tab-item" onclick="openPopup('shop-popup')"><div class="tab-icon-circle">🛒</div><span>Shop</span></button>
-                <button class="tab-item" onclick="showScreen('spin-screen')"><div class="tab-icon-circle">🎡</div><span>Spin</span></button>
-                <button class="tab-item" onclick="showScreen('achievements-screen')"><div class="tab-icon-circle">🏆</div><span>Rewards</span></button>
-            </footer>
-        </div>
-
-        <!-- SPIN SCREEN -->
-        <div id="spin-screen" class="screen hidden" style="background: #f4f7ff; align-items: center;">
-            <header style="padding: 20px; display: flex; align-items: center; width: 100%; gap: 15px;">
-                <button onclick="showScreen('main-menu')" style="background: none; border: none; font-size: 1.5rem;">❮</button>
-                <h1 style="font-weight: 900; font-size: 1.5rem;">SPIN & WIN</h1>
-            </header>
-            <div class="wheel-pointer"></div>
-            <div id="spin-wheel" class="wheel-container">
-                <div class="wheel-center">🎡</div>
-                <div id="wheel-canvas-container" style="width: 100%; height: 100%;">
-                    <canvas id="wheelCanvas" width="300" height="300"></canvas>
-                </div>
-            </div>
-            <button id="spin-btn" class="btn-glossy" style="background: var(--grad-yellow); width: 60%; font-size: 1.5rem;" onclick="spinWheel()">SPIN</button>
-            <p style="margin-top: 20px; font-weight: 700; color: #999;">You have 3 spins left today</p>
-        </div>
-
-        <!-- LEVELS -->
-        <div id="levels-screen" class="screen hidden" style="background: #fff;">
-            <header style="padding: 20px; display: flex; align-items: center; gap: 15px;">
-                <button onclick="showScreen('main-menu')" style="background: none; border: none; font-size: 1.5rem;">❮</button>
-                <h1 style="font-weight: 900; font-size: 1.5rem;">LEVELS</h1>
-            </header>
-            <div class="world-selector">
-                <div class="world-card active" style="background: #2ecc71;">GREEN FOREST</div>
-                <div class="world-card" style="background: #3498db; opacity: 0.5;">SNOW LAND 🔒</div>
-            </div>
-            <div class="map-view" id="levels-grid" style="padding: 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;"></div>
-        </div>
-
-        <!-- MAP VIEW -->
-        <div id="home-screen" class="screen hidden">
-            <nav style="display: flex; justify-content: space-between; padding: 15px 20px; z-index: 5;">
-                <div style="display: flex; gap: 10px;">
-                    <div class="pill-status" style="background: white; padding: 6px 12px; border-radius: 20px; font-weight: 900; box-shadow: var(--shadow-soft);">❤️ FULL</div>
-                    <div class="pill-status" style="background: white; padding: 6px 12px; border-radius: 20px; font-weight: 900; box-shadow: var(--shadow-soft);">🪙 <span id="header-coins">1250</span></div>
-                </div>
-                <button class="btn-glossy" style="width: 36px; height: 36px; padding:0; background: white;" onclick="openPopup('settings-popup')">⚙️</button>
-            </nav>
-            <div class="world-header" style="z-index: 5;">
-                <div class="world-title">GREEN FOREST</div>
-                <div class="world-progress-bar">
-                    <div class="world-progress-fill" style="width: 45%;"></div>
-                </div>
-                <div style="font-size: 0.65rem; font-weight: 900; color: #999; margin-top: 5px;">30/90</div>
-            </div>
-            <div class="map-view" id="map-scroll-view">
-                <canvas id="mapPathCanvas" class="map-path-canvas"></canvas>
-                <div id="map-path-container" style="display: flex; flex-direction: column-reverse; align-items: center; gap: 40px; padding-bottom: 150px; position: relative; z-index: 2;"></div>
-            </div>
-            <footer class="tab-bar" style="z-index: 5;">
-                <button class="tab-item active" onclick="showScreen('home-screen')"><span>🏠</span><span>Home</span></button>
-                <button class="tab-item" onclick="showScreen('levels-screen')"><span>🗺️</span><span>Map</span></button>
-                <button class="tab-item" onclick="openPopup('shop-popup')"><span>🛍️</span><span>Shop</span></button>
-            </footer>
-        </div>
-
-        <!-- GAMEPLAY -->
-        <div id="gameplay-ui" class="screen hidden" style="background: linear-gradient(180deg, #d4f1ff 0%, #ffffff 100%);">
-            <header style="padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(10px); z-index: 10;">
-                <button onclick="showScreen('home-screen')" style="background: none; border: none; font-size: 1.5rem;">❮</button>
-                <div style="text-align: center;">
-                    <div style="font-size: 0.6rem; font-weight: 800; color: var(--dark-purple);">SCORE</div>
-                    <div style="font-size: 1.2rem; font-weight: 900;" id="current-score">0</div>
-                    <div style="display: flex; justify-content: center; gap: 2px; margin-top: 2px;">⭐<span style="opacity: 0.3;">⭐</span><span style="opacity: 0.3;">⭐</span></div>
-                </div>
-                <div style="background: white; border: 1px solid #eee; padding: 8px 15px; border-radius: 20px; font-weight: 900; display: flex; align-items: center; gap: 8px; box-shadow: var(--shadow-soft);">
-                    🎯 <span id="goal-text">0/6</span>
-                </div>
-            </header>
-            <canvas id="gameCanvas" style="flex: 1;"></canvas>
-            <div class="shooter-tray-v2">
-                <div class="shooter-bump"></div>
-                <div style="display: flex; justify-content: space-between; align-items: flex-end; width: 100%; max-width: 320px; padding-bottom: 10px;">
-                    <div style="background: white; padding: 10px; border-radius: 15px; box-shadow: var(--shadow-soft); position: relative;" onclick="usePowerup('BOMB')">
-                        <span style="font-size: 1.5rem;">💣</span>
-                        <span style="position: absolute; bottom: -5px; right: -5px; background: var(--dark-purple); color: white; font-size: 0.6rem; padding: 2px 6px; border-radius: 10px;" id="bomb-count">2</span>
-                    </div>
-                    <div class="cannon-visual-v2">
-                        <div id="active-ball" style="width: 50px; height: 50px; border-radius: 50%;"></div>
-                        <div id="next-ball" style="position: absolute; bottom: -10px; right: -10px; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"></div>
-                    </div>
-                    <div style="background: white; padding: 10px; border-radius: 15px; box-shadow: var(--shadow-soft); position: relative;" onclick="usePowerup('RAINBOW')">
-                        <span style="font-size: 1.5rem;">🌈</span>
-                        <span style="position: absolute; bottom: -5px; right: -5px; background: var(--dark-purple); color: white; font-size: 0.6rem; padding: 2px 6px; border-radius: 10px;" id="rainbow-count">3</span>
-                    </div>
-                </div>
-                <div style="text-align: center; background: white; padding: 6px 15px; border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-top: 10px; display: flex; gap: 10px; align-items: center;">
-                    <div style="font-size: 1.1rem; font-weight: 900; color: var(--dark-purple);" id="balls-text">60</div>
-                    <div style="font-size: 0.5rem; font-weight: 700;">BALLS LEFT</div>
-                    <button style="border: none; background: none; font-size: 1.2rem; cursor: pointer;" onclick="swapBalls()">🔄</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- DAILY CHALLENGE POPUP -->
-        <div id="daily-challenge-popup" class="popup-overlay hidden">
-            <div class="popup-card">
-                <button class="close-btn-round" onclick="closePopup('daily-challenge-popup')">✕</button>
-                <h2 style="margin-bottom: 5px;">DAILY CHALLENGE</h2>
-                <p style="color: #666; font-size: 0.8rem; margin-bottom: 20px;">Complete today's challenge and get amazing rewards!</p>
-                <div class="challenge-tier">
-                    <div class="tier-progress"><div class="tier-fill" style="width: 45%;"></div></div>
-                    <div class="tier-box active">🎁<div style="position: absolute; bottom: -20px; font-size: 0.6rem; font-weight: 900;">10</div></div>
-                    <div class="tier-box">🎁<div style="position: absolute; bottom: -20px; font-size: 0.6rem; font-weight: 900;">20</div></div>
-                    <div class="tier-box">🎁<div style="position: absolute; bottom: -20px; font-size: 0.6rem; font-weight: 900;">30</div></div>
-                </div>
-                <div style="background: #f8f9ff; padding: 15px; border-radius: 20px; text-align: left; margin-bottom: 20px;">
-                    <div style="font-weight: 900; font-size: 0.8rem; color: var(--dark-purple);">CHALLENGE TASK</div>
-                    <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
-                        <span style="font-size: 1.5rem;">🟣</span>
-                        <div style="flex: 1;">
-                            <div style="font-weight: 700; font-size: 0.75rem;">Pop 30 Purple Bubbles</div>
-                            <div class="prog-container" style="height: 6px;"><div class="prog-fill" style="width: 60%; background: var(--grad-yellow);"></div></div>
-                        </div>
-                        <div style="font-weight: 900; font-size: 0.8rem;">18/30</div>
-                    </div>
-                </div>
-                <button class="btn-glossy" style="background: var(--grad-yellow); width: 100%;" onclick="startGame(1)">PLAY</button>
-            </div>
-        </div>
-
-        <!-- ACHIEVEMENTS SCREEN -->
-        <div id="achievements-screen" class="screen hidden" style="background: #fff; overflow-y: auto;">
-            <header style="padding: 20px; display: flex; align-items: center; gap: 15px; flex-shrink: 0;">
-                <button onclick="showScreen('main-menu')" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">❮</button>
-                <h1 style="font-weight: 900; font-size: 1.5rem;">ACHIEVEMENTS</h1>
-                <button onclick="closePopup('achievements-screen')" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; margin-left: auto;">✕</button>
-            </header>
-            <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 15px; padding-bottom: 40px;">
-                <div class="ach-item" style="background: white; padding: 15px; border-radius: 20px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 15px rgba(108,92,231,0.08);">
-                    <div style="width: 55px; height: 55px; background: #fff8e1; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; flex-shrink: 0;">🌟</div>
-                    <div style="flex: 1;">
-                        <div style="font-weight: 900; font-size: 0.9rem;">Bubble Popper</div>
-                        <div style="font-size: 0.7rem; color: #999; margin-bottom: 6px;">Pop 100 Bubbles</div>
-                        <div style="height: 8px; background: #eee; border-radius: 4px; overflow: hidden;"><div id="ach-pop-fill" style="height: 100%; background: linear-gradient(90deg, #a29bfe, #6c5ce7); width: 0%; transition: width 0.5s;"></div></div>
-                    </div>
-                    <div style="font-weight: 900; font-size: 0.8rem; color: #666; flex-shrink: 0;" id="ach-pop-text">0/100</div>
-                </div>
-                <div class="ach-item" style="background: white; padding: 15px; border-radius: 20px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 15px rgba(108,92,231,0.08);">
-                    <div style="width: 55px; height: 55px; background: #e8f4fd; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; flex-shrink: 0;">🎯</div>
-                    <div style="flex: 1;">
-                        <div style="font-weight: 900; font-size: 0.9rem;">Sharpshooter</div>
-                        <div style="font-size: 0.7rem; color: #999; margin-bottom: 6px;">Make 50 Shots</div>
-                        <div style="height: 8px; background: #eee; border-radius: 4px; overflow: hidden;"><div id="ach-shot-fill" style="height: 100%; background: linear-gradient(90deg, #a29bfe, #6c5ce7); width: 0%; transition: width 0.5s;"></div></div>
-                    </div>
-                    <div style="font-weight: 900; font-size: 0.8rem; color: #666; flex-shrink: 0;" id="ach-shot-text">0/50</div>
-                </div>
-                <div class="ach-item" style="background: white; padding: 15px; border-radius: 20px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 15px rgba(108,92,231,0.08);">
-                    <div style="width: 55px; height: 55px; background: #fef9e7; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; flex-shrink: 0;">🪙</div>
-                    <div style="flex: 1;">
-                        <div style="font-weight: 900; font-size: 0.9rem;">Collector</div>
-                        <div style="font-size: 0.7rem; color: #999; margin-bottom: 6px;">Collect 1000 Coins</div>
-                        <div style="height: 8px; background: #eee; border-radius: 4px; overflow: hidden;"><div id="ach-coin-fill" style="height: 100%; background: linear-gradient(90deg, #fdcb6e, #e17055); width: 0%; transition: width 0.5s;"></div></div>
-                    </div>
-                    <div style="font-weight: 900; font-size: 0.8rem; color: #666; flex-shrink: 0;" id="ach-coin-text">0/1000</div>
-                </div>
-                <div class="ach-item" style="background: white; padding: 15px; border-radius: 20px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 15px rgba(108,92,231,0.08);">
-                    <div style="width: 55px; height: 55px; background: #eafaf1; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; flex-shrink: 0;">🏅</div>
-                    <div style="flex: 1;">
-                        <div style="font-weight: 900; font-size: 0.9rem;">Level Master</div>
-                        <div style="font-size: 0.7rem; color: #999; margin-bottom: 6px;">Complete 10 Levels</div>
-                        <div style="height: 8px; background: #eee; border-radius: 4px; overflow: hidden;"><div id="ach-level-fill" style="height: 100%; background: linear-gradient(90deg, #00D68F, #2ecc71); width: 0%; transition: width 0.5s;"></div></div>
-                    </div>
-                    <div style="font-weight: 900; font-size: 0.8rem; color: #666; flex-shrink: 0;" id="ach-level-text">0/10</div>
-                </div>
-                <div class="ach-item" style="background: white; padding: 15px; border-radius: 20px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 15px rgba(108,92,231,0.08);">
-                    <div style="width: 55px; height: 55px; background: #fdecea; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; flex-shrink: 0;">📅</div>
-                    <div style="flex: 1;">
-                        <div style="font-weight: 900; font-size: 0.9rem;">Daily Player</div>
-                        <div style="font-size: 0.7rem; color: #999; margin-bottom: 6px;">Play 7 Days in a Row</div>
-                        <div style="height: 8px; background: #eee; border-radius: 4px; overflow: hidden;"><div style="height: 100%; background: linear-gradient(90deg, #FF3D71, #e74c3c); width: 30%;"></div></div>
-                    </div>
-                    <div style="font-weight: 900; font-size: 0.8rem; color: #666; flex-shrink: 0;">3/7</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- SHOP POPUP -->
-        <div id="shop-popup" class="popup-overlay hidden">
-            <div class="popup-card" style="background: white; width: 90%; border-radius: 30px; padding: 25px 20px; position: relative; max-height: 80vh; overflow-y: auto;">
-                <button onclick="closePopup('shop-popup')" style="position: absolute; top: -10px; right: -10px; width: 34px; height: 34px; background: var(--dark-purple); color: white; border-radius: 50%; border: 3px solid white; font-weight: 900; cursor: pointer;">✕</button>
-                <h2 style="font-weight: 900; text-align: center; margin-bottom: 20px; color: var(--dark-purple);">SHOP</h2>
-
-                <div style="font-weight: 900; color: #333; margin-bottom: 12px; font-size: 0.9rem;">⚡ POWER UPS</div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-                    <div style="background: #f8f9ff; padding: 15px 10px; border-radius: 18px; text-align: center;">
-                        <div style="font-size: 2rem; margin-bottom: 8px;">💣</div>
-                        <div style="font-size: 0.7rem; font-weight: 700; color: #666; margin-bottom: 8px;">Bomb</div>
-                        <button class="btn-glossy" style="background: var(--grad-purple); padding: 8px 12px; font-size: 0.7rem; border-radius: 12px;" onclick="buyItem('BOMB', 50)">🪙 50</button>
-                    </div>
-                    <div style="background: #f8f9ff; padding: 15px 10px; border-radius: 18px; text-align: center;">
-                        <div style="font-size: 2rem; margin-bottom: 8px;">🌈</div>
-                        <div style="font-size: 0.7rem; font-weight: 700; color: #666; margin-bottom: 8px;">Color Ball</div>
-                        <button class="btn-glossy" style="background: var(--grad-purple); padding: 8px 12px; font-size: 0.7rem; border-radius: 12px;" onclick="buyItem('RAINBOW', 50)">🪙 50</button>
-                    </div>
-                    <div style="background: #f8f9ff; padding: 15px 10px; border-radius: 18px; text-align: center;">
-                        <div style="font-size: 2rem; margin-bottom: 8px;">🔥</div>
-                        <div style="font-size: 0.7rem; font-weight: 700; color: #666; margin-bottom: 8px;">Fireball</div>
-                        <button class="btn-glossy" style="background: var(--grad-purple); padding: 8px 12px; font-size: 0.7rem; border-radius: 12px;" onclick="buyItem('FIREBALL', 50)">🪙 50</button>
-                    </div>
-                </div>
-
-                <div style="font-weight: 900; color: #333; margin-bottom: 12px; font-size: 0.9rem;">🪙 COINS</div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                    <div style="background: #fffbf0; padding: 12px; border-radius: 18px; text-align: center;">
-                        <div style="font-size: 2rem; margin-bottom: 5px;">💰</div>
-                        <div style="font-weight: 900; font-size: 1rem;">500</div>
-                        <div style="font-size: 0.8rem; font-weight: 700; color: var(--dark-purple);">₹49</div>
-                    </div>
-                    <div style="background: #fffbf0; padding: 12px; border-radius: 18px; text-align: center; border: 2px solid var(--accent-yellow);">
-                        <div style="font-size: 2rem; margin-bottom: 5px;">💰</div>
-                        <div style="font-weight: 900; font-size: 1rem;">2500</div>
-                        <div style="font-size: 0.65rem; background: #e74c3c; color: white; padding: 2px 6px; border-radius: 8px; font-weight: 900; margin-bottom: 4px;">BEST VALUE</div>
-                        <div style="font-size: 0.8rem; font-weight: 700; color: var(--dark-purple);">₹199</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- SETTINGS POPUP -->
-        <div id="settings-popup" class="popup-overlay hidden">
-            <div class="popup-card" style="background: white; width: 85%; border-radius: 30px; padding: 30px 25px; position: relative;">
-                <button onclick="closePopup('settings-popup')" style="position: absolute; top: -10px; right: -10px; width: 34px; height: 34px; background: var(--dark-purple); color: white; border-radius: 50%; border: 3px solid white; font-weight: 900; cursor: pointer;">✕</button>
-                <h2 style="font-weight: 900; margin-bottom: 20px; color: #1d1d1f;">SETTINGS</h2>
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f0f0f0;">
-                    <div style="display: flex; align-items: center; gap: 10px;"><span style="font-size: 1.2rem;">🔊</span><span style="font-weight: 700;">Sound</span></div>
-                    <div class="toggle on" onclick="this.classList.toggle('on')" style="width: 50px; height: 28px; border-radius: 14px; position: relative; cursor: pointer; background: #2ecc71; transition: background 0.3s;"></div>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f0f0f0;">
-                    <div style="display: flex; align-items: center; gap: 10px;"><span style="font-size: 1.2rem;">🎵</span><span style="font-weight: 700;">Music</span></div>
-                    <div class="toggle on" onclick="this.classList.toggle('on')" style="width: 50px; height: 28px; border-radius: 14px; position: relative; cursor: pointer; background: #2ecc71; transition: background 0.3s;"></div>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f0f0f0;">
-                    <div style="display: flex; align-items: center; gap: 10px;"><span style="font-size: 1.2rem;">📳</span><span style="font-weight: 700;">Vibration</span></div>
-                    <div class="toggle on" onclick="this.classList.toggle('on')" style="width: 50px; height: 28px; border-radius: 14px; position: relative; cursor: pointer; background: #2ecc71; transition: background 0.3s;"></div>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f0f0f0;">
-                    <div style="display: flex; align-items: center; gap: 10px;"><span style="font-size: 1.2rem;">🔔</span><span style="font-weight: 700;">Notifications</span></div>
-                    <div class="toggle" onclick="this.classList.toggle('on')" style="width: 50px; height: 28px; border-radius: 14px; position: relative; cursor: pointer; background: #ccc; transition: background 0.3s;"></div>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f0f0f0;">
-                    <div style="display: flex; align-items: center; gap: 10px;"><span style="font-size: 1.2rem;">⭐</span><span style="font-weight: 700;">Rate Us</span></div>
-                    <span style="color: #ccc; font-size: 1.2rem;">›</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f0f0f0;">
-                    <div style="display: flex; align-items: center; gap: 10px;"><span style="font-size: 1.2rem;">🔒</span><span style="font-weight: 700;">Privacy Policy</span></div>
-                    <span style="color: #ccc; font-size: 1.2rem;">›</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 0;">
-                    <div style="display: flex; align-items: center; gap: 10px;"><span style="font-size: 1.2rem;">ℹ️</span><span style="font-weight: 700;">About Us</span></div>
-                    <span style="color: #ccc; font-size: 1.2rem;">›</span>
-                </div>
-                <button class="btn-glossy" style="background: #e74c3c; width: 100%; margin-top: 10px; border-radius: 15px; padding: 15px;">LOG OUT</button>
-            </div>
-        </div>
-
-        <!-- LEVEL COMPLETE POPUP -->
-        <div id="level-complete-popup" class="popup-overlay hidden">
-            <div style="background: white; width: 85%; border-radius: 30px; padding: 30px 25px; text-align: center; position: relative; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
-                <div style="font-size: 3.5rem; margin-bottom: 10px;">⭐🏆⭐</div>
-                <h2 style="font-weight: 900; font-size: 1.5rem; color: var(--dark-purple); margin-bottom: 8px;">WELL DONE!</h2>
-                <p style="color: #999; font-size: 0.85rem; margin-bottom: 25px;">Level Completed! You earned 50 coins 🪙</p>
-                <button class="btn-glossy" id="next-level-btn" style="background: var(--grad-yellow); width: 100%; font-size: 1.1rem; padding: 18px;">NEXT LEVEL ›</button>
-            </div>
-        </div>
-
+    <!-- ══════════ SPLASH ══════════ -->
+    <div id="splash-screen" class="screen">
+        <img src="bubble_shooter_logo_premium_1778697858318.png" class="logo-anim" alt="Bubble Shooter">
+        <div class="spinner"></div>
     </div>
-    <script src="game.js"></script>
-    <style>
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .popup-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; }
-        .toggle::after { content: ''; position: absolute; left: 2px; top: 2px; width: 24px; height: 24px; background: white; border-radius: 50%; transition: left 0.3s; }
-        .toggle.on { background: #2ecc71 !important; }
-        .toggle.on::after { left: 24px; }
-        .tab-bar { background: white; border-top: 1px solid #eee; display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); }
-        .world-header { background: rgba(255,255,255,0.85); backdrop-filter: blur(20px); margin: 10px 20px; padding: 12px 15px; border-radius: 20px; box-shadow: 0 6px 20px rgba(108,92,231,0.1); text-align: center; z-index: 5; }
-        .world-title { font-weight: 900; color: var(--dark-purple); font-size: 1rem; text-transform: uppercase; margin-bottom: 6px; }
-        .world-progress-bar { height: 8px; background: #eee; border-radius: 4px; overflow: hidden; }
-        .world-progress-fill { height: 100%; background: linear-gradient(90deg, #3498db, #2980b9); border-radius: 4px; }
-        .world-selector { display: flex; gap: 15px; padding: 10px 20px; overflow-x: auto; scrollbar-width: none; }
-        .world-card { flex-shrink: 0; width: 130px; height: 75px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.3); font-size: 0.85rem; }
-        .world-card.active { border: 3px solid var(--accent-yellow); }
-        .ach-item { background: white; padding: 15px; border-radius: 20px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 15px rgba(108,92,231,0.08); }
-    </style>
+
+    <!-- ══════════ MAIN MENU ══════════ -->
+    <div id="main-menu" class="screen hidden">
+        <nav class="top-nav-row">
+            <button class="icon-btn" onclick="openPopup('settings-popup')">⚙️</button>
+            <button class="icon-btn gold" onclick="openPopup('shop-popup')">👑</button>
+        </nav>
+        <img src="bubble_shooter_logo_premium_1778697858318.png" class="logo-anim" alt="Bubble Shooter">
+        <div class="menu-btns">
+            <button class="btn-glossy yellow big" onclick="showScreen('home-screen')">▶ PLAY</button>
+            <button class="btn-glossy purple" onclick="showScreen('levels-screen')">LEVELS</button>
+            <button class="btn-glossy purple" onclick="openPopup('daily-challenge-popup')">DAILY CHALLENGE</button>
+        </div>
+        <footer class="menu-footer">
+            <button class="footer-tab" onclick="openPopup('shop-popup')">
+                <div class="footer-icon">🛒</div><span>Shop</span>
+            </button>
+            <button class="footer-tab" onclick="showScreen('spin-screen')">
+                <div class="footer-icon">🎡</div><span>Spin</span>
+            </button>
+            <button class="footer-tab" onclick="showScreen('achievements-screen')">
+                <div class="footer-icon">🏆</div><span>Rewards</span>
+            </button>
+        </footer>
+    </div>
+
+    <!-- ══════════ MAP SCREEN ══════════ -->
+    <div id="home-screen" class="screen hidden map-screen">
+        <nav class="map-nav">
+            <div class="pill-row">
+                <div class="pill">❤️ FULL</div>
+                <div class="pill">🪙 <span id="header-coins">0</span></div>
+            </div>
+            <button class="icon-btn sm" onclick="openPopup('settings-popup')">⚙️</button>
+        </nav>
+        <div class="world-banner">
+            <div class="world-name">🌿 GREEN FOREST</div>
+            <div class="world-bar-wrap"><div class="world-bar-fill" id="world-bar"></div></div>
+            <div class="world-prog-label" id="world-prog-label">0/90</div>
+        </div>
+        <div class="map-scroll" id="map-scroll">
+            <canvas id="mapCanvas" class="map-canvas"></canvas>
+            <div id="map-nodes" class="map-nodes"></div>
+        </div>
+        <footer class="tab-bar">
+            <button class="tab-btn active" onclick="showScreen('home-screen')">🏠<span>Home</span></button>
+            <button class="tab-btn" onclick="showScreen('levels-screen')">🗺️<span>Map</span></button>
+            <button class="tab-btn" onclick="openPopup('shop-popup')">🛍️<span>Shop</span></button>
+        </footer>
+    </div>
+
+    <!-- ══════════ LEVELS SCREEN ══════════ -->
+    <div id="levels-screen" class="screen hidden" style="background:#fff;">
+        <header class="screen-header">
+            <button class="back-btn" onclick="showScreen('main-menu')">❮</button>
+            <h1>LEVELS</h1>
+        </header>
+        <div class="world-tabs">
+            <div class="world-tab active green">🌿 Green Forest</div>
+            <div class="world-tab locked blue">❄️ Snow Land 🔒</div>
+            <div class="world-tab locked orange">🏜️ Desert 🔒</div>
+        </div>
+        <div id="levels-grid" class="levels-grid"></div>
+    </div>
+
+    <!-- ══════════ ACHIEVEMENTS SCREEN ══════════ -->
+    <div id="achievements-screen" class="screen hidden" style="background:#f8f9ff;">
+        <header class="screen-header">
+            <button class="back-btn" onclick="showScreen('main-menu')">❮</button>
+            <h1>ACHIEVEMENTS</h1>
+        </header>
+        <div class="ach-list">
+            <div class="ach-card">
+                <div class="ach-icon" style="background:#fff8e1;">🌟</div>
+                <div class="ach-body">
+                    <div class="ach-title">Bubble Popper</div>
+                    <div class="ach-sub">Pop 100 Bubbles</div>
+                    <div class="prog-bar"><div class="prog-fill purple" id="ach-pop-fill"></div></div>
+                </div>
+                <div class="ach-count" id="ach-pop-text">0/100</div>
+            </div>
+            <div class="ach-card">
+                <div class="ach-icon" style="background:#e8f5fd;">🎯</div>
+                <div class="ach-body">
+                    <div class="ach-title">Sharpshooter</div>
+                    <div class="ach-sub">Make 10 Perfect Shots</div>
+                    <div class="prog-bar"><div class="prog-fill purple" id="ach-shot-fill"></div></div>
+                </div>
+                <div class="ach-count" id="ach-shot-text">0/10</div>
+            </div>
+            <div class="ach-card">
+                <div class="ach-icon" style="background:#fef9e7;">🪙</div>
+                <div class="ach-body">
+                    <div class="ach-title">Collector</div>
+                    <div class="ach-sub">Collect 1000 Coins</div>
+                    <div class="prog-bar"><div class="prog-fill orange" id="ach-coin-fill"></div></div>
+                </div>
+                <div class="ach-count" id="ach-coin-text">0/1000</div>
+            </div>
+            <div class="ach-card">
+                <div class="ach-icon" style="background:#eafaf1;">🏅</div>
+                <div class="ach-body">
+                    <div class="ach-title">Level Master</div>
+                    <div class="ach-sub">Complete 10 Levels</div>
+                    <div class="prog-bar"><div class="prog-fill green" id="ach-level-fill"></div></div>
+                </div>
+                <div class="ach-count" id="ach-level-text">0/10</div>
+            </div>
+            <div class="ach-card">
+                <div class="ach-icon" style="background:#fdecea;">📅</div>
+                <div class="ach-body">
+                    <div class="ach-title">Daily Player</div>
+                    <div class="ach-sub">Play 7 Days in a Row</div>
+                    <div class="prog-bar"><div class="prog-fill red" style="width:43%;"></div></div>
+                </div>
+                <div class="ach-count">3/7</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════ SPIN SCREEN ══════════ -->
+    <div id="spin-screen" class="screen hidden" style="background:#f4f7ff; align-items:center;">
+        <header class="screen-header">
+            <button class="back-btn" onclick="showScreen('main-menu')">❮</button>
+            <h1>SPIN & WIN</h1>
+        </header>
+        <div class="spin-area">
+            <div class="spin-pointer">▼</div>
+            <canvas id="wheelCanvas" width="280" height="280" class="wheel-canvas"></canvas>
+        </div>
+        <button id="spin-btn" class="btn-glossy yellow big mt20" onclick="spinWheel()">SPIN</button>
+        <p id="spins-left-text" class="spins-label">You have 3 spins left today</p>
+    </div>
+
+    <!-- ══════════ GAMEPLAY ══════════ -->
+    <div id="gameplay-ui" class="screen hidden gameplay-bg">
+        <header class="game-hud">
+            <button class="icon-btn sm" onclick="showScreen('home-screen')">⏸</button>
+            <div class="hud-score">
+                <div class="hud-label">SCORE</div>
+                <div class="hud-value" id="current-score">0</div>
+                <div class="hud-stars">⭐<span style="opacity:.3">⭐</span><span style="opacity:.3">⭐</span></div>
+            </div>
+            <div class="hud-goal">
+                🎯 <span id="goal-text">0/6</span>
+            </div>
+        </header>
+
+        <canvas id="gameCanvas" style="flex:1; display:block;"></canvas>
+
+        <div class="shooter-tray">
+            <!-- Curved bump -->
+            <div class="tray-bump"></div>
+
+            <div class="tray-row">
+                <!-- Bomb powerup -->
+                <div class="powerup-btn" onclick="usePowerup('BOMB')">
+                    <span class="pu-icon">💣</span>
+                    <span class="pu-badge" id="bomb-count">2</span>
+                </div>
+
+                <!-- Cannon -->
+                <div class="cannon">
+                    <div id="active-ball" class="active-ball"></div>
+                    <div id="next-ball" class="next-ball"></div>
+                </div>
+
+                <!-- Rainbow powerup -->
+                <div class="powerup-btn" onclick="usePowerup('RAINBOW')">
+                    <span class="pu-icon">🌈</span>
+                    <span class="pu-badge" id="rainbow-count">3</span>
+                </div>
+            </div>
+
+            <div class="tray-footer">
+                <span class="balls-left" id="balls-text">60</span>
+                <span class="balls-label">balls left</span>
+                <button class="swap-btn" onclick="swapBalls()">🔄</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════ POPUPS ══════════ -->
+
+    <!-- Daily Challenge -->
+    <div id="daily-challenge-popup" class="overlay hidden">
+        <div class="modal">
+            <button class="modal-close" onclick="closePopup('daily-challenge-popup')">✕</button>
+            <h2>DAILY CHALLENGE</h2>
+            <p class="modal-sub">Complete today's challenge and get amazing rewards!</p>
+            <div class="tier-row">
+                <div class="tier-bar-bg"><div class="tier-bar-fill" style="width:45%"></div></div>
+                <div class="tier-box done">🎁<div class="tier-num">10</div></div>
+                <div class="tier-box">🎁<div class="tier-num">20</div></div>
+                <div class="tier-box">🎁<div class="tier-num">30</div></div>
+            </div>
+            <div class="challenge-task">
+                <div class="task-label">CHALLENGE TASK</div>
+                <div class="task-row">
+                    <span style="font-size:1.5rem;">🟣</span>
+                    <div style="flex:1;">
+                        <div class="task-name">Pop 30 Purple Bubbles</div>
+                        <div class="prog-bar sm"><div class="prog-fill orange" style="width:60%;"></div></div>
+                    </div>
+                    <span class="task-count">18/30</span>
+                </div>
+            </div>
+            <button class="btn-glossy yellow big w100 mt20" onclick="startGame(1);closePopup('daily-challenge-popup')">PLAY</button>
+        </div>
+    </div>
+
+    <!-- Shop -->
+    <div id="shop-popup" class="overlay hidden">
+        <div class="modal wide">
+            <button class="modal-close" onclick="closePopup('shop-popup')">✕</button>
+            <h2>SHOP</h2>
+            <div class="section-label">⚡ POWER UPS</div>
+            <div class="shop-grid">
+                <div class="shop-card">
+                    <div class="shop-icon">💣</div>
+                    <div class="shop-name">Bomb</div>
+                    <button class="btn-glossy purple sm" onclick="buyItem('BOMB',50)">🪙 50</button>
+                </div>
+                <div class="shop-card">
+                    <div class="shop-icon">🌈</div>
+                    <div class="shop-name">Color Ball</div>
+                    <button class="btn-glossy purple sm" onclick="buyItem('RAINBOW',50)">🪙 50</button>
+                </div>
+                <div class="shop-card">
+                    <div class="shop-icon">🔥</div>
+                    <div class="shop-name">Fireball</div>
+                    <button class="btn-glossy purple sm" onclick="buyItem('FIREBALL',50)">🪙 50</button>
+                </div>
+            </div>
+            <div class="section-label mt20">🪙 COINS</div>
+            <div class="coin-grid">
+                <div class="coin-card"><div class="coin-icon">💰</div><div class="coin-amt">500</div><div class="coin-price">₹49</div></div>
+                <div class="coin-card best"><div class="coin-icon">💰</div><div class="coin-amt">1200</div><div class="coin-price">₹99</div></div>
+                <div class="coin-card"><div class="coin-icon">💰</div><div class="coin-amt">2500</div><div class="coin-price">₹199</div></div>
+                <div class="coin-card best"><div class="best-badge">BEST VALUE</div><div class="coin-icon">💰</div><div class="coin-amt">5500</div><div class="coin-price">₹399</div></div>
+            </div>
+            <div class="no-ads-row">
+                <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:1.5rem;">🚫</span><div><div style="font-weight:800;font-size:.9rem;">No Ads</div><div style="font-size:.7rem;color:#999;">Enjoy the game without any interruptions</div></div></div>
+                <button class="btn-glossy red sm">₹99</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings -->
+    <div id="settings-popup" class="overlay hidden">
+        <div class="modal">
+            <button class="modal-close" onclick="closePopup('settings-popup')">✕</button>
+            <h2>SETTINGS</h2>
+            <div class="settings-list">
+                <div class="setting-row"><div class="setting-label">🔊 Sound</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+                <div class="setting-row"><div class="setting-label">🎵 Music</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+                <div class="setting-row"><div class="setting-label">📳 Vibration</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+                <div class="setting-row"><div class="setting-label">🔔 Notifications</div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+                <div class="setting-row link"><div class="setting-label">⭐ Rate Us</div><span>›</span></div>
+                <div class="setting-row link"><div class="setting-label">🔒 Privacy Policy</div><span>›</span></div>
+                <div class="setting-row link"><div class="setting-label">ℹ️ About Us</div><span>›</span></div>
+            </div>
+            <button class="btn-glossy red big w100 mt20">LOG OUT</button>
+        </div>
+    </div>
+
+    <!-- Level Complete -->
+    <div id="level-complete-popup" class="overlay hidden">
+        <div class="modal center">
+            <div style="font-size:3.5rem;">⭐🏆⭐</div>
+            <h2>WELL DONE!</h2>
+            <p class="modal-sub">Level Completed! +50 🪙</p>
+            <button class="btn-glossy yellow big w100 mt20" id="next-level-btn">NEXT LEVEL ›</button>
+        </div>
+    </div>
+
+</div><!-- end #game-container -->
+<script src="game.js"></script>
 </body>
 </html>

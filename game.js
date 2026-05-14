@@ -1,596 +1,533 @@
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+'use strict';
+// ══════════════════════════════════════════
+//  BUBBLE SHOOTER PREMIUM — game.js
+//  State v7 | Complete & final
+// ══════════════════════════════════════════
 
-let width, height;
-const BUBBLE_RADIUS = 20; 
-const COLUMNS = 9;
-const ROWS = 20;
+const canvas  = document.getElementById('gameCanvas');
+const ctx     = canvas.getContext('2d');
+const wCanvas = document.getElementById('wheelCanvas');
+const wCtx    = wCanvas.getContext('2d');
 
-// Vibrant Colors
-const COLORS = [
-    '#FF3D71', '#3366FF', '#00D68F', '#FFAA00', '#A29BFE', '#FF708D'
+// ──────── CONSTANTS ────────
+const R       = 20;        // bubble radius
+const COLS    = 9;
+const ROWS    = 22;
+const SPEED   = 18;
+const COLORS  = ['#FF3D71','#3366FF','#00D68F','#FFAA00','#A29BFE','#FF708D'];
+
+// ──────── WHEEL CONFIG ────────
+const WHEEL_SEGS = [
+    { label:'100🪙',  color:'#FF3D71', reward:{type:'coins', val:100}  },
+    { label:'500🪙',  color:'#FFAA00', reward:{type:'coins', val:500}  },
+    { label:'💣x2',   color:'#A29BFE', reward:{type:'BOMB',  val:2}   },
+    { label:'20🪙',   color:'#00D68F', reward:{type:'coins', val:20}   },
+    { label:'🌈x2',   color:'#3366FF', reward:{type:'RAINBOW',val:2}  },
+    { label:'80🪙',   color:'#FF708D', reward:{type:'coins', val:80}   },
+    { label:'200🪙',  color:'#FFAA00', reward:{type:'coins', val:200}  },
+    { label:'50🪙',   color:'#00D68F', reward:{type:'coins', val:50}   },
 ];
 
-// GAME STATE
-let state = {
-    coins: 100,
+// ──────── PERSISTENT STATE ────────
+let S = {
+    coins: 200,
     highestLevel: 1,
-    currentLevel: 1,
     score: 0,
-    powerups: { BOMB: 2, FIREBALL: 1, RAINBOW: 3 },
-    stats: { totalPops: 0, totalShots: 0, totalCoins: 100 },
-    settings: { sound: true, music: true, vibration: true },
-    dailyChallenge: { id: new Date().toDateString(), target: 30, current: 0, completed: false },
+    powerups: { BOMB:2, FIREBALL:1, RAINBOW:3 },
+    stats: { totalPops:0, totalShots:0, totalCoins:200 },
     spinsLeft: 3,
-    lastSpinDate: ''
+    spinDate: '',
+    challengeDate: '',
+    challengeProg: 18,
 };
 
-// RUNTIME
-let grid = [];
-let ballsRemaining = 60;
+// ──────── RUNTIME STATE ────────
+let grid       = [];
+let ballsLeft  = 60;
 let activeBall = null;
-let isShooting = false;
-let mouseX = 0, mouseY = 0;
-let activePowerup = null;
-let currentGoal = { color: COLORS[4], target: 6, current: 0 };
+let nextColor  = COLORS[0];
+let shooting   = false;
+let mx = 0, my = 0;
+let activePU   = null;
+let currentLevel = 1;
+let goal       = { color: COLORS[4], need:6, done:0 };
+let wheelAngle = 0;
+let wheelSpinning = false;
+let mapNodePositions = [];   // for path drawing
 
-// =====================
+// ══════════════════════════════════════════
 //  INIT
-// =====================
+// ══════════════════════════════════════════
 function init() {
-    loadState();
-    updateUI();
+    load();
     generateMap();
-    generateLevelsGrid();
+    generateLevels();
     drawWheel();
+    updateUI();
+
+    // input
+    canvas.addEventListener('mousemove', e => { const r=canvas.getBoundingClientRect(); mx=e.clientX-r.left; my=e.clientY-r.top; });
+    canvas.addEventListener('mouseup',   () => { if(!shooting && ballsLeft>0 && !activeBall) shoot(); });
+    canvas.addEventListener('touchstart',e => { e.preventDefault(); const r=canvas.getBoundingClientRect(); mx=e.touches[0].clientX-r.left; my=e.touches[0].clientY-r.top; },{passive:false});
+    canvas.addEventListener('touchend',  e => { e.preventDefault(); if(!shooting && ballsLeft>0 && !activeBall) shoot(); },{passive:false});
 
     showScreen('splash-screen');
     setTimeout(() => showScreen('main-menu'), 2000);
-
-    // Input
-    canvas.addEventListener('mousemove', e => {
-        const r = canvas.getBoundingClientRect();
-        mouseX = e.clientX - r.left;
-        mouseY = e.clientY - r.top;
-    });
-    canvas.addEventListener('mouseup', () => { if (!isShooting && ballsRemaining > 0 && !activeBall) shoot(); });
-    canvas.addEventListener('touchstart', e => {
-        const r = canvas.getBoundingClientRect();
-        mouseX = e.touches[0].clientX - r.left;
-        mouseY = e.touches[0].clientY - r.top;
-    }, {passive: false});
-    canvas.addEventListener('touchend', () => { if (!isShooting && ballsRemaining > 0 && !activeBall) shoot(); }, {passive: false});
-
-    requestAnimationFrame(gameLoop);
+    requestAnimationFrame(loop);
 }
 
-// =====================
-//  PERSISTENCE
-// =====================
-function loadState() {
-    const saved = localStorage.getItem('bubble_shooter_state_v6');
-    if (saved) state = Object.assign(state, JSON.parse(saved));
-    if (state.lastSpinDate !== new Date().toDateString()) {
-        state.spinsLeft = 3;
-        state.lastSpinDate = new Date().toDateString();
-    }
-    if (state.dailyChallenge.id !== new Date().toDateString()) {
-        state.dailyChallenge = { id: new Date().toDateString(), target: 30, current: 0, completed: false };
-    }
-}
-function saveState() {
-    localStorage.setItem('bubble_shooter_state_v6', JSON.stringify(state));
+// ══════════════════════════════════════════
+//  SAVE / LOAD
+// ══════════════════════════════════════════
+function save() { try { localStorage.setItem('bsv7', JSON.stringify(S)); } catch(_){} }
+function load() {
+    try {
+        const d = JSON.parse(localStorage.getItem('bsv7') || '{}');
+        Object.assign(S, d);
+    } catch(_) {}
+    const today = new Date().toDateString();
+    if (S.spinDate !== today)      { S.spinsLeft = 3; S.spinDate = today; }
+    if (S.challengeDate !== today) { S.challengeProg = 0; S.challengeDate = today; }
 }
 
-// =====================
-//  SCREEN NAVIGATION
-// =====================
+// ══════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════
 function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => {
         if (s.id !== id) {
-            s.style.opacity = '0';
-            s.style.transform = 'scale(0.95)';
-            setTimeout(() => { if (s.style.opacity === '0') s.classList.add('hidden'); }, 350);
+            s.style.opacity = '0'; s.style.transform = 'scale(.96)';
+            setTimeout(() => { if (s.style.opacity==='0') s.classList.add('hidden'); }, 350);
         }
     });
-    const target = document.getElementById(id);
-    target.classList.remove('hidden');
-    setTimeout(() => { target.style.opacity = '1'; target.style.transform = 'scale(1)'; }, 10);
+    const t = document.getElementById(id);
+    t.classList.remove('hidden');
+    requestAnimationFrame(() => { t.style.opacity='1'; t.style.transform='scale(1)'; });
 
-    if (id === 'home-screen') { generateMap(); setTimeout(drawMapPath, 100); }
+    if (id === 'home-screen')        { generateMap(); setTimeout(drawMapPath, 120); }
     if (id === 'achievements-screen') updateAchievements();
-    if (id === 'spin-screen') updateSpinUI();
+    if (id === 'spin-screen')        { updateSpinUI(); drawWheel(); }
 }
 
-function openPopup(id) { document.getElementById(id).classList.remove('hidden'); }
+function openPopup(id)  { document.getElementById(id).classList.remove('hidden'); }
 function closePopup(id) { document.getElementById(id).classList.add('hidden'); }
 
-// =====================
+// ══════════════════════════════════════════
 //  UI UPDATES
-// =====================
+// ══════════════════════════════════════════
 function updateUI() {
-    document.querySelectorAll('#header-coins').forEach(el => el.innerText = state.coins);
-    if (document.getElementById('bomb-count')) document.getElementById('bomb-count').innerText = state.powerups.BOMB;
-    if (document.getElementById('rainbow-count')) document.getElementById('rainbow-count').innerText = state.powerups.RAINBOW;
-    if (document.getElementById('balls-text')) document.getElementById('balls-text').innerText = ballsRemaining;
-    if (document.getElementById('current-score')) document.getElementById('current-score').innerText = state.score.toLocaleString();
-    if (document.getElementById('goal-text')) document.getElementById('goal-text').innerText = `${currentGoal.current}/${currentGoal.target}`;
+    setText('header-coins',    S.coins);
+    setText('bomb-count',      S.powerups.BOMB);
+    setText('rainbow-count',   S.powerups.RAINBOW);
+    setText('balls-text',      ballsLeft);
+    setText('current-score',   S.score.toLocaleString());
+    setText('goal-text',       `${goal.done}/${goal.need}`);
+    const w = Math.min((S.highestLevel-1)/90*100, 100);
+    setStyle('world-bar', 'width', w+'%');
+    setText('world-prog-label', `${S.highestLevel-1}/90`);
 }
 
+function setText(id, v)            { const el=document.getElementById(id); if(el) el.textContent=v; }
+function setStyle(id, prop, val)   { const el=document.getElementById(id); if(el) el.style[prop]=val; }
+
 function updateAchievements() {
-    const setProg = (fillId, textId, val, max) => {
-        const pct = Math.min((val / max) * 100, 100);
-        if (document.getElementById(fillId)) document.getElementById(fillId).style.width = pct + '%';
-        if (document.getElementById(textId)) document.getElementById(textId).innerText = `${val}/${max}`;
+    const set = (fid,tid,val,max) => {
+        setStyle(fid,'width', Math.min(val/max*100,100)+'%');
+        setText(tid, `${val}/${max}`);
     };
-    setProg('ach-pop-fill', 'ach-pop-text', state.stats.totalPops, 100);
-    setProg('ach-shot-fill', 'ach-shot-text', state.stats.totalShots, 50);
-    setProg('ach-coin-fill', 'ach-coin-text', state.stats.totalCoins, 1000);
-    setProg('ach-level-fill', 'ach-level-text', Math.max(0, state.highestLevel - 1), 10);
+    set('ach-pop-fill',  'ach-pop-text',   S.stats.totalPops,   100);
+    set('ach-shot-fill', 'ach-shot-text',  S.stats.totalShots,   10);
+    set('ach-coin-fill', 'ach-coin-text',  S.stats.totalCoins, 1000);
+    set('ach-level-fill','ach-level-text', Math.max(0,S.highestLevel-1), 10);
 }
 
 function updateSpinUI() {
     const btn = document.getElementById('spin-btn');
-    const txt = document.getElementById('spins-left-text');
-    if (btn) btn.disabled = state.spinsLeft <= 0;
-    if (txt) txt.innerText = `You have ${state.spinsLeft} spin${state.spinsLeft !== 1 ? 's' : ''} left today`;
+    if (btn) btn.disabled = S.spinsLeft<=0;
+    setText('spins-left-text', `You have ${S.spinsLeft} spin${S.spinsLeft!==1?'s':''} left today`);
 }
 
-// =====================
+// ══════════════════════════════════════════
 //  SPIN WHEEL
-// =====================
-const WHEEL_SEGMENTS = [
-    { label: '100', color: '#FF3D71', reward: { type: 'coins', val: 100 } },
-    { label: '500', color: '#FFAA00', reward: { type: 'coins', val: 500 } },
-    { label: '💣', color: '#A29BFE', reward: { type: 'BOMB', val: 2 } },
-    { label: '20',  color: '#00D68F', reward: { type: 'coins', val: 20 } },
-    { label: '🌈',  color: '#3366FF', reward: { type: 'RAINBOW', val: 2 } },
-    { label: '80',  color: '#FF708D', reward: { type: 'coins', val: 80 } },
-    { label: '200', color: '#FFAA00', reward: { type: 'coins', val: 200 } },
-    { label: '50',  color: '#00D68F', reward: { type: 'coins', val: 50 } },
-];
-
-let wheelAngle = 0;
-let isSpinning = false;
-
-function drawWheel() {
-    const wCanvas = document.getElementById('wheelCanvas');
-    if (!wCanvas) return;
-    const wCtx = wCanvas.getContext('2d');
-    const cx = 150, cy = 150, r = 140;
-    const arc = (Math.PI * 2) / WHEEL_SEGMENTS.length;
-
-    wCtx.clearRect(0, 0, 300, 300);
-    WHEEL_SEGMENTS.forEach((seg, i) => {
-        const start = arc * i + wheelAngle;
-        const end = start + arc;
-        wCtx.beginPath();
-        wCtx.moveTo(cx, cy);
-        wCtx.arc(cx, cy, r, start, end);
-        wCtx.closePath();
-        wCtx.fillStyle = seg.color;
-        wCtx.fill();
-        wCtx.strokeStyle = 'white';
-        wCtx.lineWidth = 3;
-        wCtx.stroke();
-
-        // Label
-        wCtx.save();
-        wCtx.translate(cx, cy);
-        wCtx.rotate(start + arc / 2);
-        wCtx.textAlign = 'right';
-        wCtx.fillStyle = 'white';
-        wCtx.font = 'bold 18px Inter, sans-serif';
-        wCtx.fillText(seg.label, r - 20, 6);
+// ══════════════════════════════════════════
+function drawWheel(extraAngle) {
+    const ang = (extraAngle !== undefined ? extraAngle : wheelAngle);
+    const cx=140, cy=140, r=130;
+    const arc = Math.PI*2 / WHEEL_SEGS.length;
+    wCtx.clearRect(0,0,280,280);
+    WHEEL_SEGS.forEach((seg,i) => {
+        const s=arc*i+ang, e=s+arc;
+        wCtx.beginPath(); wCtx.moveTo(cx,cy); wCtx.arc(cx,cy,r,s,e); wCtx.closePath();
+        wCtx.fillStyle=seg.color; wCtx.fill();
+        wCtx.strokeStyle='#fff'; wCtx.lineWidth=3; wCtx.stroke();
+        // label
+        wCtx.save(); wCtx.translate(cx,cy); wCtx.rotate(s+arc/2);
+        wCtx.textAlign='right'; wCtx.fillStyle='#fff'; wCtx.font='bold 14px Inter,sans-serif';
+        wCtx.fillText(seg.label, r-14, 5);
         wCtx.restore();
     });
-    // Center circle
-    wCtx.beginPath();
-    wCtx.arc(cx, cy, 30, 0, Math.PI * 2);
-    wCtx.fillStyle = 'white';
-    wCtx.fill();
-    wCtx.fillStyle = '#6c5ce7';
-    wCtx.font = 'bold 20px sans-serif';
-    wCtx.textAlign = 'center';
-    wCtx.fillText('🎡', cx, cy + 7);
+    // center circle
+    wCtx.beginPath(); wCtx.arc(cx,cy,28,0,Math.PI*2);
+    wCtx.fillStyle='#fff'; wCtx.fill();
+    wCtx.fillStyle=WHEEL_SEGS[0].color; wCtx.font='22px sans-serif';
+    wCtx.textAlign='center'; wCtx.fillText('🎡',cx,cy+8);
 }
 
 function spinWheel() {
-    if (isSpinning || state.spinsLeft <= 0) return;
-    isSpinning = true;
-    state.spinsLeft--;
-    saveState(); updateSpinUI();
-
-    const totalRotation = Math.PI * 2 * (5 + Math.random() * 5);
-    const duration = 4000;
-    const start = performance.now();
-    const startAngle = wheelAngle;
-    const winSegmentIdx = Math.floor(Math.random() * WHEEL_SEGMENTS.length);
-
-    function animate(now) {
-        const elapsed = now - start;
-        const progress = Math.min(elapsed / duration, 1);
-        const ease = 1 - Math.pow(1 - progress, 4);
-        wheelAngle = startAngle + totalRotation * ease;
-        drawWheel();
-        if (progress < 1) { requestAnimationFrame(animate); }
+    if (wheelSpinning || S.spinsLeft<=0) return;
+    wheelSpinning=true; S.spinsLeft--; save(); updateSpinUI();
+    const winIdx   = Math.floor(Math.random()*WHEEL_SEGS.length);
+    const total    = Math.PI*2*(6+Math.random()*4);
+    const arc      = Math.PI*2/WHEEL_SEGS.length;
+    const targetA  = wheelAngle + total;
+    const dur      = 4200;
+    const t0       = performance.now();
+    const startA   = wheelAngle;
+    function frame(now) {
+        const p = Math.min((now-t0)/dur, 1);
+        const ease = 1 - Math.pow(1-p, 4);
+        wheelAngle = startA + total*ease;
+        drawWheel(wheelAngle);
+        if (p<1) { requestAnimationFrame(frame); }
         else {
-            isSpinning = false;
-            const reward = WHEEL_SEGMENTS[winSegmentIdx].reward;
-            applyWheelReward(reward);
+            wheelSpinning=false;
+            applyReward(WHEEL_SEGS[winIdx].reward);
         }
     }
-    requestAnimationFrame(animate);
+    requestAnimationFrame(frame);
 }
 
-function applyWheelReward(reward) {
-    if (reward.type === 'coins') {
-        state.coins += reward.val;
-        state.stats.totalCoins += reward.val;
-        alert(`🪙 You won ${reward.val} coins!`);
-    } else {
-        state.powerups[reward.type] = (state.powerups[reward.type] || 0) + reward.val;
-        alert(`You won ${reward.val}x ${reward.type}!`);
-    }
-    saveState(); updateUI();
+function applyReward(r) {
+    if (r.type==='coins') { S.coins+=r.val; S.stats.totalCoins+=r.val; }
+    else { S.powerups[r.type]=(S.powerups[r.type]||0)+r.val; }
+    save(); updateUI();
+    alert(r.type==='coins' ? `🪙 You won ${r.val} coins!` : `You won ${r.val}x ${r.type}!`);
 }
 
-// =====================
+// ══════════════════════════════════════════
 //  MAP GENERATION
-// =====================
+// ══════════════════════════════════════════
 function generateMap() {
-    const container = document.getElementById('map-path-container');
-    if (!container) return;
-    container.innerHTML = '';
-    for (let i = 20; i >= 1; i--) {
-        const node = document.createElement('div');
-        node.className = 'level-node';
-        const row = Math.floor((i - 1) / 3);
-        const col = (i - 1) % 3;
-        const xOffset = (row % 2 === 0) ? (col - 1) * 80 : (1 - col) * 80;
-        node.style.transform = `translateX(${xOffset}px)`;
-        if (i > state.highestLevel) {
+    const cont = document.getElementById('map-nodes');
+    if (!cont) return;
+    cont.innerHTML=''; mapNodePositions=[];
+    for (let i=20; i>=1; i--) {
+        const node = document.createElement('button');
+        node.className='level-node';
+        const row = Math.floor((i-1)/3);
+        const col = (i-1)%3;
+        const xOff= (row%2===0)?(col-1)*84:(1-col)*84;
+        node.style.transform=`translateX(${xOff}px)`;
+        if (i>S.highestLevel) {
             node.classList.add('locked');
-            node.innerHTML = `🔒`;
+            node.innerHTML='🔒';
         } else {
-            if (i === state.highestLevel) node.classList.add('active');
-            node.innerHTML = `<span style="font-size:1.1rem">${i}</span><span style="font-size:0.55rem;color:#f1c40f;">★★★</span>`;
-            node.onclick = () => startGame(i);
+            if (i===S.highestLevel) node.classList.add('active');
+            node.innerHTML=`${i}<div class="stars">★★★</div>`;
+            node.onclick=()=>startGame(i);
         }
-        container.appendChild(node);
+        cont.appendChild(node);
     }
 }
 
-function generateLevelsGrid() {
+function generateLevels() {
     const grid = document.getElementById('levels-grid');
-    if (!grid) return;
-    grid.innerHTML = '';
-    for (let i = 1; i <= 20; i++) {
-        const btn = document.createElement('button');
-        btn.className = 'level-node';
-        btn.style.fontSize = '1rem';
-        if (i > state.highestLevel) { btn.classList.add('locked'); btn.innerText = '🔒'; }
-        else { btn.innerText = i; btn.onclick = () => startGame(i); }
+    if (!grid) return; grid.innerHTML='';
+    for (let i=1; i<=20; i++) {
+        const btn=document.createElement('button');
+        btn.className='level-node';
+        btn.style.cssText='position:relative;border-radius:18px;';
+        if (i>S.highestLevel) {
+            btn.classList.add('locked');
+            btn.innerHTML='<span>🔒</span>';
+        } else {
+            btn.innerHTML=`<span>${i}</span>`;
+            btn.onclick=()=>startGame(i);
+        }
         grid.appendChild(btn);
     }
 }
 
 function drawMapPath() {
-    const pathCanvas = document.getElementById('mapPathCanvas');
-    const scrollView = document.getElementById('map-scroll-view');
-    if (!pathCanvas || !scrollView) return;
-    const nodes = document.querySelectorAll('#map-path-container .level-node');
-    if (!nodes.length) return;
-    
-    pathCanvas.width = scrollView.offsetWidth;
-    pathCanvas.height = scrollView.scrollHeight;
-    const pCtx = pathCanvas.getContext('2d');
-    const positions = [];
-
-    nodes.forEach(n => {
-        const rect = n.getBoundingClientRect();
-        const containerRect = scrollView.getBoundingClientRect();
-        positions.push({
-            x: rect.left - containerRect.left + rect.width / 2,
-            y: rect.top - containerRect.top + scrollView.scrollTop + rect.height / 2
-        });
+    const mapC = document.getElementById('mapCanvas');
+    const scroll= document.getElementById('map-scroll');
+    const nodes = document.querySelectorAll('#map-nodes .level-node');
+    if (!mapC||!scroll||!nodes.length) return;
+    mapC.width = scroll.offsetWidth;
+    mapC.height= scroll.scrollHeight || scroll.offsetHeight;
+    const pCtx = mapC.getContext('2d');
+    const pts=[];
+    nodes.forEach(n=>{
+        const nr=n.getBoundingClientRect();
+        const sr=scroll.getBoundingClientRect();
+        pts.push({ x: nr.left-sr.left+nr.width/2, y: nr.top-sr.top+scroll.scrollTop+nr.height/2 });
     });
-
-    pCtx.strokeStyle = 'rgba(139, 90, 43, 0.5)';
-    pCtx.lineWidth = 10;
-    pCtx.lineCap = 'round';
-    pCtx.lineJoin = 'round';
-    pCtx.setLineDash([15, 10]);
-    pCtx.beginPath();
-    if (positions[0]) pCtx.moveTo(positions[0].x, positions[0].y);
-    positions.forEach((p, i) => { if (i > 0) pCtx.lineTo(p.x, p.y); });
-    pCtx.stroke();
+    if (pts.length<2) return;
+    pCtx.strokeStyle='rgba(139,90,43,.45)'; pCtx.lineWidth=10;
+    pCtx.lineCap='round'; pCtx.lineJoin='round';
+    pCtx.setLineDash([14,10]);
+    pCtx.beginPath(); pCtx.moveTo(pts[0].x,pts[0].y);
+    pts.slice(1).forEach(p=>pCtx.lineTo(p.x,p.y));
+    pCtx.stroke(); pCtx.setLineDash([]);
 }
 
-// =====================
-//  GAMEPLAY
-// =====================
+// ══════════════════════════════════════════
+//  GAME START
+// ══════════════════════════════════════════
 function startGame(level) {
-    state.currentLevel = level;
-    ballsRemaining = Math.max(30, 60 - Math.floor(level / 5) * 2);
-    currentGoal.color = COLORS[Math.floor(Math.random() * COLORS.length)];
-    currentGoal.target = 5 + Math.floor(level / 2);
-    currentGoal.current = 0;
+    currentLevel=level;
+    ballsLeft=Math.max(30, 60-Math.floor(level/5)*2);
+    goal.color=COLORS[Math.floor(Math.random()*COLORS.length)];
+    goal.need =5+Math.floor(level/2);
+    goal.done =0;
+    S.score=0;
     generateLevel(level);
-    prepareNext();
+    prepNext();
     showScreen('gameplay-ui');
     resize();
     updateUI();
 }
 
 function generateLevel(level) {
-    grid = [];
-    const maxRows = 8 + Math.floor(level / 5);
-    for (let y = 0; y < maxRows; y++) {
-        grid[y] = [];
-        const indent = Math.floor(y / 2);
-        const cols = Math.max(2, (y % 2 === 0 ? COLUMNS : COLUMNS - 1) - indent);
-        for (let x = 0; x < cols; x++) {
-            grid[y][x + Math.floor(indent / 2)] = {
-                type: 'NORMAL',
-                color: COLORS[Math.floor(Math.random() * COLORS.length)],
-                hits: 1
-            };
+    grid=[];
+    const rows=8+Math.floor(level/5);
+    for (let y=0;y<rows;y++) {
+        grid[y]=[];
+        const indent=Math.floor(y/2);
+        const cols=Math.max(2,(y%2===0?COLS:COLS-1)-indent);
+        for (let x=0;x<cols;x++) {
+            grid[y][x+Math.floor(indent/2)]={ color:COLORS[Math.floor(Math.random()*COLORS.length)], type:'NORMAL' };
         }
     }
 }
 
 function resize() {
     if (!canvas.parentElement) return;
-    width = canvas.parentElement.clientWidth;
-    height = canvas.parentElement.clientHeight;
-    canvas.width = width;
-    canvas.height = height;
+    canvas.width =canvas.parentElement.clientWidth;
+    canvas.height=canvas.parentElement.clientHeight;
 }
 
-function gameLoop() {
-    if (canvas.width > 0) {
-        ctx.clearRect(0, 0, width, height);
+// ══════════════════════════════════════════
+//  GAME LOOP
+// ══════════════════════════════════════════
+function loop() {
+    if (canvas.width>0 && canvas.height>0) {
+        ctx.clearRect(0,0,canvas.width,canvas.height);
         drawGrid();
-        drawTrajectory();
-        if (activeBall) updateBall();
+        drawAim();
+        if (activeBall) moveBall();
     }
-    requestAnimationFrame(gameLoop);
+    requestAnimationFrame(loop);
 }
 
-function getPos(x, y) {
-    const xOffset = y % 2 !== 0 ? BUBBLE_RADIUS : 0;
-    const startX = (width - COLUMNS * BUBBLE_RADIUS * 2) / 2 + BUBBLE_RADIUS;
-    return { x: startX + x * BUBBLE_RADIUS * 2 + xOffset, y: y * BUBBLE_RADIUS * 1.75 + BUBBLE_RADIUS + 20 };
+function getPos(x,y) {
+    const off = y%2!==0 ? R : 0;
+    const sx  = (canvas.width - COLS*R*2)/2 + R;
+    return { x: sx+x*R*2+off, y: y*R*1.76+R+18 };
 }
 
+// ══════════════════════════════════════════
+//  DRAWING
+// ══════════════════════════════════════════
 function drawGrid() {
-    for (let y = 0; y < grid.length; y++) {
-        if (!grid[y]) continue;
-        for (let x = 0; x < grid[y].length; x++) {
-            if (grid[y][x]) {
-                const pos = getPos(x, y);
-                drawBubble(pos.x, pos.y, grid[y][x].color, grid[y][x].type);
-            }
-        }
+    grid.forEach((row,y)=>{ if(!row) return; row.forEach((b,x)=>{ if(b){ const p=getPos(x,y); drawBubble(ctx,p.x,p.y,b.color); }}); });
+}
+
+function drawBubble(c,x,y,color) {
+    // shadow
+    c.beginPath(); c.arc(x,y+2,R-1,0,Math.PI*2);
+    c.fillStyle='rgba(0,0,0,.08)'; c.fill();
+    // base
+    c.beginPath(); c.arc(x,y,R-1,0,Math.PI*2);
+    c.fillStyle=color; c.fill();
+    // gloss
+    const g=c.createRadialGradient(x-R*.35,y-R*.35,R*.05,x,y,R);
+    g.addColorStop(0,'rgba(255,255,255,.55)');
+    g.addColorStop(.35,'rgba(255,255,255,.12)');
+    g.addColorStop(1,'rgba(0,0,0,.12)');
+    c.fillStyle=g; c.fill();
+    // specular
+    c.beginPath(); c.ellipse(x-R*.3,y-R*.3,R*.22,R*.13,-Math.PI/4,0,Math.PI*2);
+    c.fillStyle='rgba(255,255,255,.5)'; c.fill();
+}
+
+function drawAim() {
+    if (shooting||!mx||!my) return;
+    const cen=ballCenter();
+    const ang=Math.atan2(my-cen.y,mx-cen.x);
+    if (ang>0) return;
+    let cx=cen.x,cy=cen.y,dx=Math.cos(ang)*12,dy=Math.sin(ang)*12;
+    ctx.fillStyle='rgba(162,155,254,.5)';
+    for(let i=0;i<24;i++){
+        cx+=dx; cy+=dy;
+        if(cx<R||cx>canvas.width-R) dx*=-1;
+        if(i%2===0){ ctx.beginPath(); ctx.arc(cx,cy,3,0,Math.PI*2); ctx.fill(); }
     }
 }
 
-function drawBubble(x, y, color, type) {
-    const r = BUBBLE_RADIUS - 1;
-    // Shadow
-    ctx.beginPath();
-    ctx.arc(x, y + 2, r, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(0,0,0,0.1)';
-    ctx.fill();
-    // Base
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fillStyle = type === 'ROCK' ? '#8E8E93' : color;
-    ctx.fill();
-    // Gloss gradient
-    const g = ctx.createRadialGradient(x - r * 0.35, y - r * 0.35, r * 0.05, x, y, r);
-    g.addColorStop(0, 'rgba(255,255,255,0.55)');
-    g.addColorStop(0.4, 'rgba(255,255,255,0.1)');
-    g.addColorStop(1, 'rgba(0,0,0,0.15)');
-    ctx.fillStyle = g;
-    ctx.fill();
-    // Shine spot
-    ctx.beginPath();
-    ctx.ellipse(x - r * 0.3, y - r * 0.3, r * 0.22, r * 0.13, -Math.PI / 4, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255,255,255,0.55)';
-    ctx.fill();
+function ballCenter() {
+    const el=document.getElementById('active-ball');
+    if (!el) return {x:canvas.width/2, y:canvas.height-80};
+    const r=el.getBoundingClientRect(), cr=canvas.getBoundingClientRect();
+    return { x:r.left+r.width/2-cr.left, y:r.top+r.height/2-cr.top };
 }
 
-function drawTrajectory() {
-    if (isShooting || !mouseX || !mouseY) return;
-    const c = getBallCenter();
-    const angle = Math.atan2(mouseY - c.y, mouseX - c.x);
-    if (angle > 0) return;
-
-    let cx = c.x, cy = c.y;
-    let dx = Math.cos(angle) * 12, dy = Math.sin(angle) * 12;
-    ctx.fillStyle = 'rgba(162, 155, 254, 0.5)';
-    for (let i = 0; i < 22; i++) {
-        cx += dx; cy += dy;
-        if (cx < BUBBLE_RADIUS || cx > width - BUBBLE_RADIUS) dx *= -1;
-        if (i % 2 === 0) { ctx.beginPath(); ctx.arc(cx, cy, 3, 0, Math.PI * 2); ctx.fill(); }
-    }
-}
-
-function getBallCenter() {
-    const el = document.getElementById('active-ball');
-    if (!el) return { x: width / 2, y: height - 80 };
-    const r = el.getBoundingClientRect();
-    const cr = canvas.getBoundingClientRect();
-    return { x: r.left + r.width / 2 - cr.left, y: r.top + r.height / 2 - cr.top };
-}
-
+// ══════════════════════════════════════════
+//  SHOOTING
+// ══════════════════════════════════════════
 function shoot() {
-    if (isShooting) return;
-    isShooting = true; ballsRemaining--;
-    state.stats.totalShots++;
-    const c = getBallCenter();
-    const angle = Math.atan2(mouseY - c.y, mouseX - c.x);
-    const ballColor = document.getElementById('active-ball').style.backgroundColor;
-    activeBall = {
-        x: c.x, y: c.y,
-        vx: Math.cos(angle) * 18, vy: Math.sin(angle) * 18,
-        color: activePowerup === 'RAINBOW' ? '#ffffff' : ballColor,
-        powerup: activePowerup
-    };
-    activePowerup = null;
-    updateUI();
-    saveState();
+    if (shooting) return;
+    shooting=true; ballsLeft--; S.stats.totalShots++;
+    const cen=ballCenter();
+    const ang=Math.atan2(my-cen.y,mx-cen.x);
+    const col=document.getElementById('active-ball').style.backgroundColor;
+    activeBall={ x:cen.x,y:cen.y, vx:Math.cos(ang)*SPEED,vy:Math.sin(ang)*SPEED, color:col, pu:activePU };
+    activePU=null; updateUI(); save();
 }
 
-function updateBall() {
-    activeBall.x += activeBall.vx;
-    activeBall.y += activeBall.vy;
-    if (activeBall.x <= BUBBLE_RADIUS || activeBall.x >= width - BUBBLE_RADIUS) activeBall.vx *= -1;
-    drawBubble(activeBall.x, activeBall.y, activeBall.color, 'NORMAL');
-
-    for (let y = 0; y < grid.length; y++) {
-        for (let x = 0; x < (grid[y] ? grid[y].length : 0); x++) {
-            if (grid[y][x]) {
-                const p = getPos(x, y);
-                if (Math.hypot(activeBall.x - p.x, activeBall.y - p.y) <= BUBBLE_RADIUS * 1.8) { snap(); return; }
+function moveBall() {
+    activeBall.x+=activeBall.vx; activeBall.y+=activeBall.vy;
+    if(activeBall.x<=R||activeBall.x>=canvas.width-R) activeBall.vx*=-1;
+    drawBubble(ctx,activeBall.x,activeBall.y,activeBall.color);
+    // collision check
+    let hit=false;
+    outer: for(let y=0;y<grid.length;y++){
+        if(!grid[y]) continue;
+        for(let x=0;x<grid[y].length;x++){
+            if(grid[y][x]){
+                const p=getPos(x,y);
+                if(Math.hypot(activeBall.x-p.x,activeBall.y-p.y)<=R*1.8){ hit=true; break outer; }
             }
         }
     }
-    if (activeBall.y <= BUBBLE_RADIUS + 20) { snap(); return; }
-    if (activeBall.y < 0 || activeBall.y > height) { activeBall = null; isShooting = false; prepareNext(); }
+    if(hit||(activeBall.y<=R+18)) snap();
+    if(activeBall.y>canvas.height){ activeBall=null; shooting=false; prepNext(); }
 }
 
 function snap() {
-    if (activeBall.powerup === 'FIREBALL') { processFireball(activeBall.x, activeBall.y); }
+    if (activeBall.pu==='FIREBALL') { fireballBlast(activeBall.x); }
     else {
-        let minDist = Infinity, tx = 0, ty = 0;
-        for (let y = 0; y < ROWS; y++) {
-            if (!grid[y]) grid[y] = [];
-            const cols = y % 2 === 0 ? COLUMNS : COLUMNS - 1;
-            for (let x = 0; x < cols; x++) {
-                if (grid[y][x]) continue;
-                const p = getPos(x, y);
-                const d = Math.hypot(activeBall.x - p.x, activeBall.y - p.y);
-                if (d < minDist) { minDist = d; tx = x; ty = y; }
-            }
-        }
-        if (!grid[ty]) grid[ty] = [];
-        grid[ty][tx] = { type: 'NORMAL', color: activeBall.color, hits: 1 };
-        if (activeBall.powerup === 'BOMB') processBomb(tx, ty);
-        else processMatches(tx, ty);
+        const {tx,ty}=findSlot();
+        if (!grid[ty]) grid[ty]=[];
+        grid[ty][tx]={ color:activeBall.color, type:'NORMAL' };
+        if(activeBall.pu==='BOMB') bombBlast(tx,ty);
+        else matchAndPop(tx,ty);
     }
-    activeBall = null; isShooting = false; prepareNext();
+    activeBall=null; shooting=false; prepNext();
 }
 
-function getNeighbors(x, y) {
-    const off = y % 2 === 0 ? [[1,0],[-1,0],[0,1],[0,-1],[-1,1],[-1,-1]] : [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1]];
-    return off.map(([ox, oy]) => [x + ox, y + oy]);
-}
-
-function processMatches(x, y) {
-    const bubble = grid[y] && grid[y][x];
-    if (!bubble) return;
-    let matches = [[x, y]], queue = [[x, y]], visited = new Set([`${x},${y}`]);
-    while (queue.length) {
-        const [cx, cy] = queue.shift();
-        for (const [nx, ny] of getNeighbors(cx, cy)) {
-            if (grid[ny] && grid[ny][nx] && grid[ny][nx].color === bubble.color && !visited.has(`${nx},${ny}`)) {
-                visited.add(`${nx},${ny}`); matches.push([nx, ny]); queue.push([nx, ny]);
-            }
+function findSlot() {
+    let best=Infinity,tx=0,ty=0;
+    for(let y=0;y<ROWS;y++){
+        if(!grid[y]) grid[y]=[];
+        const cols=y%2===0?COLS:COLS-1;
+        for(let x=0;x<cols;x++){
+            if(grid[y][x]) continue;
+            const p=getPos(x,y);
+            const d=Math.hypot(activeBall.x-p.x,activeBall.y-p.y);
+            if(d<best){best=d;tx=x;ty=y;}
         }
     }
-    if (matches.length >= 3) {
-        matches.forEach(([mx, my]) => {
-            if (grid[my] && grid[my][mx]) {
-                if (grid[my][mx].color === currentGoal.color) currentGoal.current++;
-                grid[my][mx] = null; state.score += 20; state.stats.totalPops++;
+    return {tx,ty};
+}
+
+// ══════════════════════════════════════════
+//  MATCH LOGIC
+// ══════════════════════════════════════════
+function neighbors(x,y) {
+    const off=y%2===0?[[1,0],[-1,0],[0,1],[0,-1],[-1,1],[-1,-1]]:[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1]];
+    return off.map(([ox,oy])=>[x+ox,y+oy]);
+}
+
+function matchAndPop(x,y) {
+    const col=grid[y]&&grid[y][x]&&grid[y][x].color;
+    if(!col) return;
+    let q=[[x,y]],matched=[[x,y]],vis=new Set([`${x},${y}`]);
+    while(q.length){
+        const [cx,cy]=q.shift();
+        neighbors(cx,cy).forEach(([nx,ny])=>{
+            if(grid[ny]&&grid[ny][nx]&&grid[ny][nx].color===col&&!vis.has(`${nx},${ny}`)){
+                vis.add(`${nx},${ny}`); matched.push([nx,ny]); q.push([nx,ny]);
             }
         });
-        checkFloating();
-        if (isGoalMet() || isGridEmpty()) winLevel();
     }
-    updateUI(); saveState();
-}
-
-function processBomb(tx, ty) {
-    [...getNeighbors(tx, ty), [tx, ty]].forEach(([nx, ny]) => {
-        if (grid[ny] && grid[ny][nx]) { grid[ny][nx] = null; state.score += 10; state.stats.totalPops++; }
-    });
-    checkFloating(); if (isGridEmpty()) winLevel();
-}
-
-function processFireball(ax, ay) {
-    for (let y = 0; y < grid.length; y++) {
-        for (let x = 0; x < (grid[y] ? grid[y].length : 0); x++) {
-            if (grid[y][x]) {
-                const p = getPos(x, y);
-                if (Math.abs(p.x - ax) < BUBBLE_RADIUS * 2.5) { grid[y][x] = null; state.score += 10; state.stats.totalPops++; }
+    if(matched.length>=3){
+        matched.forEach(([mx,my])=>{
+            if(grid[my]&&grid[my][mx]){
+                if(grid[my][mx].color===goal.color) goal.done++;
+                grid[my][mx]=null; S.score+=20; S.stats.totalPops++;
             }
-        }
+        });
+        floatCheck();
+        if(goal.done>=goal.need||gridEmpty()) winLevel();
     }
-    checkFloating(); if (isGridEmpty()) winLevel();
+    updateUI(); save();
 }
 
-function checkFloating() {
-    const connected = new Set();
-    const q = [];
-    if (grid[0]) grid[0].forEach((b, x) => { if (b) { connected.add(`0,${x}`); q.push([x, 0]); } });
-    while (q.length) {
-        const [cx, cy] = q.shift();
-        for (const [nx, ny] of getNeighbors(cx, cy)) {
-            if (grid[ny] && grid[ny][nx] && !connected.has(`${nx},${ny}`)) { connected.add(`${nx},${ny}`); q.push([nx, ny]); }
-        }
-    }
-    for (let y = 0; y < grid.length; y++) {
-        for (let x = 0; x < (grid[y] ? grid[y].length : 0); x++) {
-            if (grid[y][x] && grid[y][x].type !== 'ROCK' && !connected.has(`${x},${y}`)) { grid[y][x] = null; state.score += 5; state.stats.totalPops++; }
-        }
-    }
+function bombBlast(tx,ty) {
+    [...neighbors(tx,ty),[tx,ty]].forEach(([nx,ny])=>{
+        if(grid[ny]&&grid[ny][nx]){ grid[ny][nx]=null; S.score+=10; S.stats.totalPops++; }
+    });
+    floatCheck(); if(gridEmpty()) winLevel();
 }
 
-function isGoalMet() { return currentGoal.current >= currentGoal.target; }
-function isGridEmpty() {
-    return grid.every(row => !row || row.every(b => !b || b.type === 'ROCK'));
+function fireballBlast(ax) {
+    grid.forEach((row,y)=>{ if(!row) return; row.forEach((_,x)=>{ if(grid[y][x]){const p=getPos(x,y);if(Math.abs(p.x-ax)<R*2.5){grid[y][x]=null;S.score+=10;S.stats.totalPops++;}} }); });
+    floatCheck(); if(gridEmpty()) winLevel();
 }
+
+function floatCheck() {
+    const con=new Set(); const q=[];
+    if(grid[0]) grid[0].forEach((b,x)=>{ if(b){con.add(`0,${x}`);q.push([x,0]);} });
+    while(q.length){
+        const [cx,cy]=q.shift();
+        neighbors(cx,cy).forEach(([nx,ny])=>{ if(grid[ny]&&grid[ny][nx]&&!con.has(`${nx},${ny}`)){con.add(`${nx},${ny}`);q.push([nx,ny]);} });
+    }
+    grid.forEach((row,y)=>{ if(!row) return; row.forEach((b,x)=>{ if(b&&!con.has(`${x},${y}`)){grid[y][x]=null;S.score+=5;S.stats.totalPops++;} }); });
+}
+
+function gridEmpty() { return grid.every(r=>!r||r.every(b=>!b)); }
 
 function winLevel() {
-    state.coins += 50; state.stats.totalCoins += 50;
-    if (state.currentLevel >= state.highestLevel) state.highestLevel = state.currentLevel + 1;
-    saveState(); generateLevelsGrid();
-    const pop = document.getElementById('level-complete-popup');
-    if (pop) {
-        pop.classList.remove('hidden');
-        document.getElementById('next-level-btn').onclick = () => { pop.classList.add('hidden'); startGame(state.currentLevel + 1); };
-    }
+    S.coins+=50; S.stats.totalCoins+=50;
+    if(currentLevel>=S.highestLevel) S.highestLevel=currentLevel+1;
+    save(); generateLevels(); generateMap();
+    openPopup('level-complete-popup');
+    document.getElementById('next-level-btn').onclick=()=>{ closePopup('level-complete-popup'); startGame(currentLevel+1); };
 }
 
-function prepareNext() {
-    const active = document.getElementById('active-ball');
-    const next = document.getElementById('next-ball');
-    if (!active || !next) return;
-    active.style.backgroundColor = next.style.backgroundColor || COLORS[Math.floor(Math.random() * COLORS.length)];
-    next.style.backgroundColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+// ══════════════════════════════════════════
+//  BALL MANAGEMENT
+// ══════════════════════════════════════════
+function prepNext() {
+    const a=document.getElementById('active-ball');
+    const n=document.getElementById('next-ball');
+    if(!a||!n) return;
+    a.style.backgroundColor=n.style.backgroundColor||randColor();
+    n.style.backgroundColor=randColor();
     updateUI();
 }
+function randColor() { return COLORS[Math.floor(Math.random()*COLORS.length)]; }
 
 function swapBalls() {
-    const active = document.getElementById('active-ball');
-    const next = document.getElementById('next-ball');
-    if (!active || !next) return;
-    [active.style.backgroundColor, next.style.backgroundColor] = [next.style.backgroundColor, active.style.backgroundColor];
+    const a=document.getElementById('active-ball');
+    const n=document.getElementById('next-ball');
+    if(!a||!n) return;
+    [a.style.backgroundColor,n.style.backgroundColor]=[n.style.backgroundColor,a.style.backgroundColor];
 }
 
 function usePowerup(type) {
-    if (state.powerups[type] > 0) { state.powerups[type]--; activePowerup = type; saveState(); }
-    else { openPopup('shop-popup'); }
+    if(S.powerups[type]>0){ S.powerups[type]--; activePU=type; save(); updateUI(); }
+    else openPopup('shop-popup');
 }
 
-function buyItem(type, cost) {
-    if (state.coins >= cost) { state.coins -= cost; state.powerups[type] = (state.powerups[type] || 0) + 3; saveState(); }
-    else { alert('Not enough coins!'); }
+function buyItem(type,cost) {
+    if(S.coins>=cost){ S.coins-=cost; S.powerups[type]=(S.powerups[type]||0)+3; save(); updateUI(); }
+    else alert('Not enough coins!');
 }
 
-window.onload = init;
-window.onresize = resize;
+// ══════════════════════════════════════════
+//  BOOTSTRAP
+// ══════════════════════════════════════════
+window.onload  = init;
+window.onresize= resize;
