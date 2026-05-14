@@ -5,51 +5,109 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Bubble Shooter Pro</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="game">
-  <!-- Top Bar -->
-  <div class="top-bar">
-    <div class="hud-btn">❚❚</div>
-    <div class="score-box">
-      <p>SCORE</p>
-      <h1 id="score">0</h1>
+
+  <!-- SPLASH SCREEN -->
+  <div class="splash-screen" id="splashScreen">
+    <div class="splash-glow"></div>
+    <div class="splash-logo">
+      <h1>BUBBLE</h1>
+      <h2>SHOOTER</h2>
     </div>
-    <div class="hud-btn">⚙</div>
-  </div>
-
-  <!-- Game Canvas -->
-  <div class="canvas-wrap">
-    <canvas id="gameCanvas" width="390" height="550"></canvas>
-  </div>
-
-  <!-- Bottom UI -->
-  <div class="bottom-ui">
-    <div class="shooter-controls">
-      <div class="next-label">NEXT</div>
-      <div class="next-bubble-wrap">
-        <div id="nextBubble" class="bubble-preview"></div>
-      </div>
-      
-      <div class="powerups">
-        <div class="power">💣</div>
-        <div class="power">🌈</div>
-        <div class="power">⚡</div>
-      </div>
+    <div class="bubble-loader">
+      <div class="loader-bubble b1"></div>
+      <div class="loader-bubble b2"></div>
+      <div class="loader-bubble b3"></div>
     </div>
   </div>
 
-  <!-- Win/Loss Popups -->
+  <!-- HOME SCREEN -->
+  <div class="home-screen" id="homeScreen" style="display:none;">
+    <div class="home-top">
+      <div class="coins-box">🪙 <span id="coins">2500</span></div>
+      <div class="settings-btn">⚙</div>
+    </div>
+    <div class="game-logo">
+      <h1>BUBBLE</h1>
+      <h2>SHOOTER</h2>
+    </div>
+    <div class="play-btn" onclick="startGame()">PLAY</div>
+    <div class="home-buttons">
+      <div class="menu-btn">🏆<span>Leaderboard</span></div>
+      <div class="menu-btn">🎁<span>Rewards</span></div>
+      <div class="menu-btn" onclick="toggleShop()">🛒<span>Shop</span></div>
+    </div>
+    <!-- Level Map -->
+    <div class="level-map">
+        <div class="level level-active">1</div>
+        <div class="level">2</div>
+        <div class="level">3</div>
+        <div class="level">4</div>
+        <div class="level">5</div>
+    </div>
+  </div>
+
+  <!-- GAMEPLAY UI -->
+  <div id="gameplay-ui" style="display:none; height:100%; flex-direction:column;">
+    <div class="top-bar">
+        <div class="hud-btn" onclick="showScreen('homeScreen')">🏠</div>
+        <div class="score-box">
+            <p>Score</p>
+            <h1 id="score">0</h1>
+        </div>
+        <div class="hud-btn">⚙</div>
+    </div>
+
+    <canvas id="gameCanvas" width="390" height="520"></canvas>
+
+    <div class="bottom-ui">
+        <div class="next-text">NEXT BUBBLE</div>
+        <div class="next-bubble" id="nextBubble"></div>
+        <div class="powerups">
+            <div class="power">💣</div>
+            <div class="power">🌈</div>
+            <div class="power">⚡</div>
+        </div>
+    </div>
+  </div>
+
+  <!-- SHOP SCREEN (Overlay) -->
+  <div class="shop-screen" id="shopScreen" style="display:none;">
+    <div class="shop-header"><h2>POWER SHOP</h2></div>
+    <div class="shop-items">
+      <div class="shop-card">
+        <div class="shop-icon">💣</div>
+        <h3>Bomb Bubble</h3>
+        <button>500 Coins</button>
+      </div>
+      <div class="shop-card">
+        <div class="shop-icon">⚡</div>
+        <h3>Lightning</h3>
+        <button>800 Coins</button>
+      </div>
+      <div class="shop-card">
+        <div class="shop-icon">🌈</div>
+        <h3>Rainbow Bubble</h3>
+        <button>1200 Coins</button>
+      </div>
+    </div>
+    <button class="play-btn" style="height:50px; width:100%; margin-top:20px; font-size:16px;" onclick="toggleShop()">CLOSE</button>
+  </div>
+
+  <!-- POPUP -->
   <div class="popup" id="popup">
     <div class="popup-content">
-        <h2 id="popup-title">Level Complete!</h2>
-        <p id="popup-msg">Amazing shooting skills!</p>
-        <button class="play-btn" onclick="restartGame()">PLAY AGAIN</button>
+        <h2>Level Complete 🎉</h2>
+        <p>Amazing shooting skills!</p>
+        <button class="play-btn" style="width:100%; height:60px;" onclick="restartGame()">Play Again</button>
     </div>
   </div>
+
 </div>
 
 <script src="game.js"></script>
