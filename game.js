@@ -135,19 +135,29 @@ function load() {
 //  NAVIGATION
 // ══════════════════════════════════════════
 function showScreen(id) {
+    // Hide all other visible screens
     document.querySelectorAll('.screen').forEach(s => {
-        if (s.id !== id) {
-            s.style.opacity = '0'; s.style.transform = 'scale(.96)';
-            setTimeout(() => { if (s.style.opacity==='0') s.classList.add('hidden'); }, 350);
+        if (s.id !== id && !s.classList.contains('hidden')) {
+            s.style.opacity = '0';
+            s.style.transform = 'scale(.96)';
+            setTimeout(() => { s.classList.add('hidden'); s.style.opacity=''; s.style.transform=''; }, 350);
         }
     });
     const t = document.getElementById(id);
+    if (!t) return;
+    // Set start state before making visible
+    t.style.opacity = '0';
+    t.style.transform = 'scale(.96)';
     t.classList.remove('hidden');
-    requestAnimationFrame(() => { t.style.opacity='1'; t.style.transform='scale(1)'; });
+    // Double rAF ensures browser has painted the display:flex state before transition
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        t.style.opacity = '1';
+        t.style.transform = 'scale(1)';
+    }));
 
-    if (id === 'home-screen')        { generateMap(); setTimeout(drawMapPath, 120); }
-    if (id === 'achievements-screen') updateAchievements();
-    if (id === 'spin-screen')        { updateSpinUI(); drawWheel(); }
+    if (id === 'home-screen')         { generateMap(); setTimeout(drawMapPath, 180); }
+    if (id === 'achievements-screen') { updateAchievements(); }
+    if (id === 'spin-screen')         { updateSpinUI(); drawWheel(); }
 }
 
 function openPopup(id)  { document.getElementById(id).classList.remove('hidden'); }
@@ -346,16 +356,16 @@ function generateLevel(level) {
 }
 
 function resize() {
-    if (!canvas.parentElement) return;
-    canvas.width =canvas.parentElement.clientWidth;
-    canvas.height=canvas.parentElement.clientHeight;
+    if (!canvas || !canvas.parentElement) return;
+    canvas.width  = canvas.parentElement.clientWidth;
+    canvas.height = canvas.parentElement.clientHeight;
 }
 
 // ══════════════════════════════════════════
 //  GAME LOOP
 // ══════════════════════════════════════════
 function loop() {
-    if (canvas.width>0 && canvas.height>0) {
+    if (canvas && canvas.width > 0 && canvas.height > 0) {
         // screen shake
         ctx.save();
         if (shakeFrames>0) {
