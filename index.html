@@ -12,45 +12,53 @@
 
 <div class="game-container">
 
-  <!-- 1. SPLASH -->
+  <!-- SPLASH -->
   <div id="splashScreen" class="screen splash" style="justify-content: center; align-items: center; background: linear-gradient(180deg, #7b6cff, #fff); position: absolute; inset: 0; z-index: 1000;">
     <h1 style="font-size: 50px; font-weight: 900; color: #fff; text-shadow: 0 8px 0 #5a4bd6;">BUBBLE</h1>
     <h1 style="font-size: 35px; font-weight: 900; color: #ffcf3e; text-shadow: 0 6px 0 #d49e00;">SHOOTER</h1>
   </div>
 
-  <!-- 2. MAP SCREEN (FIXED) -->
-  <div id="mapScreen" class="screen hidden map-screen-bg">
-    <div class="map-header">
-      <div class="pill gold">🪙 <span id="map-coins">1250</span></div>
-      <h2 style="color: #7b6cff; font-weight: 900; font-size: 18px;">LEVELS</h2>
-      <button class="hud-btn" onclick="showScreen('settingsScreen')">⚙️</button>
-    </div>
+  <!-- FOREST MAP SCREEN (EXACT COPY) -->
+  <div id="mapScreen" class="screen hidden map-screen">
+    
+    <header class="map-top-bar">
+      <div class="map-pill">❤️ 5 <span>FULL</span></div>
+      <div class="map-pill coins">🪙 <span id="map-coins">1250</span> <div class="add-btn">+</div></div>
+      <button class="gear-btn" onclick="showScreen('settingsScreen')">⚙️</button>
+    </header>
 
-    <div class="map-scroll" id="mapScrollArea">
-      <div class="path-container" id="levelPath">
-        <!-- Dynamically generated via JS -->
+    <div class="world-card-wrap">
+      <div class="world-card">
+        <h2>GREEN FOREST</h2>
+        <div class="world-progress">
+          <div class="fill"></div>
+          <span style="z-index: 1;">30/90</span>
+        </div>
       </div>
     </div>
 
-    <div class="shop-float" onclick="toggleShop()">
-      <div class="shop-float-inner">🛒</div>
+    <div class="map-scroller" id="mapScrollArea">
+      <div class="winding-path" id="levelPath">
+        <!-- Nodes generated via JS -->
+      </div>
     </div>
+
+    <footer class="bottom-tab-bar">
+      <div class="tab-item" onclick="showScreen('splashScreen')"><i>🏠</i><span>HOME</span></div>
+      <div class="tab-item active"><i>🗺️</i><span>MAP</span></div>
+      <div class="tab-item" onclick="toggleShop()"><i>🛒</i><span>SHOP</span></div>
+    </footer>
   </div>
 
-  <!-- 3. GAMEPLAY SCREEN (SAME TO SAME FIX) -->
+  <!-- GAMEPLAY SCREEN (PREVIOUS PIXEL-PERFECT FIX) -->
   <div id="gameplayScreen" class="screen hidden game-play-bg">
-    
     <header class="top-hud">
       <button class="hud-btn" onclick="showScreen('mapScreen')">⏸</button>
-      
       <div class="stat-card">
         <span>SCORE</span>
         <h3 id="score">2,450</h3>
-        <div style="height: 6px; background: #eee; border-radius: 10px; margin-top: 5px;">
-          <div style="height: 100%; width: 40%; background: #ffcf3e; border-radius: 10px;"></div>
-        </div>
+        <div style="height: 6px; background: #eee; border-radius: 10px; margin-top: 5px;"><div style="height: 100%; width: 40%; background: #ffcf3e; border-radius: 10px;"></div></div>
       </div>
-
       <div class="stat-card" style="display: flex; align-items: center; gap: 10px;">
         <div style="text-align: left;">
             <span>GOAL</span>
@@ -60,46 +68,19 @@
             </div>
         </div>
       </div>
-
       <button class="hud-btn" onclick="showScreen('settingsScreen')">⚙️</button>
     </header>
-
     <canvas id="gameCanvas" width="390" height="420"></canvas>
-
     <footer class="bottom-shooter">
       <div class="shooter-controls">
-        <!-- Bomb -->
-        <div class="pu-item">
-          <img src="https://img.icons8.com/color/96/bomb.png" alt="bomb">
-          <span class="badge">2</span>
-        </div>
-
-        <!-- Main Shooter Circle -->
+        <div class="pu-item"><img src="https://img.icons8.com/color/96/bomb.png" alt="bomb"><span class="badge">2</span></div>
         <div class="main-ball-circle">
           <div id="currentBall" class="ball-current"></div>
-          <div class="swap-small-btn" onclick="swapBubbles()">
-            <div id="nextBall" class="ball-next"></div>
-            <span style="position: absolute; right: -5px; bottom: -5px; font-size: 8px;">🔄</span>
-          </div>
+          <div class="swap-small-btn" onclick="swapBubbles()"><div id="nextBall" class="ball-next"></div><span style="position: absolute; right: -5px; bottom: -5px; font-size: 8px;">🔄</span></div>
         </div>
-
-        <!-- Color Ball -->
-        <div class="pu-item">
-          <img src="https://img.icons8.com/color/96/rainbow.png" alt="rainbow">
-          <span class="badge">1</span>
-        </div>
+        <div class="pu-item"><img src="https://img.icons8.com/color/96/rainbow.png" alt="rainbow"><span class="badge">1</span></div>
       </div>
     </footer>
-
-  </div>
-
-  <!-- OVERLAYS -->
-  <div id="shopScreen" class="screen hidden overlay">...</div>
-  <div id="settingsScreen" class="screen hidden overlay" style="background: rgba(0,0,0,0.4); backdrop-filter: blur(10px); justify-content: center; align-items: center; display: none;">
-    <div style="width: 340px; background: #fff; border-radius: 40px; padding: 30px;">
-        <h1 style="color: #7b6cff; font-weight: 900; margin-bottom: 20px;">SETTINGS</h1>
-        <button onclick="showScreen('mapScreen')" style="width: 100%; border: none; background: #7b6cff; color: #fff; padding: 15px; border-radius: 20px; font-weight: 800;">BACK</button>
-    </div>
   </div>
 
 </div>
