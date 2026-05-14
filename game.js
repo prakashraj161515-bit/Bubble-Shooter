@@ -5,7 +5,8 @@
 // ══════════════════════════════════════════
 
 let canvas, ctx, scoreVal, currentBallEl, nextBallEl, goalText;
-const R = 20, rowHeight = 38, SPEED = 16;
+const R = 19, rowHeight = 34, SPEED = 16;
+
 const COLORS = ['#ff4d4d', '#ffcc00', '#33cc33', '#3399ff', '#cc33ff', '#ff8c1a'];
 
 let S = {
@@ -83,25 +84,25 @@ function startGame() {
     showScreen('gameplayScreen');
     S.ammo = 50; S.score = 2450; S.objective.count = 0;
     bubbles = [];
-    let rows = 10; // More rows to fill space
-    const spacingX = 40; 
-    const spacingY = 34; // Tighter vertical overlap for better zig-zag feel
+    let rows = 11; 
+    const spacingX = 38.5; 
+    const spacingY = 33; 
     
     for (let row = 0; row < rows; row++) {
-        // Full width rows: 9 or 10 bubbles alternating
         const isOffset = row % 2 !== 0;
         const width = isOffset ? 9 : 10;
-        const startX = isOffset ? 20 : 0; 
+        const startX = isOffset ? (spacingX/2) + 2.5 : 2.5; 
         
         for (let col = 0; col < width; col++) {
-            const x = startX + col * spacingX + 5; // Added small padding
-            const y = row * spacingY + 30; // Started higher up
+            const x = startX + col * spacingX;
+            const y = row * spacingY + 30; 
             bubbles.push({ x, y, color: COLORS[Math.floor(Math.random()*COLORS.length)], alive: true, falling: false });
         }
     }
     prepNext();
     updateUI();
 }
+
 
 
 

@@ -23,14 +23,14 @@ body { background: #dce1ff; display: flex; justify-content: center; align-items:
 
 .hud-top-premium {
   padding: 50px 15px 20px; display: flex; justify-content: space-between; align-items: center;
-  background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px);
-  border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.03); z-index: 50;
+  background: transparent; backdrop-filter: none;
+  border-radius: 0; box-shadow: none; z-index: 50;
 }
 .hud-btn-p { 
-  width: 50px; height: 50px; background: #eef2ff; border-radius: 18px; border: none; 
-  font-size: 24px; color: var(--p-purple); box-shadow: inset 0 -4px 0 #ccd5f0; 
+  width: 50px; height: 50px; background: rgba(255,255,255,0.9); border-radius: 18px; border: none; 
+  font-size: 24px; color: var(--p-purple); box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
 }
+
 
 .score-box-p { 
   background: #fff; border-radius: 20px; padding: 3px 12px; text-align: center; width: 110px; 
@@ -68,11 +68,12 @@ body { background: #dce1ff; display: flex; justify-content: center; align-items:
 .pu-badge-p { position: absolute; bottom: -5px; right: -5px; background: var(--p-purple); color: #fff; font-size: 11px; padding: 4px 10px; border-radius: 12px; font-weight: 800; border: 3px solid #fff; }
 
 .cannon-wrap-p { 
-    width: 115px; height: 115px; background: #fff; border-radius: 50%; 
+    width: 85px; height: 85px; background: #fff; border-radius: 50%; 
     display: flex; justify-content: center; align-items: center; position: relative;
-    box-shadow: 0 15px 35px rgba(123,108,255,0.2); border: 3px solid #fff; margin-bottom: 40px;
+    box-shadow: 0 10px 25px rgba(123,108,255,0.15); border: 3px solid #fff; margin-bottom: 25px;
 }
-.cannon-ball-p { width: 85px; height: 85px; border-radius: 50%; box-shadow: inset -5px -5px 15px rgba(0,0,0,0.2); }
+.cannon-ball-p { width: 62px; height: 62px; border-radius: 50%; box-shadow: inset -3px -3px 10px rgba(0,0,0,0.2); }
+
 
 .swap-box-p { 
     position: absolute; bottom: -10px; right: -5px; width: 50px; height: 50px; background: #fff; 
