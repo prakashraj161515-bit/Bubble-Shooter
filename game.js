@@ -84,18 +84,22 @@ function startGame() {
     S.ammo = 50; S.score = 2450; S.objective.count = 0;
     bubbles = [];
     let rows = 9;
+    const spacingX = 40; // Diameter is 40 (2*R), so this makes them touch
+    const spacingY = 35; // Vertical overlap for hex grid
     for (let row = 0; row < rows; row++) {
         const width = 8 - (row < 5 ? 0 : (row - 4));
-        const startX = 40 + (row % 2 ? 22 : 0) + (row < 5 ? 0 : (row - 4) * 22);
+        const rowOff = (row % 2) ? (spacingX/2) : 0;
+        const startX = 40 + rowOff + (row < 5 ? 0 : (row - 4) * (spacingX/2));
         for (let col = 0; col < width; col++) {
-            const x = startX + col * 44;
-            const y = row * rowHeight + 40;
+            const x = startX + col * spacingX;
+            const y = row * spacingY + 50; // Started a bit lower for slimmer HUD
             bubbles.push({ x, y, color: COLORS[Math.floor(Math.random()*COLORS.length)], alive: true, falling: false });
         }
     }
     prepNext();
     updateUI();
 }
+
 
 function swapBubbles() {
     const temp = activeColor;
