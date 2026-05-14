@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Bubble Shooter Premium</title>
+  <title>Bubble Shooter Pro</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
@@ -13,101 +13,53 @@
 <div class="game-container">
 
   <!-- 1. SPLASH -->
-  <div id="splashScreen" class="screen splash" style="justify-content: center; align-items: center; background: linear-gradient(180deg, #7b6cff, #fff);">
-    <div class="logo-wrap" style="margin: 0;">
-      <h1 class="logo-main">BUBBLE</h1>
-      <h1 class="logo-sub">SHOOTER</h1>
-    </div>
-  </div>
-
-  <!-- 2. MAIN MENU -->
-  <div id="mainMenu" class="screen hidden">
-    <div class="top-nav">
-      <button class="round-btn" onclick="showScreen('settingsScreen')">⚙️</button>
-      <button class="round-btn">👑</button>
-    </div>
-    
+  <div id="splashScreen" class="screen splash">
     <div class="logo-wrap">
       <h1 class="logo-main">BUBBLE</h1>
       <h1 class="logo-sub">SHOOTER</h1>
     </div>
-
-    <div class="menu-stack">
-      <button class="btn-3d yellow" onclick="showScreen('mapScreen')">PLAY</button>
-      <button class="btn-3d purple" onclick="showScreen('levelsScreen')">LEVELS</button>
-      <button class="btn-3d purple" onclick="showScreen('dailyScreen')" style="background: #a29bfe;">DAILY CHALLENGE</button>
-    </div>
-
-    <div class="icon-bar">
-      <div class="icon-item" onclick="showScreen('shopScreen')">
-        <div class="icon-circle">🛒</div>
-        <span>SHOP</span>
-      </div>
-      <div class="icon-item" onclick="showScreen('spinScreen')">
-        <div class="icon-circle">🎡</div>
-        <span>SPIN</span>
-      </div>
-      <div class="icon-item" onclick="showScreen('achievementsScreen')">
-        <div class="icon-circle">🏆</div>
-        <span>AWARDS</span>
-      </div>
-    </div>
   </div>
 
-  <!-- 3. MAP SCREEN -->
-  <div id="mapScreen" class="screen hidden">
+  <!-- 2. MAP SCREEN (Lighter & Cleaner) -->
+  <div id="mapScreen" class="screen hidden light-bg">
     <div class="map-header">
       <div class="pill">❤️ <span id="heart-status">FULL</span></div>
-      <div class="pill" style="color: #ffb300;">🪙 <span id="map-coins">1250</span> <span style="background: #3ddc84; color: #fff; width: 20px; height: 20px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 14px;">+</span></div>
-      <button class="round-btn" style="width: 40px; height: 40px;" onclick="showScreen('settingsScreen')">⚙️</button>
+      <div class="pill gold">🪙 <span id="map-coins">1250</span></div>
+      <button class="round-btn" onclick="showScreen('settingsScreen')">⚙️</button>
     </div>
 
-    <div class="map-content" style="overflow-y: auto;">
-      <!-- Green Forest -->
-      <div class="world-info">
-        <h3 style="color: #3ddc84;">GREEN FOREST</h3>
-        <div class="progress-container"><div class="progress-fill" style="width: 70%;"></div></div>
-        <p style="font-size: 12px; font-weight: 800; color: #999;">30/40</p>
+    <div class="map-content">
+      <div class="world-card">
+        <h3>GREEN FOREST</h3>
+        <div class="progress-bar"><div class="fill" style="width: 70%;"></div></div>
       </div>
 
-      <div style="position: relative; height: 500px;">
-        <div class="map-node active" style="top: 20px; right: 50px;"><span>4</span><div class="stars">⭐⭐</div></div>
-        <div class="map-node done" style="top: 140px; left: 80px;"><span>3</span><div class="stars">⭐⭐⭐</div></div>
-        <div class="map-node done" style="top: 260px; right: 100px;"><span>2</span><div class="stars">⭐⭐⭐</div></div>
-        <div class="map-node done" style="top: 380px; left: 60px;"><span>1</span><div class="stars">⭐⭐⭐</div></div>
-      </div>
-
-      <!-- Snow Land (Locked) -->
-      <div class="world-info" style="opacity: 0.6; background: #e0f4ff;">
-        <h3 style="color: #5ba1ff;">SNOW LAND ❄️</h3>
-        <p style="font-size: 12px; font-weight: 800; color: #999;">Locked</p>
-      </div>
-
-      <!-- Desert (Locked) -->
-      <div class="world-info" style="opacity: 0.6; background: #fff4e0; margin-bottom: 120px;">
-        <h3 style="color: #ffb300;">DESERT 🏜️</h3>
-        <p style="font-size: 12px; font-weight: 800; color: #999;">Locked</p>
+      <div class="path-container">
+        <!-- Level Nodes -->
+        <div class="map-node active" style="top: 50px; right: 50px;" onclick="startGame()">4<div class="stars">⭐⭐</div></div>
+        <div class="map-node done" style="top: 170px; left: 80px;" onclick="startGame()">3<div class="stars">⭐⭐⭐</div></div>
+        <div class="map-node done" style="top: 290px; right: 100px;" onclick="startGame()">2<div class="stars">⭐⭐⭐</div></div>
+        <div class="map-node done" style="top: 410px; left: 60px;" onclick="startGame()">1<div class="stars">⭐⭐⭐</div></div>
       </div>
     </div>
 
-    <div class="icon-bar" style="background: #fff; margin: 0; padding: 15px; border-top-left-radius: 40px; border-top-right-radius: 40px; position: absolute; bottom: 0; width: 100%;">
-        <div class="icon-item" onclick="showScreen('mainMenu')">🏠<span>HOME</span></div>
-        <div class="icon-item active" style="color: #7b6cff;">🗺️<span>MAP</span></div>
-        <div class="icon-item" onclick="showScreen('shopScreen')">🛒<span>SHOP</span></div>
+    <!-- Floating Shop Icon -->
+    <div class="floating-shop" onclick="toggleShop()">
+      <div class="shop-inner">🛒</div>
     </div>
   </div>
 
-  <!-- 4. GAMEPLAY UI -->
-  <div id="gameplayScreen" class="screen hidden" style="background: linear-gradient(180deg, #b8c6ff, #fff);">
+  <!-- 3. GAMEPLAY UI -->
+  <div id="gameplayScreen" class="screen hidden play-bg">
     <div class="game-hud">
-      <button class="round-btn" style="width: 45px; height: 45px;" onclick="showScreen('mapScreen')">⏸</button>
+      <button class="round-btn" onclick="showScreen('mapScreen')">❮</button>
       <div class="hud-box">
         <span>SCORE</span>
-        <h3 id="score">2,450</h3>
+        <h3 id="score">0</h3>
       </div>
-      <div class="hud-box" style="width: 100px;">
+      <div class="hud-box" style="min-width: 100px;">
         <span>GOAL</span>
-        <h3 id="goal-val" style="color: #c76bff; font-size: 16px;">🟣 0/6</h3>
+        <h3 id="goal-val">🟣 0/6</h3>
       </div>
     </div>
 
@@ -115,47 +67,43 @@
 
     <div class="cannon-area">
       <div class="shooter-wrap">
-        <div class="side-pu">💣<span style="position: absolute; top: -5px; right: -5px; background: #ff5c73; color: #fff; font-size: 10px; padding: 4px 8px; border-radius: 10px;">2</span></div>
+        <div class="side-pu">💣</div>
         <div class="main-ball-wrap">
-          <div id="nextBall" style="width: 20px; height: 20px; border-radius: 50%; background: #ddd; margin-bottom: 5px;"></div>
-          <div id="currentBall" style="width: 55px; height: 55px; border-radius: 50%; background: #7b6cff; box-shadow: inset -5px -5px 10px rgba(0,0,0,0.2);"></div>
+          <div id="nextBall" class="next-b"></div>
+          <div id="currentBall" class="current-b"></div>
           <div class="swap-icon">🔄</div>
         </div>
-        <div class="side-pu">🌈<span style="position: absolute; top: -5px; right: -5px; background: #ff5c73; color: #fff; font-size: 10px; padding: 4px 8px; border-radius: 10px;">1</span></div>
+        <div class="side-pu">🌈</div>
       </div>
     </div>
   </div>
 
-  <!-- 5. DAILY CHALLENGE -->
-  <div id="dailyScreen" class="screen hidden">
-    <div class="map-header">
-        <button class="round-btn" onclick="showScreen('mainMenu')">❮</button>
-        <h2 style="color: #7b6cff; font-weight: 900;">DAILY CHALLENGE</h2>
-        <button class="round-btn" onclick="showScreen('mainMenu')">✕</button>
-    </div>
-    <div style="padding: 24px; text-align: center;">
-        <p style="color: #666; margin-bottom: 20px;">Complete today's challenge and get amazing rewards!</p>
-        <div class="challenge-bar">
-            <div class="fill" style="width: 60%;"></div>
-            <div class="gift-node" style="left: 30%;">🎁<br><span style="font-size: 10px;">10</span></div>
-            <div class="gift-node" style="left: 60%;">🎁<br><span style="font-size: 10px;">20</span></div>
-            <div class="gift-node" style="left: 90%;">🎁<br><span style="font-size: 10px;">30</span></div>
+  <!-- 4. SHOP (Overlay) -->
+  <div id="shopScreen" class="screen hidden overlay">
+    <div class="modal-3d">
+        <header><h1>SHOP</h1><button onclick="toggleShop()">✕</button></header>
+        <div class="shop-grid">
+            <div class="shop-item">💣<button>200</button></div>
+            <div class="shop-item">🌈<button>200</button></div>
+            <div class="shop-item">🔥<button>200</button></div>
         </div>
-        <div class="shop-card" style="margin-top: 50px; padding: 30px;">
-            <p style="font-weight: 800; color: #999; font-size: 12px;">CHALLENGE TASK</p>
-            <h2 style="color: #c76bff; margin: 15px 0;">🟣 Pop 30 Purple Bubbles</h2>
-            <div class="progress-container"><div class="progress-fill" style="width: 60%; background: #c76bff;"></div></div>
-            <p>18/30</p>
+        <div class="coins-list">
+            <div class="coin-row">🪙 500 <span>₹49</span></div>
+            <div class="coin-row">🪙 1200 <span>₹99</span></div>
         </div>
-        <button class="btn-3d yellow" style="margin-top: 40px;" onclick="showScreen('gameplayScreen')">PLAY</button>
     </div>
   </div>
 
-  <!-- SHOP, SETTINGS, AWARDS, SPIN (Same as before, ensure IDs match) -->
-  <div id="shopScreen" class="screen hidden" style="padding: 60px 24px;">...</div>
-  <div id="settingsScreen" class="screen hidden">...</div>
-  <div id="achievementsScreen" class="screen hidden" style="padding: 60px 24px;">...</div>
-  <div id="spinScreen" class="screen hidden">...</div>
+  <!-- 5. SETTINGS -->
+  <div id="settingsScreen" class="screen hidden overlay">
+    <div class="modal-3d">
+        <header><h1>SETTINGS</h1><button onclick="showScreen('mapScreen')">✕</button></header>
+        <div class="s-list">
+            <div class="s-item">🔊 Sound <div class="toggle on"></div></div>
+            <div class="s-item">🎵 Music <div class="toggle on"></div></div>
+        </div>
+    </div>
+  </div>
 
 </div>
 
