@@ -1,157 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Bubble Shooter Premium</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Bubble Shooter Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="game-container">
 
-    <!-- 1. SPLASH SCREEN -->
-    <div id="splash-screen" class="screen" onclick="showScreen('main-menu')">
-        <div class="logo-glow"></div>
-        <div class="logo-wrap">
-            <h1 class="logo-top">BUBBLE</h1>
-            <h1 class="logo-bottom">SHOOTER</h1>
-        </div>
-        <div class="loading-container">
-            <div class="loading-bar"><div class="loading-fill"></div></div>
-            <span class="loading-text">Loading premium assets...</span>
-        </div>
+<div class="game">
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="hud-btn">❚❚</div>
+    <div class="score-box">
+      <p>SCORE</p>
+      <h1 id="score">0</h1>
     </div>
+    <div class="hud-btn">⚙</div>
+  </div>
 
-    <!-- 2. MAIN MENU -->
-    <div id="main-menu" class="screen hidden">
-        <nav class="top-nav-row">
-            <button class="icon-btn" onclick="openPopup('settings-popup')">⚙️</button>
-            <button class="icon-btn gold" onclick="showScreen('profile-screen')">👤</button>
-        </nav>
-        <div class="menu-content">
-            <div class="logo-wrap mini">
-                <h1 class="logo-top">BUBBLE</h1>
-                <h1 class="logo-bottom">SHOOTER</h1>
-            </div>
-            <div class="menu-btns">
-                <button class="btn-glossy yellow big" onclick="showScreen('home-screen')">▶ PLAY</button>
-                <button class="btn-glossy purple" onclick="showScreen('leaderboard-screen')">🏆 LEADERBOARD</button>
-                <button class="btn-glossy purple" onclick="showScreen('tournament-screen')">⚔️ TOURNAMENT</button>
-            </div>
-        </div>
-        <footer class="menu-footer">
-            <button class="footer-tab" onclick="openPopup('shop-popup')">🛒 Shop</button>
-            <button class="footer-tab" onclick="showScreen('spin-screen')">🎡 Spin</button>
-            <button class="footer-tab" onclick="showScreen('reward-screen')">🎁 Rewards</button>
-        </footer>
+  <!-- Game Canvas -->
+  <div class="canvas-wrap">
+    <canvas id="gameCanvas" width="390" height="550"></canvas>
+  </div>
+
+  <!-- Bottom UI -->
+  <div class="bottom-ui">
+    <div class="shooter-controls">
+      <div class="next-label">NEXT</div>
+      <div class="next-bubble-wrap">
+        <div id="nextBubble" class="bubble-preview"></div>
+      </div>
+      
+      <div class="powerups">
+        <div class="power">💣</div>
+        <div class="power">🌈</div>
+        <div class="power">⚡</div>
+      </div>
     </div>
+  </div>
 
-    <!-- 3. PROFILE SCREEN -->
-    <div id="profile-screen" class="screen hidden">
-        <header class="screen-header">
-            <button class="back-btn" onclick="showScreen('main-menu')">❮</button>
-            <h1>PROFILE</h1>
-        </header>
-        <div class="profile-card">
-            <div class="avatar-large">👤</div>
-            <h2>Bubble Master</h2>
-            <div class="level-pill">LEVEL 24</div>
-        </div>
-        <div class="stats-grid">
-            <div class="stat-card"><h3>245</h3><span>LEVELS</span></div>
-            <div class="stat-card"><h3>12K</h3><span>COINS</span></div>
-            <div class="stat-card"><h3>98</h3><span>WINS</span></div>
-            <div class="stat-card"><h3>7</h3><span>STREAK</span></div>
-        </div>
+  <!-- Win/Loss Popups -->
+  <div class="popup" id="popup">
+    <div class="popup-content">
+        <h2 id="popup-title">Level Complete!</h2>
+        <p id="popup-msg">Amazing shooting skills!</p>
+        <button class="play-btn" onclick="restartGame()">PLAY AGAIN</button>
     </div>
-
-    <!-- 4. LEADERBOARD -->
-    <div id="leaderboard-screen" class="screen hidden">
-        <header class="screen-header">
-            <button class="back-btn" onclick="showScreen('main-menu')">❮</button>
-            <h1>LEADERBOARD</h1>
-        </header>
-        <div class="lb-list">
-            <div class="lb-row gold"><span>👑 1</span><span>Alex</span><span>24,500</span></div>
-            <div class="lb-row silver"><span>🥈 2</span><span>Emma</span><span>21,900</span></div>
-            <div class="lb-row user"><span>3</span><span>You</span><span>19,200</span></div>
-            <div class="lb-row"><span>4</span><span>John</span><span>18,500</span></div>
-            <div class="lb-row"><span>5</span><span>Sarah</span><span>17,200</span></div>
-        </div>
-    </div>
-
-    <!-- 5. REWARD SCREEN -->
-    <div id="reward-screen" class="screen hidden reward-bg">
-        <div class="magic-glow"></div>
-        <h1 class="reward-title">REWARD READY!</h1>
-        <div class="chest-box">🎁</div>
-        <button class="btn-glossy yellow big" onclick="showScreen('main-menu')">CLAIM REWARD</button>
-    </div>
-
-    <!-- 6. TOURNAMENT SCREEN -->
-    <div id="tournament-screen" class="screen hidden tourney-bg">
-        <header class="screen-header white">
-            <button class="back-btn" onclick="showScreen('main-menu')">❮</button>
-            <h1>TOURNAMENT</h1>
-        </header>
-        <div class="tourney-card">
-            <div class="trophy-large">🏆</div>
-            <h4>GRAND PRIZE</h4>
-            <h3>50,000 COINS</h3>
-        </div>
-        <div class="timer-pill">ENDS IN: 02D 14H 23M</div>
-        <button class="btn-glossy green big mt40">JOIN NOW</button>
-    </div>
-
-    <!-- 7. GAMEPLAY SCREEN -->
-    <div id="gameplay-ui" class="screen hidden gameplay-bg">
-        <header class="game-hud">
-            <button class="hud-pause" onclick="showScreen('home-screen')">⏸</button>
-            <div class="hud-center">
-                <div class="hud-label">SCORE</div>
-                <div class="hud-value" id="current-score">0</div>
-                <div class="hud-stars">
-                    <span class="hud-star">⭐</span>
-                    <div class="hud-star-bar"><div class="hud-star-fill"></div></div>
-                </div>
-            </div>
-            <div class="hud-right">
-                <div class="hud-goal-pill">
-                    <div class="goal-bubble" id="goal-bubble"></div>
-                    <span id="goal-text">0/6</span>
-                </div>
-            </div>
-        </header>
-
-        <canvas id="gameCanvas"></canvas>
-
-        <div class="shooter-tray">
-            <div class="powerup-row">
-                <div class="power-btn" onclick="usePowerup('BOMB')">💣<span class="badge" id="bomb-count">0</span></div>
-                <div class="power-btn" onclick="usePowerup('FIREBALL')">🔥<span class="badge">0</span></div>
-                <div class="power-btn" onclick="usePowerup('RAINBOW')">🌈<span class="badge" id="rainbow-count">0</span></div>
-            </div>
-            <div class="cannon">
-                <div id="active-ball" class="active-ball"></div>
-                <div id="next-ball" class="next-ball"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- POPUPS -->
-    <div id="settings-popup" class="overlay hidden">
-        <div class="modal">
-            <button class="modal-close" onclick="closePopup('settings-popup')">✕</button>
-            <h2>SETTINGS</h2>
-            <div class="setting-row"><span>🔊 Sound</span><div class="toggle on"></div></div>
-            <div class="setting-row"><span>🎵 Music</span><div class="toggle on"></div></div>
-            <button class="btn-glossy red w100 mt20">LOG OUT</button>
-        </div>
-    </div>
-
+  </div>
 </div>
+
 <script src="game.js"></script>
 </body>
 </html>
