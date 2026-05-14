@@ -12,82 +12,81 @@
 
 <div class="game-container">
 
-  <!-- SPLASH SCREEN -->
+  <!-- 1. SPLASH -->
   <div id="splashScreen" class="screen splash" style="justify-content: center; align-items: center; background: linear-gradient(180deg, #7b6cff, #fff); position: absolute; inset: 0; z-index: 1000;">
     <h1 style="font-size: 50px; font-weight: 900; color: #fff; text-shadow: 0 8px 0 #5a4bd6;">BUBBLE</h1>
     <h1 style="font-size: 35px; font-weight: 900; color: #ffcf3e; text-shadow: 0 6px 0 #d49e00;">SHOOTER</h1>
   </div>
 
-  <!-- MAP SCREEN (Scrollable Winding Path) -->
-  <div id="mapScreen" class="screen hidden light-bg">
+  <!-- 2. MAP SCREEN (FIXED) -->
+  <div id="mapScreen" class="screen hidden map-screen-bg">
     <div class="map-header">
       <div class="pill gold">🪙 <span id="map-coins">1250</span></div>
       <h2 style="color: #7b6cff; font-weight: 900; font-size: 18px;">LEVELS</h2>
-      <button class="round-btn" onclick="showScreen('settingsScreen')">⚙️</button>
+      <button class="hud-btn" onclick="showScreen('settingsScreen')">⚙️</button>
     </div>
-    <div class="map-content" id="mapScrollArea">
-      <div class="path-list" id="levelPath"></div>
+
+    <div class="map-scroll" id="mapScrollArea">
+      <div class="path-container" id="levelPath">
+        <!-- Dynamically generated via JS -->
+      </div>
     </div>
-    <div class="floating-shop" onclick="toggleShop()"><div class="shop-inner">🛒</div></div>
+
+    <div class="shop-float" onclick="toggleShop()">
+      <div class="shop-float-inner">🛒</div>
+    </div>
   </div>
 
-  <!-- GAMEPLAY SCREEN (THE PIXEL-PERFECT ONE) -->
-  <div id="gameplayScreen" class="screen hidden play-bg">
+  <!-- 3. GAMEPLAY SCREEN (SAME TO SAME FIX) -->
+  <div id="gameplayScreen" class="screen hidden game-play-bg">
     
-    <!-- TOP HUD -->
-    <header class="game-hud">
-      <button class="hud-round-btn" onclick="showScreen('mapScreen')">⏸</button>
+    <header class="top-hud">
+      <button class="hud-btn" onclick="showScreen('mapScreen')">⏸</button>
       
-      <div class="score-panel">
+      <div class="stat-card">
         <span>SCORE</span>
         <h3 id="score">2,450</h3>
-        <div class="star-progress">
-          <div class="fill"></div>
-          <span class="mark" style="left: 40%;">⭐</span>
-          <span class="mark" style="left: 70%;">⭐</span>
+        <div style="height: 6px; background: #eee; border-radius: 10px; margin-top: 5px;">
+          <div style="height: 100%; width: 40%; background: #ffcf3e; border-radius: 10px;"></div>
         </div>
       </div>
 
-      <div class="goal-panel">
-        <div style="text-align: center;">
-          <span style="font-size: 8px; font-weight: 800; color: #aaa;">GOAL</span>
-          <div style="display: flex; align-items: center; gap: 5px;">
-            <div class="goal-bubble"></div>
-            <h3 id="goal-val" style="font-size: 18px; color: #4a4a8c;">0/6</h3>
-          </div>
+      <div class="stat-card" style="display: flex; align-items: center; gap: 10px;">
+        <div style="text-align: left;">
+            <span>GOAL</span>
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <div style="width: 25px; height: 25px; background: radial-gradient(circle at 8px 8px, #e1baff, #c76bff); border-radius: 50%;"></div>
+                <h3 id="goal-val" style="font-size: 18px;">0/6</h3>
+            </div>
         </div>
       </div>
 
-      <button class="hud-round-btn" onclick="showScreen('settingsScreen')">⚙️</button>
+      <button class="hud-btn" onclick="showScreen('settingsScreen')">⚙️</button>
     </header>
 
-    <!-- GAME CANVAS -->
-    <canvas id="gameCanvas" width="390" height="480"></canvas>
+    <canvas id="gameCanvas" width="390" height="420"></canvas>
 
-    <!-- BOTTOM SHOOTER (THE WAVE) -->
-    <footer class="shooter-area">
-      <div class="shooter-wave"></div>
-      
-      <div class="controls-wrap">
-        <!-- Powerup 1 -->
-        <div class="pu-box">
-          <img src="https://img.icons8.com/color/96/bomb.png" width="50" alt="bomb">
-          <span class="pu-badge">2</span>
+    <footer class="bottom-shooter">
+      <div class="shooter-controls">
+        <!-- Bomb -->
+        <div class="pu-item">
+          <img src="https://img.icons8.com/color/96/bomb.png" alt="bomb">
+          <span class="badge">2</span>
         </div>
 
-        <!-- Main Shooter -->
-        <div class="main-shooter">
-          <div id="currentBall" class="current-ball"></div>
-          <div class="swap-small" onclick="swapBubbles()">
-            <div id="nextBall" class="reserve-ball"></div>
-            <span style="position: absolute; right: -5px; bottom: -5px; font-size: 10px;">🔄</span>
+        <!-- Main Shooter Circle -->
+        <div class="main-ball-circle">
+          <div id="currentBall" class="ball-current"></div>
+          <div class="swap-small-btn" onclick="swapBubbles()">
+            <div id="nextBall" class="ball-next"></div>
+            <span style="position: absolute; right: -5px; bottom: -5px; font-size: 8px;">🔄</span>
           </div>
         </div>
 
-        <!-- Powerup 2 -->
-        <div class="pu-box">
-          <img src="https://img.icons8.com/color/96/rainbow.png" width="50" alt="rainbow">
-          <span class="pu-badge">1</span>
+        <!-- Color Ball -->
+        <div class="pu-item">
+          <img src="https://img.icons8.com/color/96/rainbow.png" alt="rainbow">
+          <span class="badge">1</span>
         </div>
       </div>
     </footer>
@@ -96,7 +95,12 @@
 
   <!-- OVERLAYS -->
   <div id="shopScreen" class="screen hidden overlay">...</div>
-  <div id="settingsScreen" class="screen hidden overlay">...</div>
+  <div id="settingsScreen" class="screen hidden overlay" style="background: rgba(0,0,0,0.4); backdrop-filter: blur(10px); justify-content: center; align-items: center; display: none;">
+    <div style="width: 340px; background: #fff; border-radius: 40px; padding: 30px;">
+        <h1 style="color: #7b6cff; font-weight: 900; margin-bottom: 20px;">SETTINGS</h1>
+        <button onclick="showScreen('mapScreen')" style="width: 100%; border: none; background: #7b6cff; color: #fff; padding: 15px; border-radius: 20px; font-weight: 800;">BACK</button>
+    </div>
+  </div>
 
 </div>
 

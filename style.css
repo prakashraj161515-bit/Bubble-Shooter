@@ -1,70 +1,105 @@
 :root {
   --p-purple: #7b6cff;
-  --p-light-purple: #eef2ff;
-  --p-hud-bg: rgba(255, 255, 255, 0.8);
-  --p-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  --p-yellow: #ffcf3e;
+  --p-green: #3ddc84;
+  --p-bg: linear-gradient(180deg, #f0f4ff 0%, #dce5ff 100%);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
 
-body { background: #dce1ff; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+body { background: #bfc7ff; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
 
 .game-container {
   width: 390px; height: 844px; background: #fff; border-radius: 50px;
-  position: relative; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.1);
+  position: relative; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.2);
 }
 
-.screen { position: absolute; inset: 0; display: flex; flex-direction: column; z-index: 10; }
+.screen { position: absolute; inset: 0; display: flex; flex-direction: column; z-index: 10; transition: 0.3s; }
 .hidden { display: none !important; }
 
-/* SKY BACKGROUND */
-.play-bg { 
-  background: linear-gradient(180deg, #6b8eff 0%, #a2b9ff 50%, #fff 100%); 
-  position: relative;
+/* --- MAP SCREEN FIX (Zig-Zag Path) --- */
+.map-screen-bg { background: var(--p-bg); }
+.map-header { 
+    padding: 60px 20px 20px; display: flex; justify-content: space-between; align-items: center; 
+    background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); z-index: 100;
 }
-.play-bg::after {
-  content: '☁️☁️☁️'; position: absolute; bottom: 180px; width: 100%; text-align: center; font-size: 100px; opacity: 0.2; pointer-events: none;
+.pill { background: #fff; padding: 10px 18px; border-radius: 20px; font-weight: 800; color: #ffb300; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+
+.map-scroll { 
+    flex: 1; overflow-y: auto; padding: 100px 20px; scrollbar-width: none; 
+    display: flex; flex-direction: column; align-items: center;
 }
+.map-scroll::-webkit-scrollbar { display: none; }
 
-/* TOP HUD (Exact Copy) */
-.game-hud {
-  padding: 50px 15px 15px; display: flex; align-items: center; justify-content: space-between;
-  background: var(--p-hud-bg); backdrop-filter: blur(20px); border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;
-  box-shadow: 0 15px 30px rgba(0,0,0,0.03); z-index: 50;
+.path-container {
+    width: 100%; display: flex; flex-direction: column-reverse; gap: 40px; position: relative;
 }
-.hud-round-btn { width: 45px; height: 45px; background: #eef2ff; border-radius: 50%; border: none; font-size: 20px; color: var(--p-purple); box-shadow: inset 0 -3px 0 #ddd; cursor: pointer; }
-
-.score-panel { background: #fff; border-radius: 25px; padding: 10px 20px; text-align: center; box-shadow: var(--p-shadow); width: 130px; }
-.score-panel span { font-size: 10px; font-weight: 800; color: #aaa; letter-spacing: 1px; }
-.score-panel h3 { font-size: 24px; color: #4a4a8c; font-weight: 900; }
-.star-progress { height: 10px; background: #eee; border-radius: 5px; margin-top: 5px; position: relative; }
-.star-progress .fill { height: 100%; width: 40%; background: linear-gradient(90deg, #ffcf3e, #ffb300); border-radius: 5px; }
-.star-progress .mark { position: absolute; top: -5px; font-size: 10px; color: #ccc; }
-
-.goal-panel { background: #fff; border-radius: 25px; padding: 10px 15px; display: flex; align-items: center; gap: 10px; box-shadow: var(--p-shadow); min-width: 90px; }
-.goal-bubble { width: 30px; height: 30px; background: radial-gradient(circle at 10px 10px, #e1baff, #c76bff); border-radius: 50%; box-shadow: 0 5px 10px rgba(0,0,0,0.1); }
-
-/* SHOOTER HUD (The Wave Design) */
-.shooter-area {
-  position: absolute; bottom: 0; width: 100%; height: 200px;
-  background: rgba(255,255,255,0.8); backdrop-filter: blur(20px);
-  border-top-left-radius: 45px; border-top-right-radius: 45px;
-  display: flex; justify-content: center; align-items: center; z-index: 100;
-}
-.shooter-wave {
-  width: 100%; height: 60px; position: absolute; top: -30px;
-  background: rgba(255,255,255,0.8); backdrop-filter: blur(20px);
-  border-radius: 50% 50% 0 0;
+.path-container::before {
+    content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 6px; background: rgba(0,0,0,0.05); transform: translateX(-50%);
 }
 
-.controls-wrap { display: flex; align-items: flex-end; gap: 20px; position: relative; padding-bottom: 20px; }
-.pu-box { width: 85px; height: 85px; background: #fff; border-radius: 25px; display: flex; justify-content: center; align-items: center; position: relative; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-.pu-badge { position: absolute; bottom: -5px; right: -5px; background: var(--p-purple); color: #fff; font-size: 10px; padding: 4px 8px; border-radius: 10px; font-weight: 800; }
+.level-node {
+    width: 75px; height: 75px; border-radius: 50%; background: #fff;
+    display: flex; justify-content: center; align-items: center;
+    font-weight: 900; font-size: 26px; color: #ccc;
+    box-shadow: 0 8px 0 #f0f0f0, 0 15px 30px rgba(0,0,0,0.05);
+    cursor: pointer; z-index: 5; position: relative; transition: 0.2s;
+}
+.level-node.done { background: var(--p-green); color: #fff; box-shadow: 0 8px 0 #2ea663; }
+.level-node.active { background: var(--p-yellow); color: #fff; box-shadow: 0 8px 0 #d49e00; transform: scale(1.15); }
 
-.main-shooter { width: 100px; height: 100px; background: #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); position: relative; z-index: 10; margin-bottom: 30px; }
-.current-ball { width: 65px; height: 65px; border-radius: 50%; box-shadow: inset -5px -5px 10px rgba(0,0,0,0.1); }
-.swap-small { position: absolute; bottom: -5px; right: 10px; width: 35px; height: 35px; background: #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 2px solid #eef2ff; box-shadow: 0 5px 10px rgba(0,0,0,0.1); }
-.reserve-ball { width: 25px; height: 25px; border-radius: 50%; }
+/* The Zig-Zag Logic */
+.level-node:nth-child(4n+1) { margin-left: -120px; }
+.level-node:nth-child(4n+2) { margin-left: 0; }
+.level-node:nth-child(4n+3) { margin-left: 120px; }
+.level-node:nth-child(4n+4) { margin-left: 0; }
 
-/* BUBBLES IN CANVAS (Engine will use these colors) */
-canvas { flex: 1; z-index: 10; }
+/* --- GAMEPLAY SCREEN FIX (Same to Same) --- */
+.game-play-bg { background: linear-gradient(180deg, #7ba1ff 0%, #b3c9ff 60%, #fff 100%); }
+
+.top-hud {
+    padding: 50px 20px 20px; display: flex; justify-content: space-between; align-items: center;
+    background: rgba(255,255,255,0.7); backdrop-filter: blur(15px); border-radius: 0 0 40px 40px;
+}
+.hud-btn { width: 45px; height: 45px; border-radius: 50%; border: none; background: #fff; color: var(--p-purple); font-size: 20px; box-shadow: 0 5px 10px rgba(0,0,0,0.05); }
+
+.stat-card { background: #fff; padding: 10px 25px; border-radius: 25px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+.stat-card span { font-size: 10px; font-weight: 800; color: #aaa; }
+.stat-card h3 { font-size: 24px; color: #4a4a8c; font-weight: 900; }
+
+.bottom-shooter {
+    position: absolute; bottom: 0; width: 100%; height: 220px;
+    background: rgba(255,255,255,0.85); backdrop-filter: blur(20px);
+    border-radius: 50px 50px 0 0; display: flex; justify-content: center; align-items: center;
+}
+/* The Wave */
+.bottom-shooter::before {
+    content: ''; position: absolute; top: -30px; left: 50%; width: 120px; height: 100px;
+    background: rgba(255,255,255,0.85); border-radius: 50%; transform: translateX(-50%);
+}
+
+.shooter-controls { display: flex; align-items: flex-end; gap: 30px; position: relative; z-index: 10; padding-bottom: 20px; }
+.pu-item { 
+    width: 80px; height: 80px; background: #fff; border-radius: 25px; 
+    display: flex; justify-content: center; align-items: center; position: relative;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05); border: 2px solid #f0f4ff;
+}
+.pu-item img { width: 50px; }
+.badge { position: absolute; bottom: -5px; right: -5px; background: var(--p-purple); color: #fff; font-size: 10px; padding: 4px 8px; border-radius: 10px; font-weight: 800; }
+
+.main-ball-circle {
+    width: 100px; height: 100px; background: #fff; border-radius: 50%;
+    display: flex; justify-content: center; align-items: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1); position: relative; margin-bottom: 40px;
+}
+.ball-current { width: 65px; height: 65px; border-radius: 50%; box-shadow: inset -5px -5px 15px rgba(0,0,0,0.1); }
+.swap-small-btn {
+    position: absolute; bottom: -5px; right: 5px; width: 38px; height: 38px; background: #fff;
+    border-radius: 50%; border: 2px solid #f0f4ff; display: flex; justify-content: center; align-items: center; box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+}
+.ball-next { width: 25px; height: 25px; border-radius: 50%; }
+
+/* FLOATING SHOP */
+.shop-float { position: absolute; right: 20px; bottom: 60px; z-index: 200; animation: bounce 2s infinite; cursor: pointer; }
+.shop-float-inner { width: 70px; height: 70px; background: var(--p-purple); border-radius: 25px; display: flex; justify-content: center; align-items: center; font-size: 30px; box-shadow: 0 10px 0 #5a4bd6; }
+@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
