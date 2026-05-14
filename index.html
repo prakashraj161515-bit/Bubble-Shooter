@@ -12,14 +12,8 @@
 
 <div class="game-container">
 
-  <!-- SPLASH -->
-  <div id="splashScreen" class="screen splash" style="justify-content: center; align-items: center; background: linear-gradient(180deg, #7b6cff, #fff); position: absolute; inset: 0; z-index: 1000;">
-    <h1 style="font-size: 50px; font-weight: 900; color: #fff; text-shadow: 0 8px 0 #5a4bd6;">BUBBLE</h1>
-    <h1 style="font-size: 35px; font-weight: 900; color: #ffcf3e; text-shadow: 0 6px 0 #d49e00;">SHOOTER</h1>
-  </div>
-
-  <!-- PIXEL-PERFECT MAP (FOREST THEME) -->
-  <div id="mapScreen" class="screen hidden map-screen">
+  <!-- PIXEL-PERFECT MAP (CLEANER) -->
+  <div id="mapScreen" class="screen map-screen">
     
     <header class="map-header-pro">
       <div class="hud-item">❤️ 5 <span>FULL</span></div>
@@ -27,30 +21,22 @@
       <button class="set-btn" onclick="showScreen('settingsScreen')">⚙️</button>
     </header>
 
-    <div class="world-banner">
-      <div class="banner-card">
-        <h2>GREEN FOREST</h2>
-        <div class="prog-container">
-          <div class="prog-fill"></div>
-          <span style="z-index: 1;">30/90</span>
-        </div>
-      </div>
-    </div>
+    <!-- World Banner "Green Forest" removed as requested -->
 
     <div class="map-view" id="mapScrollArea">
       <div class="path-canvas" id="levelPath">
-        <!-- Nodes generated via JS to follow the 'S' curve exactly -->
+        <!-- 100 Nodes generated via JS -->
       </div>
     </div>
 
     <footer class="bottom-nav-pro">
-      <div class="nav-item" onclick="showScreen('splashScreen')"><i>🏠</i>HOME</div>
+      <div class="nav-item"><i>🏠</i>HOME</div>
       <div class="nav-item active"><i>🗺️</i>MAP</div>
-      <div class="nav-item" onclick="toggleShop()"><i>🛒</i>SHOP</div>
+      <div class="tab-item" onclick="toggleShop()"><i>🛒</i>SHOP</div>
     </footer>
   </div>
 
-  <!-- GAMEPLAY SCREEN (PIXEL-PERFECT) -->
+  <!-- GAMEPLAY SCREEN (SAME TO SAME) -->
   <div id="gameplayScreen" class="screen hidden game-play-bg">
     <header class="top-hud">
       <button class="hud-btn" onclick="showScreen('mapScreen')">⏸</button>

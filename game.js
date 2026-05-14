@@ -1,7 +1,7 @@
 'use strict';
 // ══════════════════════════════════════════
-//  BUBBLE SHOOTER PREMIUM — game.js v20
-//  EXACT COPY — S-Curve Map Rendering
+//  BUBBLE SHOOTER PREMIUM — game.js v21
+//  100 Levels Map Engine | Cleaner UI
 // ══════════════════════════════════════════
 
 let canvas, ctx, scoreVal, currentBallEl, nextBallEl, goalText;
@@ -32,23 +32,25 @@ function showScreen(id) {
     updateUI();
 }
 
-// ──────── RENDER MAP (THE S-CURVE FIX) ────────
+// ──────── RENDER 100 LEVELS (S-CURVE) ────────
 function renderMap() {
     const path = document.getElementById('levelPath');
     if (!path) return;
     path.innerHTML = '';
     
-    const totalLevels = Math.min(S.unlockedLevels + 15, 5000);
-    const center = 155; // Center of the 390px width minus node half-width
-    const amplitude = 100; // How far it zig-zags
-    const frequency = 250; // Vertical distance for a full wave
+    const totalLevels = 100; // Updated to show exactly 100 levels
+    const center = 155; 
+    const amplitude = 100; 
+    const frequency = 300; 
+    
+    // Set container height for 100 levels
+    path.style.height = `${totalLevels * 150}px`;
     
     for (let i = 1; i <= totalLevels; i++) {
         const node = document.createElement('div');
         node.className = 'node-pro';
         
-        // Calculate S-curve position
-        const yPos = i * 140; // Spacing between levels
+        const yPos = i * 140; 
         const xPos = center + Math.sin(yPos / frequency) * amplitude;
         
         node.style.top = `${yPos}px`;
@@ -86,13 +88,8 @@ function init() {
     initFloaters();
     animate();
     
-    setTimeout(() => {
-        const splash = document.getElementById('splashScreen');
-        if(splash) {
-            splash.style.opacity = '0';
-            setTimeout(() => { splash.style.display = 'none'; showScreen('mapScreen'); }, 500);
-        }
-    }, 2000);
+    // Jump straight to Map Screen
+    showScreen('mapScreen');
 
     canvas.addEventListener('mousemove', e => { 
         const r = canvas.getBoundingClientRect(); mouseX = e.clientX - r.left; mouseY = e.clientY - r.top; 
