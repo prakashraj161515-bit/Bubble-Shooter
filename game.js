@@ -1,18 +1,20 @@
 'use strict';
 // ══════════════════════════════════════════
-//  BUBBLE SHOOTER PREMIUM — game.js v14
-//  Light UI | Instant Play | Floating Shop
+//  BUBBLE SHOOTER PREMIUM — game.js v15
+//  5000 Levels | Adaptive Difficulty | Ammo System
 // ══════════════════════════════════════════
 
-let canvas, ctx, scoreVal, currentBallEl, nextBallEl, goalText, heartText;
+let canvas, ctx, scoreVal, currentBallEl, nextBallEl, ammoText;
 const R = 20, rowHeight = 38, SPEED = 16;
-const COLORS = ['#ff5c73', '#ffd54f', '#3ddc84', '#42a5ff', '#c76bff'];
+// Light Pastel Colors for Smooth Look
+const COLORS = ['#ffb3ba', '#ffdfba', '#ffffba', '#baffc9', '#bae1ff', '#e1baff'];
 
 let S = {
-    score: 0, coins: 1250, hearts: 5, lastHeartTime: Date.now(),
-    currentLevel: 4, unlockedLevels: 4,
-    powerups: { BOMB: 2, COLOR: 1, FIRE: 1 },
-    settings: { sound: true, music: true, vibration: true }
+    score: 0, coins: 1250, ammo: 50,
+    currentLevel: Number(localStorage.getItem('bs_level')) || 1,
+    unlockedLevels: Number(localStorage.getItem('bs_unlocked')) || 1,
+    consecutiveFails: 0,
+    settings: { sound: true, music: true }
 };
 
 let bubbles = [], projectile = null, particles = [], floaters = [];
@@ -24,20 +26,11 @@ let isGameActive = false;
 function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
     const target = document.getElementById(id);
-    if (target) {
-        target.classList.remove('hidden');
-        isGameActive = (id === 'gameplayScreen');
-        updateUI();
-    }
+    if (target) target.classList.remove('hidden');
+    isGameActive = (id === 'gameplayScreen');
+    updateUI();
 }
 
-function toggleShop() {
-    const el = document.getElementById('shopScreen');
-    if(el.classList.contains('hidden')) el.classList.remove('hidden');
-    else el.classList.add('hidden');
-}
-
-// ──────── INITIALIZATION ────────
 function init() {
     canvas = document.getElementById('gameCanvas');
     if (!canvas) return;
@@ -45,21 +38,13 @@ function init() {
     scoreVal = document.getElementById('score');
     currentBallEl = document.getElementById('currentBall');
     nextBallEl = document.getElementById('nextBall');
-    goalText = document.getElementById('goal-val');
-    heartText = document.getElementById('heart-status');
+    ammoText = document.getElementById('ammo-val');
 
     loadState();
     initFloaters();
     animate();
-    
-    // Direct transition from Splash to Map
-    setTimeout(() => {
-        const splash = document.getElementById('splashScreen');
-        if(splash) splash.style.opacity = '0';
-        setTimeout(() => showScreen('mapScreen'), 500);
-    }, 2000);
+    setTimeout(() => showScreen('mapScreen'), 2000);
 
-    // Event Listeners
     canvas.addEventListener('mousemove', e => { 
         const r = canvas.getBoundingClientRect(); mouseX = e.clientX - r.left; mouseY = e.clientY - r.top; 
     });
@@ -70,36 +55,42 @@ function init() {
     }, {passive:false});
 }
 
-// ──────── GAMEPLAY ────────
+// ──────── DYNAMIC LEVEL GENERATION ────────
 function startGame() {
     showScreen('gameplayScreen');
-    bubbles = []; S.score = 0; updateUI();
-    const rows = 10;
+    S.ammo = 50; S.score = 0;
+    bubbles = [];
+    
+    // Difficulty based on level
+    let rows = Math.min(6 + Math.floor(S.currentLevel / 50), 12);
+    let colorCount = Math.min(3 + Math.floor(S.currentLevel / 100), COLORS.length);
+    
+    // Adaptive: Make it easier if user failed multiple times
+    if (S.consecutiveFails > 2) { rows -= 1; colorCount -= 1; }
+    
+    const activeColors = COLORS.slice(0, colorCount);
+
     for (let row = 0; row < rows; row++) {
         for (let col = 0; col < 8; col++) {
             const x = col * 44 + 40 + (row % 2 ? 22 : 0);
             const y = row * rowHeight + 40;
-            bubbles.push({ x, y, color: COLORS[Math.floor(Math.random()*COLORS.length)], alive: true, falling: false });
+            bubbles.push({ x, y, color: activeColors[Math.floor(Math.random()*activeColors.length)], alive: true, falling: false });
         }
     }
     prepNext();
-}
-
-function updateUI() {
-    if(scoreVal) scoreVal.innerText = S.score;
-    if(heartText) heartText.innerText = S.hearts === 5 ? "FULL" : S.hearts;
-    const mapCoins = document.getElementById('map-coins');
-    if(mapCoins) mapCoins.innerText = S.coins;
-    saveState();
+    updateUI();
 }
 
 function shoot() {
-    if (projectile || !isGameActive) return;
+    if (projectile || !isGameActive || S.ammo <= 0) return;
     initAudio();
     const sx = canvas.width / 2, sy = canvas.height - 40;
     const ang = Math.atan2(mouseY - sy, mouseX - sx); if (ang > 0) return;
+    
     projectile = { x: sx, y: sy, color: activeColor, vx: Math.cos(ang) * SPEED, vy: Math.sin(ang) * SPEED };
+    S.ammo--;
     prepNext();
+    updateUI();
     if(S.settings.sound) playSFX('shoot');
 }
 
@@ -125,14 +116,42 @@ function snap() {
     if (matches.length >= 3) {
         matches.forEach(b => { b.alive = false; createParticles(b.x, b.y, b.color); S.score += 100; });
         shakeFrames = 15; if(S.settings.sound) playSFX('pop');
-        // Gravity
-        const con = new Set();
-        function mark(b) { if(con.has(b)) return; con.add(b); bubbles.filter(o => o.alive && !o.falling && Math.hypot(o.x-b.x, o.y-b.y) < 48).forEach(mark); }
-        bubbles.filter(b => b.y < 60 && b.alive).forEach(mark);
-        bubbles.forEach(b => { if(b.alive && !con.has(b)) b.falling = true; });
+        checkGravity();
     }
-    updateUI(); projectile = null;
-    if(bubbles.every(b => !b.alive)) showScreen('mapScreen');
+    projectile = null;
+    checkEnd();
+}
+
+function checkEnd() {
+    const remaining = bubbles.filter(b => b.alive);
+    if (remaining.length === 0) {
+        S.consecutiveFails = 0;
+        S.currentLevel++;
+        if (S.currentLevel > S.unlockedLevels) S.unlockedLevels = S.currentLevel;
+        alert("LEVEL CLEAR! 🎉 Next Level: " + S.currentLevel);
+        showScreen('mapScreen');
+    } else if (S.ammo <= 0 && !projectile) {
+        S.consecutiveFails++;
+        alert("OUT OF BALLS! ❌ Try Again.");
+        showScreen('mapScreen');
+    }
+}
+
+function checkGravity() {
+    const con = new Set();
+    function mark(b) { if(con.has(b)) return; con.add(b); bubbles.filter(o => o.alive && !o.falling && Math.hypot(o.x-b.x, o.y-b.y) < 48).forEach(mark); }
+    bubbles.filter(b => b.y < 60 && b.alive).forEach(mark);
+    bubbles.forEach(b => { if(b.alive && !con.has(b)) b.falling = true; });
+}
+
+function updateUI() {
+    if(scoreVal) scoreVal.innerText = S.score;
+    if(ammoText) ammoText.innerText = S.ammo;
+    const mapCoins = document.getElementById('map-coins');
+    if(mapCoins) mapCoins.innerText = S.currentLevel; // Using level as coins display for now
+    const bc = document.getElementById('bomb-count');
+    if(bc) bc.innerText = S.currentLevel;
+    saveState();
 }
 
 function prepNext() {
@@ -141,12 +160,20 @@ function prepNext() {
     if(nextBallEl) nextBallEl.style.background = reserveColor;
 }
 
-// ──────── ENGINE ────────
+// ──────── SMOOTH DRAWING ────────
 function drawBall(x, y, color, r = R) {
     ctx.save();
-    const grad = ctx.createRadialGradient(x-8, y-8, 5, x, y, r);
-    grad.addColorStop(0, '#fff'); grad.addColorStop(0.2, color); grad.addColorStop(1, '#000');
-    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fillStyle = grad; ctx.fill(); ctx.restore();
+    const grad = ctx.createRadialGradient(x-5, y-5, 2, x, y, r);
+    grad.addColorStop(0, '#ffffff'); // Shiny Highlight
+    grad.addColorStop(0.3, color);
+    grad.addColorStop(1, shadeColor(color, -20));
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fillStyle = grad; ctx.fill();
+    ctx.restore();
+}
+
+function shadeColor(color, percent) {
+    let f=parseInt(color.slice(1),16),t=percent<0?0:255,p=percent<0?percent*-1:percent,R=f>>16,G=f>>8&0x00FF,B=f&0x0000FF;
+    return "#"+(0x1000000+(Math.round((t-R)*p/100)+R)*0x10000+(Math.round((t-G)*p/100)+G)*0x100+(Math.round((t-B)*p/100)+B)).toString(16).slice(1);
 }
 
 function animate() {
@@ -160,12 +187,12 @@ function animate() {
         if (projectile.x < R || projectile.x > canvas.width - R) projectile.vx *= -1;
         drawBall(projectile.x, projectile.y, projectile.color, 22);
         let hit = false; if (projectile.y < R + 20) hit = true; else bubbles.forEach(b => { if (b.alive && !b.falling && Math.hypot(b.x - projectile.x, b.y - projectile.y) < 38) hit = true; });
-        if (hit) snap(); if (projectile && projectile.y > canvas.height) projectile = null;
+        if (hit) snap(); if (projectile && (projectile.y < 0 || projectile.y > canvas.height)) projectile = null;
     }
     drawVFX();
     if (isGameActive && !projectile) {
         const sx = canvas.width/2, sy = canvas.height-40, ang = Math.atan2(mouseY-sy, mouseX-sx);
-        if (ang < 0) { ctx.beginPath(); ctx.setLineDash([5, 10]); ctx.moveTo(sx, sy); ctx.lineTo(sx+Math.cos(ang)*200, sy+Math.sin(ang)*200); ctx.strokeStyle='rgba(255,255,255,0.4)'; ctx.stroke(); ctx.setLineDash([]); }
+        if (ang < 0) { ctx.beginPath(); ctx.setLineDash([5, 10]); ctx.moveTo(sx, sy); ctx.lineTo(sx+Math.cos(ang)*200, sy+Math.sin(ang)*200); ctx.strokeStyle='rgba(0,0,0,0.1)'; ctx.stroke(); ctx.setLineDash([]); }
     }
     ctx.restore(); requestAnimationFrame(animate);
 }
@@ -174,7 +201,7 @@ function animate() {
 function createParticles(x, y, color) { for (let i = 0; i < 8; i++) particles.push({ x, y, dx: (Math.random()-0.5)*6, dy: (Math.random()-0.5)*6, s: Math.random()*5+2, a: 1, c: color }); }
 function drawVFX() { particles = particles.filter(p => p.a > 0); particles.forEach(p => { p.x += p.dx; p.y += p.dy; p.dy += 0.15; p.a -= 0.03; ctx.globalAlpha = p.a; ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fillStyle = p.c; ctx.fill(); }); ctx.globalAlpha = 1; }
 function initFloaters() { for (let i = 0; i < 15; i++) floaters.push({ x: Math.random()*390, y: Math.random()*844, r: Math.random()*5+1, s: Math.random()*0.5+0.2 }); }
-function drawFloaters() { floaters.forEach(f => { f.y -= f.s; if (f.y < -20) f.y = 860; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI*2); ctx.fillStyle = 'rgba(255,255,255,0.1)'; ctx.fill(); }); }
+function drawFloaters() { floaters.forEach(f => { f.y -= f.s; if (f.y < -20) f.y = 860; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI*2); ctx.fillStyle = 'rgba(0,0,0,0.03)'; ctx.fill(); }); }
 
 let audioCtx = null;
 function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
@@ -184,7 +211,7 @@ function playSFX(type) {
     else { o.frequency.setValueAtTime(300, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05); o.start(); o.stop(audioCtx.currentTime + 0.05); }
 }
 
-function saveState() { localStorage.setItem('bs_premium_v14', JSON.stringify(S)); }
-function loadState() { const s = localStorage.getItem('bs_premium_v14'); if(s) S = JSON.parse(s); }
+function saveState() { localStorage.setItem('bs_level', S.currentLevel); localStorage.setItem('bs_unlocked', S.unlockedLevels); }
+function loadState() { const l = localStorage.getItem('bs_level'); if(l) S.currentLevel = Number(l); }
 
 document.addEventListener('DOMContentLoaded', init);
