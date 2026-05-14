@@ -1,7 +1,7 @@
 'use strict';
 // ══════════════════════════════════════════
-//  BUBBLE SHOOTER PREMIUM — game.js v22
-//  Pixel-Perfect Engine | High-Gloss 3D Bubbles
+//  BUBBLE SHOOTER PREMIUM — game.js v23
+//  Restored Map Engine | S-Curve Logic
 // ══════════════════════════════════════════
 
 let canvas, ctx, scoreVal, currentBallEl, nextBallEl, goalText;
@@ -32,28 +32,42 @@ function showScreen(id) {
     updateUI();
 }
 
+// ──────── RENDER 100 LEVELS (RESTORED ENGINE) ────────
 function renderMap() {
     const path = document.getElementById('levelPath');
     if (!path) return;
     path.innerHTML = '';
+    
     const totalLevels = 100;
-    const center = 155, amplitude = 100, frequency = 300;
+    const center = 155; 
+    const amplitude = 100; 
+    const frequency = 300; 
+    
     path.style.height = `${totalLevels * 150}px`;
+    
     for (let i = 1; i <= totalLevels; i++) {
         const node = document.createElement('div');
-        node.className = 'node-pro';
+        node.className = 'node-premium'; // Matches Restored CSS
+        
         const yPos = i * 140; 
         const xPos = center + Math.sin(yPos / frequency) * amplitude;
-        node.style.top = `${yPos}px`; node.style.left = `${xPos}px`;
+        
+        node.style.top = `${yPos}px`;
+        node.style.left = `${xPos}px`;
+        
         if (i <= S.unlockedLevels) {
             node.classList.add('unlocked');
-            node.innerHTML = `<span>${i}</span><div class="stars-row">⭐⭐⭐</div>`;
+            node.innerHTML = `<span>${i}</span><div class="stars-under">⭐⭐⭐</div>`;
             node.onclick = () => { S.currentLevel = i; startGame(); };
-        } else { node.innerHTML = `<span>${i}</span><div class="locks-row">🔒🔒🔒</div>`; }
+        } else {
+            node.innerHTML = `<span>${i}</span><div class="locks-under">🔒🔒🔒</div>`;
+        }
+        
         path.appendChild(node);
     }
+    
     setTimeout(() => {
-        const activeNode = document.querySelectorAll('.node-pro.unlocked')[S.unlockedLevels-1];
+        const activeNode = document.querySelectorAll('.node-premium.unlocked')[S.unlockedLevels-1];
         if (activeNode) activeNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 100);
 }
@@ -169,27 +183,13 @@ function prepNext() {
     updateUI();
 }
 
-// ──────── HIGH-GLOSS 3D BUBBLES ────────
 function drawBall(x, y, color, r = R) {
     ctx.save();
-    // Shadow
-    ctx.shadowColor = 'rgba(0,0,0,0.15)';
-    ctx.shadowBlur = 10; ctx.shadowOffsetY = 5;
-    
-    // Main Gradient
+    ctx.shadowColor = 'rgba(0,0,0,0.15)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 5;
     const grad = ctx.createRadialGradient(x - r*0.35, y - r*0.35, r*0.1, x, y, r);
-    grad.addColorStop(0, '#fff'); // Sharp Highlight
-    grad.addColorStop(0.3, color);
-    grad.addColorStop(1, shadeColor(color, -40)); // Dark edge
-
+    grad.addColorStop(0, '#fff'); grad.addColorStop(0.3, color); grad.addColorStop(1, shadeColor(color, -40));
     ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fillStyle = grad; ctx.fill();
-    
-    // Secondary Shine
-    ctx.beginPath();
-    ctx.ellipse(x - r*0.4, y - r*0.4, r*0.3, r*0.2, Math.PI/4, 0, Math.PI*2);
-    ctx.fillStyle = 'rgba(255,255,255,0.3)';
-    ctx.fill();
-    
+    ctx.beginPath(); ctx.ellipse(x - r*0.4, y - r*0.4, r*0.3, r*0.2, Math.PI/4, 0, Math.PI*2); ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fill();
     ctx.restore();
 }
 
