@@ -67,12 +67,14 @@ body {
 
 /* LEVEL MAP */
 .level-map { display: flex; gap: 15px; margin-top: 50px; }
-.level { width: 50px; height: 50px; border-radius: 50%; background: white; display: flex; justify-content: center; align-items: center; font-weight: 800; color: var(--primary); box-shadow: 0 8px 15px rgba(0,0,0,0.05); }
-.level-active { background: #ffd54f; color: white; transform: scale(1.1); border: 3px solid white; }
+.level { width: 50px; height: 50px; border-radius: 50%; background: white; display: flex; justify-content: center; align-items: center; font-weight: 800; color: var(--primary); box-shadow: 0 8px 15px rgba(0,0,0,0.05); opacity: 0.5; cursor: not-allowed; transition: 0.3s; }
+.level-active { background: #ffd54f; color: white; transform: scale(1.1); border: 3px solid white; opacity: 1; cursor: pointer; box-shadow: 0 10px 25px rgba(255,213,79,0.4); }
+.level-done { background: #3ddc84; color: white; opacity: 1; cursor: pointer; }
+.level-locked { background: rgba(255,255,255,0.2); border: 1px dashed rgba(255,255,255,0.4); }
 
 /* GAMEPLAY UI */
 .top-bar { height: 120px; padding: 60px 20px 20px; display: flex; justify-content: space-between; align-items: center; background: var(--glass); }
-.hud-btn { width: 50px; height: 50px; border-radius: 15px; background: white; display: flex; justify-content: center; align-items: center; font-size: 22px; color: var(--primary); }
+.hud-btn { width: 50px; height: 50px; border-radius: 15px; background: white; display: flex; justify-content: center; align-items: center; font-size: 22px; color: var(--primary); cursor: pointer; }
 .score-box { background: white; padding: 10px 30px; border-radius: 20px; text-align: center; }
 .score-box p { font-size: 10px; font-weight: 800; color: #999; }
 .score-box h1 { font-size: 26px; color: var(--primary); font-weight: 900; }
@@ -83,17 +85,22 @@ body {
 }
 .next-bubble { width: 44px; height: 44px; border-radius: 50%; border: 4px solid white; margin: 10px 0 20px; }
 .powerups { display: flex; gap: 20px; }
-.power { width: 65px; height: 65px; border-radius: 22px; background: white; display: flex; justify-content: center; align-items: center; font-size: 28px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); cursor: pointer; }
+.power { width: 65px; height: 65px; border-radius: 22px; background: white; display: flex; justify-content: center; align-items: center; font-size: 28px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); cursor: pointer; position: relative; }
 
 /* SHOP SCREEN */
 .shop-screen {
-  position: absolute; top: 110px; right: 20px; width: 200px;
-  background: white; border-radius: 30px; padding: 25px; z-index: 200;
-  box-shadow: 0 25px 60px rgba(0,0,0,0.2);
+  position: absolute; top: 110px; left: 20px; right: 20px;
+  background: white; border-radius: 35px; padding: 25px; z-index: 200;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.3);
 }
-.shop-card { background: #f8f9ff; border-radius: 20px; padding: 15px; margin-bottom: 15px; text-align: center; }
-.shop-card h3 { font-size: 13px; color: var(--primary); margin-bottom: 8px; }
-.shop-card button { border: none; background: var(--primary); color: white; padding: 8px 15px; border-radius: 12px; font-size: 11px; cursor: pointer; }
+.shop-header h2 { text-align: center; color: var(--primary); margin-bottom: 20px; }
+.shop-items { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+.shop-card { background: #f8f9ff; border-radius: 20px; padding: 15px; text-align: center; }
+.shop-card h3 { font-size: 11px; color: var(--primary); margin-bottom: 8px; }
+.shop-card button { border: none; background: var(--primary); color: white; padding: 8px 10px; border-radius: 12px; font-size: 10px; cursor: pointer; width: 100%; font-weight: 700; }
+
+/* SETTINGS PANEL */
+.setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-weight: 700; color: var(--primary); }
 
 /* POPUP */
 .popup { position: absolute; inset: 0; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(5px); }
