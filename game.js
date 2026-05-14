@@ -167,11 +167,13 @@ function updateUI() {
     if(goalText) goalText.innerText = `${S.objective.count}/${S.objective.total}`;
     if(currentBallEl) {
         const c = activeColor;
-        currentBallEl.style.background = `radial-gradient(circle at 15px 15px, #fff, ${c} 40%, ${shadeColor(c, -30)})`;
+        currentBallEl.style.background = `radial-gradient(circle at 30% 30%, #fff, ${c} 45%, ${shadeColor(c, -40)})`;
+        currentBallEl.style.boxShadow = 'inset -5px -5px 15px rgba(0,0,0,0.3), 0 10px 20px rgba(0,0,0,0.1)';
     }
     if(nextBallEl) {
         const c = reserveColor;
-        nextBallEl.style.background = `radial-gradient(circle at 10px 10px, #fff, ${c} 40%, ${shadeColor(c, -30)})`;
+        nextBallEl.style.background = `radial-gradient(circle at 30% 30%, #fff, ${c} 45%, ${shadeColor(c, -40)})`;
+        nextBallEl.style.boxShadow = 'inset -2px -2px 8px rgba(0,0,0,0.3)';
     }
     const mc = document.getElementById('map-coins');
     if(mc) mc.innerText = S.coins.toLocaleString();
@@ -185,13 +187,35 @@ function prepNext() {
 
 function drawBall(x, y, color, r = R) {
     ctx.save();
-    ctx.shadowColor = 'rgba(0,0,0,0.15)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 5;
-    const grad = ctx.createRadialGradient(x - r*0.35, y - r*0.35, r*0.1, x, y, r);
-    grad.addColorStop(0, '#fff'); grad.addColorStop(0.3, color); grad.addColorStop(1, shadeColor(color, -40));
+    // Shadow
+    ctx.shadowColor = 'rgba(0,0,0,0.2)';
+    ctx.shadowBlur = 8; ctx.shadowOffsetY = 4;
+    
+    // Main 3D Glossy Body
+    const grad = ctx.createRadialGradient(x - r*0.3, y - r*0.3, r*0.05, x, y, r);
+    grad.addColorStop(0, '#fff'); // Sharp Highlight
+    grad.addColorStop(0.2, shadeColor(color, 20));
+    grad.addColorStop(0.5, color);
+    grad.addColorStop(1, shadeColor(color, -50)); // Dark depth
+
     ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fillStyle = grad; ctx.fill();
-    ctx.beginPath(); ctx.ellipse(x - r*0.4, y - r*0.4, r*0.3, r*0.2, Math.PI/4, 0, Math.PI*2); ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fill();
+    
+    // Top-Left Gloss Reflection
+    ctx.beginPath();
+    ctx.ellipse(x - r*0.4, y - r*0.4, r*0.35, r*0.2, Math.PI/4, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.fill();
+
+    // Bottom-Right Rim Light
+    ctx.beginPath();
+    ctx.arc(x, y, r * 0.8, 0.5, 2.5);
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
     ctx.restore();
 }
+
 
 function shadeColor(color, percent) {
     let f=parseInt(color.slice(1),16),t=percent<0?0:255,p=percent<0?percent*-1:percent,R=f>>16,G=f>>8&0x00FF,B=f&0x0000FF;
