@@ -1,7 +1,7 @@
 'use strict';
 // ══════════════════════════════════════════
-//  BUBBLE SHOOTER PREMIUM — game.js v21
-//  100 Levels Map Engine | Cleaner UI
+//  BUBBLE SHOOTER PREMIUM — game.js v22
+//  Pixel-Perfect Engine | High-Gloss 3D Bubbles
 // ══════════════════════════════════════════
 
 let canvas, ctx, scoreVal, currentBallEl, nextBallEl, goalText;
@@ -32,42 +32,26 @@ function showScreen(id) {
     updateUI();
 }
 
-// ──────── RENDER 100 LEVELS (S-CURVE) ────────
 function renderMap() {
     const path = document.getElementById('levelPath');
     if (!path) return;
     path.innerHTML = '';
-    
-    const totalLevels = 100; // Updated to show exactly 100 levels
-    const center = 155; 
-    const amplitude = 100; 
-    const frequency = 300; 
-    
-    // Set container height for 100 levels
+    const totalLevels = 100;
+    const center = 155, amplitude = 100, frequency = 300;
     path.style.height = `${totalLevels * 150}px`;
-    
     for (let i = 1; i <= totalLevels; i++) {
         const node = document.createElement('div');
         node.className = 'node-pro';
-        
         const yPos = i * 140; 
         const xPos = center + Math.sin(yPos / frequency) * amplitude;
-        
-        node.style.top = `${yPos}px`;
-        node.style.left = `${xPos}px`;
-        
+        node.style.top = `${yPos}px`; node.style.left = `${xPos}px`;
         if (i <= S.unlockedLevels) {
             node.classList.add('unlocked');
             node.innerHTML = `<span>${i}</span><div class="stars-row">⭐⭐⭐</div>`;
             node.onclick = () => { S.currentLevel = i; startGame(); };
-        } else {
-            node.innerHTML = `<span>${i}</span><div class="locks-row">🔒🔒🔒</div>`;
-        }
-        
+        } else { node.innerHTML = `<span>${i}</span><div class="locks-row">🔒🔒🔒</div>`; }
         path.appendChild(node);
     }
-    
-    // Auto-scroll to active level
     setTimeout(() => {
         const activeNode = document.querySelectorAll('.node-pro.unlocked')[S.unlockedLevels-1];
         if (activeNode) activeNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -87,8 +71,6 @@ function init() {
     loadState();
     initFloaters();
     animate();
-    
-    // Jump straight to Map Screen
     showScreen('mapScreen');
 
     canvas.addEventListener('mousemove', e => { 
@@ -155,8 +137,7 @@ function snap() {
         bubbles.filter(b => b.y < 60 && b.alive).forEach(mark);
         bubbles.forEach(b => { if(b.alive && !con.has(b)) b.falling = true; });
     }
-    projectile = null;
-    checkEnd(); updateUI();
+    projectile = null; checkEnd(); updateUI();
 }
 
 function checkEnd() {
@@ -170,8 +151,14 @@ function checkEnd() {
 function updateUI() {
     if(scoreVal) scoreVal.innerText = S.score.toLocaleString();
     if(goalText) goalText.innerText = `${S.objective.count}/${S.objective.total}`;
-    if(currentBallEl) currentBallEl.style.background = activeColor;
-    if(nextBallEl) nextBallEl.style.background = reserveColor;
+    if(currentBallEl) {
+        const c = activeColor;
+        currentBallEl.style.background = `radial-gradient(circle at 15px 15px, #fff, ${c} 40%, ${shadeColor(c, -30)})`;
+    }
+    if(nextBallEl) {
+        const c = reserveColor;
+        nextBallEl.style.background = `radial-gradient(circle at 10px 10px, #fff, ${c} 40%, ${shadeColor(c, -30)})`;
+    }
     const mc = document.getElementById('map-coins');
     if(mc) mc.innerText = S.coins.toLocaleString();
     saveState();
@@ -182,11 +169,27 @@ function prepNext() {
     updateUI();
 }
 
+// ──────── HIGH-GLOSS 3D BUBBLES ────────
 function drawBall(x, y, color, r = R) {
     ctx.save();
-    const grad = ctx.createRadialGradient(x-r*0.3, y-r*0.3, r*0.1, x, y, r);
-    grad.addColorStop(0, '#fff'); grad.addColorStop(0.2, color); grad.addColorStop(1, shadeColor(color, -40));
+    // Shadow
+    ctx.shadowColor = 'rgba(0,0,0,0.15)';
+    ctx.shadowBlur = 10; ctx.shadowOffsetY = 5;
+    
+    // Main Gradient
+    const grad = ctx.createRadialGradient(x - r*0.35, y - r*0.35, r*0.1, x, y, r);
+    grad.addColorStop(0, '#fff'); // Sharp Highlight
+    grad.addColorStop(0.3, color);
+    grad.addColorStop(1, shadeColor(color, -40)); // Dark edge
+
     ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fillStyle = grad; ctx.fill();
+    
+    // Secondary Shine
+    ctx.beginPath();
+    ctx.ellipse(x - r*0.4, y - r*0.4, r*0.3, r*0.2, Math.PI/4, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.fill();
+    
     ctx.restore();
 }
 
@@ -214,7 +217,7 @@ function animate() {
             for(let i=0; i<15; i++) {
                 const dotX = sx + Math.cos(ang) * (i * 25);
                 const dotY = sy + Math.sin(ang) * (i * 25);
-                ctx.beginPath(); ctx.arc(dotX, dotY, 2, 0, Math.PI*2); ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fill();
+                ctx.beginPath(); ctx.arc(dotX, dotY, 2, 0, Math.PI*2); ctx.fillStyle = 'rgba(123, 108, 255, 0.6)'; ctx.fill();
             }
         }
     }
@@ -230,5 +233,4 @@ function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || win
 function playSFX(type) { if (!audioCtx) return; const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.connect(g); g.connect(audioCtx.destination); if(type === 'pop') { o.frequency.setValueAtTime(600, audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.1); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1); o.start(); o.stop(audioCtx.currentTime + 0.1); } }
 function saveState() { localStorage.setItem('bs_level', S.currentLevel); localStorage.setItem('bs_unlocked', S.unlockedLevels); }
 function loadState() { const l = localStorage.getItem('bs_level'); if(l) S.currentLevel = Number(l); const u = localStorage.getItem('bs_unlocked'); if(u) S.unlockedLevels = Number(u); }
-function toggleShop() { alert("SHOP COMING SOON!"); }
 document.addEventListener('DOMContentLoaded', init);

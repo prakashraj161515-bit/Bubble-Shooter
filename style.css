@@ -1,8 +1,8 @@
 :root {
   --p-purple: #7b6cff;
-  --p-green: #3ddc84;
-  --p-yellow: #ffcf3e;
-  --p-bg-url: url('https://img.freepik.com/premium-vector/forest-road-landscape-vector-illustration-nature-background-with-trees-bushes-winding-path_102902-1262.jpg');
+  --p-light-purple: #f3f6ff;
+  --p-hud-bg: rgba(255, 255, 255, 0.9);
+  --p-shadow: 0 8px 30px rgba(0,0,0,0.05);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
@@ -17,50 +17,59 @@ body { background: #dce1ff; display: flex; justify-content: center; align-items:
 .screen { position: absolute; inset: 0; display: flex; flex-direction: column; z-index: 10; }
 .hidden { display: none !important; }
 
-/* --- MAP SCREEN PIXEL-PERFECT --- */
-.map-screen { background: #f8f9ff; }
-
-.map-header-pro {
-    padding: 50px 15px 15px; display: flex; justify-content: space-between; align-items: center;
-    background: #fff; z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.02);
+/* SKY BACKGROUND */
+.play-bg { 
+  background: linear-gradient(180deg, #6b8eff 0%, #a2b9ff 50%, #fff 100%); 
+  position: relative;
 }
-.hud-item { background: #eef2ff; padding: 8px 15px; border-radius: 20px; font-weight: 800; display: flex; align-items: center; gap: 10px; color: #4a4a8c; box-shadow: inset 0 -3px 0 #ddd; }
-.hud-item.gold { color: #5a4bd6; }
-.plus-btn { background: #3ddc84; color: #fff; width: 22px; height: 22px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 14px; }
-.set-btn { width: 45px; height: 45px; background: #eef2ff; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 24px; color: #7b6cff; border: none; box-shadow: inset 0 -3px 0 #ddd; }
-
-.world-banner { padding: 0 20px; z-index: 50; margin-top: 10px; }
-.banner-card { background: linear-gradient(180deg, #7b6cff, #5a4bd6); padding: 15px; border-radius: 25px; text-align: center; color: #fff; box-shadow: 0 10px 25px rgba(123,108,255,0.4); }
-.banner-card h2 { font-size: 20px; font-weight: 900; letter-spacing: 1px; }
-.prog-container { height: 12px; background: rgba(0,0,0,0.2); border-radius: 10px; margin-top: 10px; position: relative; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; }
-.prog-fill { position: absolute; left: 0; height: 100%; width: 40%; background: linear-gradient(90deg, #ffcf3e, #fff); border-radius: 10px; }
-
-.map-view {
-    flex: 1; overflow-y: auto; background: var(--p-bg-url); background-size: 100% auto;
-    position: relative; scrollbar-width: none;
+/* Cloud Overlay */
+.play-bg::after {
+  content: ''; position: absolute; bottom: 150px; width: 100%; height: 300px;
+  background: url('https://www.transparenttextures.com/patterns/clouds.png'); opacity: 0.3; pointer-events: none;
 }
-.map-view::-webkit-scrollbar { display: none; }
 
-.path-canvas { width: 100%; height: 1500px; position: relative; }
+/* TOP HUD (EXACT COPY) */
+.hud-top {
+  padding: 50px 15px 15px; display: flex; align-items: center; justify-content: space-between;
+  background: var(--p-hud-bg); backdrop-filter: blur(20px); border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.03); z-index: 50;
+}
+.hud-round-btn { width: 50px; height: 50px; background: #eef2ff; border-radius: 20px; border: none; font-size: 24px; color: var(--p-purple); box-shadow: inset 0 -4px 0 #ccd5f0; cursor: pointer; }
 
-/* NODE STYLING (EXACT COPY) */
-.node-pro {
-    position: absolute; width: 75px; height: 75px; border-radius: 50%; background: #444;
-    display: flex; justify-content: center; align-items: center;
-    font-weight: 900; font-size: 28px; color: #fff; border: 3px solid rgba(255,255,255,0.3);
-    box-shadow: 0 8px 0 #222, 0 15px 30px rgba(0,0,0,0.3); cursor: pointer;
-}
-.node-pro.unlocked { 
-    background: radial-gradient(circle at 20px 20px, #3ddc84, #1b8a4a); 
-    border-color: #fff; box-shadow: 0 8px 0 #1b8a4a, 0 15px 30px rgba(61,220,132,0.3);
-}
-.node-pro .stars-row { position: absolute; bottom: -22px; width: 100%; text-align: center; font-size: 14px; color: #ffcf3e; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-.node-pro .locks-row { position: absolute; bottom: -20px; width: 100%; text-align: center; color: #999; font-size: 14px; }
+.panel-score { background: #fff; border-radius: 30px; padding: 8px 15px; text-align: center; box-shadow: var(--p-shadow); width: 140px; border: 2px solid #f0f4ff; }
+.panel-score span { font-size: 10px; font-weight: 800; color: #aaa; letter-spacing: 1px; }
+.panel-score h3 { font-size: 24px; color: #4a4a8c; font-weight: 900; margin: -2px 0; }
+.star-track { height: 12px; background: #eee; border-radius: 10px; margin-top: 5px; position: relative; overflow: hidden; }
+.star-track .fill { height: 100%; width: 40%; background: linear-gradient(90deg, #ffcf3e, #ff9900); border-radius: 10px; }
 
-.bottom-nav-pro {
-    height: 90px; background: #fff; display: flex; justify-content: space-around; align-items: center;
-    border-top: 1px solid #eee; z-index: 100;
+.panel-goal { background: #fff; border-radius: 30px; padding: 8px 20px; display: flex; align-items: center; gap: 10px; box-shadow: var(--p-shadow); border: 2px solid #f0f4ff; }
+.goal-bubble-icon { width: 35px; height: 35px; background: radial-gradient(circle at 10px 10px, #e1baff, #c76bff); border-radius: 50%; box-shadow: inset -2px -2px 5px rgba(0,0,0,0.2); }
+
+/* SHOOTER WAVE (EXACT COPY) */
+.hud-bottom {
+  position: absolute; bottom: 0; width: 100%; height: 180px;
+  background: rgba(255,255,255,0.9); backdrop-filter: blur(20px);
+  border-top-left-radius: 50px; border-top-right-radius: 50px;
+  display: flex; justify-content: center; align-items: center; z-index: 100;
 }
-.nav-item { text-align: center; color: #aaa; font-weight: 800; font-size: 10px; }
-.nav-item.active { color: #7b6cff; }
-.nav-item i { font-size: 28px; display: block; margin-bottom: 2px; }
+.wave-top {
+  position: absolute; top: -35px; left: 50%; width: 130px; height: 100px;
+  background: rgba(255,255,255,0.9); border-radius: 50%; transform: translateX(-50%);
+}
+
+.hud-controls { display: flex; align-items: flex-end; gap: 20px; position: relative; z-index: 10; padding-bottom: 20px; }
+.powerup-box { width: 90px; height: 90px; background: #fff; border-radius: 30px; display: flex; justify-content: center; align-items: center; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 2px solid #f0f4ff; }
+.powerup-box img { width: 60px; }
+.badge-num { position: absolute; bottom: -5px; right: -5px; background: var(--p-purple); color: #fff; font-size: 11px; padding: 4px 10px; border-radius: 12px; font-weight: 800; border: 2px solid #fff; }
+
+.main-cannon { width: 110px; height: 110px; background: #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 15px 40px rgba(0,0,0,0.1); position: relative; margin-bottom: 30px; border: 3px solid #f0f4ff; }
+.current-ball-view { width: 75px; height: 75px; border-radius: 50%; }
+
+.swap-indicator { 
+    position: absolute; bottom: -10px; right: 0; width: 45px; height: 45px; background: #fff; 
+    border-radius: 50%; border: 2px solid #f0f4ff; display: flex; justify-content: center; align-items: center; box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
+.red-ball-small { width: 30px; height: 30px; background: radial-gradient(circle at 8px 8px, #ff8080, #ff0000); border-radius: 50%; }
+.swap-arrows { position: absolute; width: 100%; height: 100%; animation: rotate 3s linear infinite; }
+
+@keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
