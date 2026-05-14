@@ -1,14 +1,13 @@
 'use strict';
 // ══════════════════════════════════════════
-//  BUBBLE SHOOTER PREMIUM — game.js v12
-//  Objectives | Hearts System | Achievement Sync
+//  BUBBLE SHOOTER PREMIUM — game.js v13
+//  Direct Map Entry Logic
 // ══════════════════════════════════════════
 
 let canvas, ctx, scoreVal, currentBallEl, nextBallEl, goalText, heartText;
 const R = 20, rowHeight = 38, SPEED = 16;
 const COLORS = ['#ff5c73', '#ffd54f', '#3ddc84', '#42a5ff', '#c76bff'];
 
-// ──────── ADVANCED STATE ────────
 let S = {
     score: 0, coins: 1250, hearts: 5, lastHeartTime: Date.now(),
     currentLevel: 4, unlockedLevels: 4,
@@ -23,7 +22,6 @@ let mouseX = 195, mouseY = 100, shakeFrames = 0;
 let activeColor = COLORS[0], reserveColor = COLORS[1];
 let isGameActive = false;
 
-// ──────── NAVIGATION ────────
 function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
     const target = document.getElementById(id);
@@ -35,7 +33,6 @@ function showScreen(id) {
     }
 }
 
-// ──────── INITIALIZATION ────────
 function init() {
     canvas = document.getElementById('gameCanvas');
     if (!canvas) return;
@@ -50,7 +47,8 @@ function init() {
     initFloaters();
     animate();
     
-    setTimeout(() => showScreen('mainMenu'), 2500);
+    // DIRECTLY GO TO MAP SCREEN after splash
+    setTimeout(() => showScreen('mapScreen'), 2500);
 
     canvas.addEventListener('mousemove', e => { 
         const r = canvas.getBoundingClientRect(); mouseX = e.clientX - r.left; mouseY = e.clientY - r.top; 
@@ -61,18 +59,15 @@ function init() {
         mouseX = e.touches[0].clientX - r.left; mouseY = e.touches[0].clientY - r.top; shoot(); 
     }, {passive:false});
 
-    // Auto-regen hearts
-    setInterval(regenHearts, 60000); // Every 1 min
+    setInterval(regenHearts, 60000);
 }
 
 // ──────── GAMEPLAY ────────
 function startGame() {
-    if(S.hearts <= 0) { alert("Out of Energy! Wait for refill ❤️"); showScreen('mainMenu'); return; }
+    if(S.hearts <= 0) { alert("Out of Energy! ❤️"); showScreen('mapScreen'); return; }
     isGameActive = true;
     bubbles = []; S.score = 0; S.objective.count = 0;
     updateUI();
-    
-    // Generate Level with specific Goal
     const rows = 9;
     for (let row = 0; row < rows; row++) {
         for (let col = 0; col < 8; col++) {
@@ -82,6 +77,15 @@ function startGame() {
         }
     }
     prepNext();
+}
+
+function updateUI() {
+    if(scoreVal) scoreVal.innerText = S.score.toLocaleString();
+    if(goalText) goalText.innerText = `🟣 ${S.objective.count}/${S.objective.total}`;
+    if(heartText) heartText.innerText = S.hearts === 5 ? "FULL" : S.hearts;
+    const mapCoins = document.getElementById('map-coins');
+    if(mapCoins) mapCoins.innerText = S.coins.toLocaleString();
+    saveState();
 }
 
 function shoot() {
@@ -99,10 +103,8 @@ function snap() {
     const rowOff = (gridY % 2) ? 22 : 0;
     const gridX = Math.round((projectile.x - 40 - rowOff) / 44);
     const nx = gridX * 44 + 40 + rowOff, ny = gridY * rowHeight + 40;
-    
     const newB = { x: nx, y: ny, color: projectile.color, alive: true, falling: false };
     bubbles.push(newB);
-    
     const visited = new Set(), matches = [];
     function dfs(b) {
         if(!b || visited.has(b)) return;
@@ -112,46 +114,19 @@ function snap() {
         });
     }
     dfs(newB);
-    
     if (matches.length >= 3) {
         matches.forEach(b => { 
             b.alive = false; createParticles(b.x, b.y, b.color); 
-            S.score += 100; S.stats.totalPops++;
-            // Check Objective (e.g., Purple bubbles)
-            if(b.color === '#c76bff') S.objective.count++; 
+            S.score += 100; if(b.color === '#c76bff') S.objective.count++; 
         });
         shakeFrames = 15; if(S.settings.sound) playSFX('pop');
-        checkGravity();
+        const con = new Set();
+        function mark(b) { if(con.has(b)) return; con.add(b); bubbles.filter(o => o.alive && !o.falling && Math.hypot(o.x-b.x, o.y-b.y) < 48).forEach(mark); }
+        bubbles.filter(b => b.y < 60 && b.alive).forEach(mark);
+        bubbles.forEach(b => { if(b.alive && !con.has(b)) b.falling = true; });
     }
-    updateUI();
-    projectile = null;
-    checkEnd();
-}
-
-function checkEnd() {
-    if(S.objective.count >= S.objective.total) {
-        S.coins += 500; S.stats.levelsCleared++;
-        if(S.currentLevel === S.unlockedLevels) S.unlockedLevels++;
-        alert("GOAL REACHED! 🎉 +500 Coins");
-        showScreen('mapScreen');
-    }
-}
-
-// ──────── CORE LOGIC ────────
-function checkGravity() {
-    const con = new Set();
-    function mark(b) { if(con.has(b)) return; con.add(b); bubbles.filter(o => o.alive && !o.falling && Math.hypot(o.x-b.x, o.y-b.y) < 48).forEach(mark); }
-    bubbles.filter(b => b.y < 60 && b.alive).forEach(mark);
-    bubbles.forEach(b => { if(b.alive && !con.has(b)) b.falling = true; });
-}
-
-function updateUI() {
-    if(scoreVal) scoreVal.innerText = S.score.toLocaleString();
-    if(goalText) goalText.innerText = `🟣 ${S.objective.count}/${S.objective.total}`;
-    if(heartText) heartText.innerText = S.hearts === 5 ? "FULL" : S.hearts;
-    const mapCoins = document.getElementById('map-coins');
-    if(mapCoins) mapCoins.innerText = S.coins.toLocaleString();
-    saveState();
+    updateUI(); projectile = null;
+    if(S.objective.count >= S.objective.total) { S.coins += 500; if(S.currentLevel === S.unlockedLevels) S.unlockedLevels++; showScreen('mapScreen'); }
 }
 
 function regenHearts() { if(S.hearts < 5) { S.hearts++; updateUI(); } }
@@ -161,7 +136,6 @@ function prepNext() {
     if(nextBallEl) nextBallEl.style.background = reserveColor;
 }
 
-// ──────── DRAWING ────────
 function drawBall(x, y, color, r = R) {
     ctx.save();
     const grad = ctx.createRadialGradient(x-8, y-8, 5, x, y, r);
@@ -189,7 +163,6 @@ function animate() {
     ctx.restore(); requestAnimationFrame(animate);
 }
 
-// ──────── UTILS ────────
 function createParticles(x, y, color) { for (let i = 0; i < 8; i++) particles.push({ x, y, dx: (Math.random()-0.5)*6, dy: (Math.random()-0.5)*6, s: Math.random()*5+2, a: 1, c: color }); }
 function drawVFX() { particles = particles.filter(p => p.a > 0); particles.forEach(p => { p.x += p.dx; p.y += p.dy; p.dy += 0.15; p.a -= 0.03; ctx.globalAlpha = p.a; ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fillStyle = p.c; ctx.fill(); }); ctx.globalAlpha = 1; }
 function initFloaters() { for (let i = 0; i < 15; i++) floaters.push({ x: Math.random()*390, y: Math.random()*844, r: Math.random()*5+1, s: Math.random()*0.5+0.2 }); }
@@ -199,11 +172,11 @@ let audioCtx = null;
 function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
 function playSFX(type) {
     if (!audioCtx) return; const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.connect(g); g.connect(audioCtx.destination);
-    if(type === 'pop') { o.frequency.setValueAtTime(600, 0); o.frequency.exponentialRampToValueAtTime(200, 0.1); g.gain.exponentialRampToValueAtTime(0.01, 0.1); o.start(); o.stop(0.1); }
-    else { o.frequency.setValueAtTime(300, 0); g.gain.exponentialRampToValueAtTime(0.01, 0.05); o.start(); o.stop(0.05); }
+    if(type === 'pop') { o.frequency.setValueAtTime(600, audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.1); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1); o.start(); o.stop(audioCtx.currentTime + 0.1); }
+    else { o.frequency.setValueAtTime(300, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05); o.start(); o.stop(audioCtx.currentTime + 0.05); }
 }
 
-function saveState() { localStorage.setItem('bs_premium_v12', JSON.stringify(S)); }
-function loadState() { const s = localStorage.getItem('bs_premium_v12'); if(s) S = JSON.parse(s); }
+function saveState() { localStorage.setItem('bs_premium_v13', JSON.stringify(S)); }
+function loadState() { const s = localStorage.getItem('bs_premium_v13'); if(s) S = JSON.parse(s); }
 
 document.addEventListener('DOMContentLoaded', init);
