@@ -2,117 +2,182 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Bubble Shooter Pro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Bubble Shooter Premium</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="game">
+<div class="game-container">
 
-  <!-- SPLASH SCREEN -->
-  <div class="splash-screen" id="splashScreen">
-    <div class="splash-glow"></div>
-    <div class="splash-logo">
-      <h1>BUBBLE</h1>
-      <h2>SHOOTER</h2>
-    </div>
-    <div class="bubble-loader">
-      <div class="loader-bubble b1"></div>
-      <div class="loader-bubble b2"></div>
-      <div class="loader-bubble b3"></div>
+  <!-- 1. SPLASH SCREEN -->
+  <div id="splashScreen" class="screen splash">
+    <div class="splash-content">
+      <div class="logo-3d">
+        <h1 class="text-bubble">BUBBLE</h1>
+        <h1 class="text-shooter">SHOOTER</h1>
+      </div>
+      <div class="loader-wrap">
+        <div class="dot d1"></div>
+        <div class="dot d2"></div>
+        <div class="dot d3"></div>
+      </div>
     </div>
   </div>
 
-  <!-- HOME SCREEN -->
-  <div class="home-screen" id="homeScreen" style="display:none;">
-    <div class="home-top">
-      <div class="coins-box">🪙 <span id="coins">2500</span></div>
-      <div class="hud-btn" style="width:auto; padding:0 15px; font-size:14px;" onclick="localStorage.clear(); location.reload();">Reset</div>
+  <!-- 2. MAIN MENU -->
+  <div id="mainMenu" class="screen hidden">
+    <div class="top-row">
+      <button class="icon-btn-3d" onclick="showScreen('settingsPanel')">⚙️</button>
+      <button class="icon-btn-3d crown">👑</button>
     </div>
-    <div class="game-logo">
-      <h1>BUBBLE</h1>
-      <h2>SHOOTER</h2>
+    
+    <div class="menu-hero">
+      <div class="logo-main">
+        <h1>BUBBLE</h1>
+        <h2>SHOOTER</h2>
+      </div>
+      <div class="hero-bubbles">
+        <span class="b-red"></span><span class="b-orange"></span><span class="b-green"></span><span class="b-blue"></span><span class="b-purple"></span>
+      </div>
     </div>
-    <div class="play-btn" onclick="startGame()">PLAY</div>
-    <div class="home-buttons">
-      <div class="menu-btn">🏆<span>Leaderboard</span></div>
-      <div class="menu-btn">🎁<span>Rewards</span></div>
-      <div class="menu-btn" onclick="toggleShop()">🛒<span>Shop</span></div>
+
+    <div class="menu-actions">
+      <button class="play-btn-3d" onclick="showScreen('mapScreen')">▶ PLAY</button>
+      <button class="menu-btn-3d" onclick="showScreen('levelsScreen')">≡ LEVELS</button>
+      <button class="menu-btn-3d daily" onclick="showScreen('dailyScreen')">📅 DAILY CHALLENGE</button>
     </div>
-    <!-- Level Map -->
-    <div class="level-map">
-        <div class="level">1</div>
-        <div class="level">2</div>
-        <div class="level">3</div>
-        <div class="level">4</div>
-        <div class="level">5</div>
+
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="showScreen('shopScreen')">🛒<span>SHOP</span></div>
+      <div class="nav-item" onclick="showScreen('spinScreen')">🎡<span>SPIN</span></div>
+      <div class="nav-item" onclick="showScreen('achievementsScreen')">🏆<span>AWARDS</span></div>
     </div>
   </div>
 
-  <!-- GAMEPLAY UI -->
-  <div id="gameplay-ui" style="display:none; height:100%; flex-direction:column;">
-    <div class="top-bar">
-        <div class="hud-btn" onclick="showScreen('homeScreen')">🏠</div>
-        <div class="score-box">
-            <p>Score</p>
-            <h1 id="score">0</h1>
+  <!-- 3. LEVEL MAP (Forest Theme) -->
+  <div id="mapScreen" class="screen hidden map-bg">
+    <div class="map-top">
+        <div class="stat-pill"><span class="icon">❤️</span> FULL</div>
+        <div class="stat-pill coin-pill"><span class="icon">🪙</span> <span id="map-coins">1250</span> <span class="add">+</span></div>
+        <button class="icon-btn-3d tiny">⚙️</button>
+    </div>
+
+    <div class="map-path">
+        <div class="world-card">
+            <h3>GREEN FOREST</h3>
+            <div class="progress-bar-mini"><div class="fill" style="width: 70%;"></div></div>
+            <span class="progress-text">30/40</span>
         </div>
-        <div class="hud-btn">⚙</div>
+        <!-- Path Nodes (Simulated winding path) -->
+        <div class="node n4 active"><span>4</span><div class="stars">⭐⭐</div></div>
+        <div class="node n3 done"><span>3</span><div class="stars">⭐⭐⭐</div></div>
+        <div class="node n2 done"><span>2</span><div class="stars">⭐⭐⭐</div></div>
+        <div class="node n1 done"><span>1</span><div class="stars">⭐⭐⭐</div></div>
     </div>
+
+    <div class="tab-bar">
+        <div class="tab active" onclick="showScreen('mainMenu')">🏠<span>HOME</span></div>
+        <div class="tab">🗺️<span>MAP</span></div>
+        <div class="tab" onclick="showScreen('shopScreen')">🛒<span>SHOP</span></div>
+    </div>
+  </div>
+
+  <!-- 4. GAMEPLAY UI -->
+  <div id="gameplayScreen" class="screen hidden gameplay-bg">
+    <header class="game-hud">
+        <button class="hud-pause" onclick="showScreen('mainMenu')">⏸</button>
+        <div class="hud-center">
+            <div class="hud-score-box">
+                <span class="label">SCORE</span>
+                <span class="val" id="score">2,450</span>
+                <div class="hud-star-progress"><div class="star">⭐</div><div class="fill-bar"></div></div>
+            </div>
+        </div>
+        <div class="hud-goal">
+            <span class="label">GOAL</span>
+            <div class="goal-item"><span class="g-purple"></span> <span id="goal-val">0/6</span></div>
+        </div>
+    </header>
 
     <canvas id="gameCanvas" width="390" height="520"></canvas>
 
-    <div class="bottom-ui">
-        <div class="next-text">NEXT BUBBLE</div>
-        <div class="next-bubble" id="nextBubble"></div>
-        <div class="powerups">
-            <div class="power">💣<span style="font-size:10px; position:absolute; top:-5px; right:-5px; background:red; color:white; border-radius:10px; padding:2px 6px;" id="bomb-count">0</span></div>
-            <div class="power">🌈</div>
-            <div class="power">⚡</div>
+    <div class="game-bottom">
+        <div class="shooter-kit">
+            <div class="pu-btn bomb" onclick="usePower('BOMB')">💣<span class="count">2</span></div>
+            <div class="cannon-wrap">
+                <div id="nextBubble" class="next-b"></div>
+                <div class="cannon-base">
+                    <div id="currentBubble" class="current-b"></div>
+                    <button class="swap-btn">🔄</button>
+                </div>
+            </div>
+            <div class="pu-btn color" onclick="usePower('COLOR')">🌈<span class="count">1</span></div>
         </div>
     </div>
   </div>
 
-  <!-- SHOP SCREEN (Overlay) -->
-  <div class="shop-screen" id="shopScreen" style="display:none;">
-    <div class="shop-header"><h2>POWER SHOP</h2></div>
-    <div class="shop-items">
-      <div class="shop-card">
-        <div class="shop-icon">💣</div>
-        <h3>Bomb Bubble</h3>
-        <button onclick="buyPowerup('BOMB', 500)">500 Coins</button>
-      </div>
-      <div class="shop-card">
-        <div class="shop-icon">⚡</div>
-        <h3>Lightning</h3>
-        <button onclick="buyPowerup('LIGHTNING', 800)">800 Coins</button>
-      </div>
-      <div class="shop-card">
-        <div class="shop-icon">🌈</div>
-        <h3>Rainbow Bubble</h3>
-        <button onclick="buyPowerup('RAINBOW', 1200)">1200 Coins</button>
-      </div>
+  <!-- 5. SHOP SCREEN -->
+  <div id="shopScreen" class="screen hidden sub-bg">
+    <header class="sub-header">
+        <button class="back-btn" onclick="showScreen('mainMenu')">❮</button>
+        <h1>SHOP</h1>
+        <button class="close-x" onclick="showScreen('mainMenu')">✕</button>
+    </header>
+    <div class="shop-content">
+        <section class="shop-sec">
+            <h4>POWER UPS</h4>
+            <div class="shop-grid">
+                <div class="item-card">
+                    <div class="icon">💣</div>
+                    <p>BOMB</p>
+                    <button class="buy-btn">🪙 200</button>
+                </div>
+                <div class="item-card">
+                    <div class="icon">🌈</div>
+                    <p>COLOR</p>
+                    <button class="buy-btn">🪙 200</button>
+                </div>
+            </div>
+        </section>
+        <section class="shop-sec">
+            <h4>COINS</h4>
+            <div class="coins-grid">
+                <div class="coin-pack">🪙 500<span>₹49</span></div>
+                <div class="coin-pack">🪙 1200<span>₹99</span></div>
+            </div>
+        </section>
     </div>
-    <button class="play-btn" style="height:50px; width:100%; margin-top:20px; font-size:16px;" onclick="toggleShop()">CLOSE</button>
   </div>
 
-  <!-- SETTINGS PANEL (Hidden by Default) -->
-  <div class="settings-panel" id="settingsPanel" style="display:none; position:absolute; bottom:220px; left:20px; right:20px; background:white; padding:20px; border-radius:30px; z-index:500;">
-    <div class="setting-row"><span>Music</span><input type="checkbox" checked></div>
-    <div class="setting-row"><span>Sound FX</span><input type="checkbox" checked></div>
-    <div class="setting-row"><span>Vibration</span><input type="checkbox" checked></div>
-    <button class="play-btn" style="height:40px; width:100%; font-size:14px; margin-top:10px;" onclick="this.parentElement.style.display='none'">CLOSE</button>
+  <!-- 6. SPIN & WIN -->
+  <div id="spinScreen" class="screen hidden spin-bg">
+    <header class="sub-header">
+        <button class="back-btn" onclick="showScreen('mainMenu')">❮</button>
+        <h1>SPIN & WIN</h1>
+    </header>
+    <div class="wheel-container">
+        <div class="wheel-pointer">▼</div>
+        <div class="wheel" id="mainWheel">
+            <!-- Segments via CSS -->
+        </div>
+        <button class="spin-btn" onclick="spinWheel()">SPIN</button>
+    </div>
+    <p class="spins-left">You have 3 spins left today</p>
   </div>
 
-  <!-- POPUP -->
-  <div class="popup" id="popup">
-    <div class="popup-content">
-        <h2>Level Complete 🎉</h2>
-        <p>You earned 500 bonus coins!</p>
-        <button class="play-btn" style="width:100%; height:60px;" onclick="restartGame()">Next Level</button>
+  <!-- 7. SETTINGS PANEL (Modal Overlay) -->
+  <div id="settingsPanel" class="screen hidden overlay">
+    <div class="modal-3d">
+        <header><h1>SETTINGS</h1><button onclick="showScreen('mainMenu')">✕</button></header>
+        <div class="settings-list">
+            <div class="s-row"><span>🔊 SOUND</span><div class="toggle on"></div></div>
+            <div class="s-row"><span>🎵 MUSIC</span><div class="toggle on"></div></div>
+            <div class="s-row"><span>📳 VIBRATION</span><div class="toggle on"></div></div>
+        </div>
+        <button class="logout-btn">LOG OUT</button>
     </div>
   </div>
 

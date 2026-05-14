@@ -1,149 +1,98 @@
 'use strict';
 // ══════════════════════════════════════════
-//  BUBBLE SHOOTER - ROBUST ENGINE FIX
-//  Safe Init | Error Guard | Auto-Transition
+//  BUBBLE SHOOTER PREMIUM — game.js v10
+//  Advanced Navigation | Pro Engine | Shop
 // ══════════════════════════════════════════
 
-let canvas, ctx, scoreText, nextBubbleEl, popup, coinText;
+let canvas, ctx, scoreVal, currentB, nextB, goalVal;
 const R = 20, rowHeight = 38, SPEED = 16;
 const COLORS = ['#ff5c73', '#ffd54f', '#3ddc84', '#42a5ff', '#c76bff'];
 
-// ──────── SAFE STATE LOAD ────────
+// ──────── STATE ────────
 let S = {
-    score: 0, coins: 2500, currentLevel: 1, unlockedLevels: 1,
-    powerups: { BOMB: 2, LIGHTNING: 1, RAINBOW: 3 },
-    settings: { music: true, sound: true, vibration: true }
+    score: 0, coins: 1250, currentLevel: 4, unlockedLevels: 4,
+    powerups: { BOMB: 2, COLOR: 1 },
+    settings: { sound: true, music: true, vibration: true }
 };
-
-function loadData() {
-    try {
-        const c = localStorage.getItem('bs_coins'); if(c) S.coins = Number(c);
-        const u = localStorage.getItem('bs_unlocked'); if(u) S.unlockedLevels = Number(u);
-        const p = localStorage.getItem('bs_powers'); if(p) S.powerups = JSON.parse(p);
-    } catch(e) { console.error("Data load failed", e); }
-}
 
 let bubbles = [], projectile = null, particles = [], floaters = [];
 let mouseX = 195, mouseY = 100, shakeFrames = 0;
-let shooterColor = COLORS[0], nextColor = COLORS[1];
+let activeColor = COLORS[0], reserveColor = COLORS[1];
 let isGameActive = false;
 
 // ──────── NAVIGATION ────────
 function showScreen(id) {
-    const screens = ['splashScreen', 'homeScreen', 'gameplay-ui', 'shopScreen'];
+    const screens = ['splashScreen', 'mainMenu', 'mapScreen', 'gameplayScreen', 'shopScreen', 'spinScreen', 'achievementsScreen', 'settingsPanel'];
     screens.forEach(s => {
         const el = document.getElementById(s);
-        if (el) el.style.display = (s === id) ? (s==='gameplay-ui'?'flex':'flex') : 'none';
-        // Note: Using flex instead of block for better alignment
+        if (el) el.classList.add('hidden');
     });
     
-    const h = document.getElementById('homeScreen');
-    if(id === 'homeScreen') {
-        h.style.display = 'flex';
-        updateLevelMap();
+    const target = document.getElementById(id);
+    if (target) {
+        target.classList.remove('hidden');
+        if (id === 'gameplayScreen') startGameplay();
+        else isGameActive = false;
     }
-    
-    isGameActive = (id === 'gameplay-ui');
-    updateUI();
-}
-
-function updateUI() {
-    if(coinText) coinText.innerText = S.coins;
-    const bc = document.getElementById('bomb-count');
-    if(bc) bc.innerText = S.powerups.BOMB;
-    
-    try {
-        localStorage.setItem('bs_coins', S.coins);
-        localStorage.setItem('bs_unlocked', S.unlockedLevels);
-        localStorage.setItem('bs_powers', JSON.stringify(S.powerups));
-    } catch(e){}
 }
 
 // ──────── INITIALIZATION ────────
 function init() {
     canvas = document.getElementById('gameCanvas');
-    if(!canvas) return;
+    if (!canvas) return;
     ctx = canvas.getContext('2d');
-    scoreText = document.getElementById('score');
-    nextBubbleEl = document.getElementById('nextBubble');
-    popup = document.getElementById('popup');
-    coinText = document.getElementById('coins');
+    scoreVal = document.getElementById('score');
+    currentB = document.getElementById('currentBubble');
+    nextB = document.getElementById('nextBubble');
+    goalVal = document.getElementById('goal-val');
 
-    loadData();
-    shooterColor = randomColor();
-    nextColor = randomColor();
-    if(nextBubbleEl) nextBubbleEl.style.background = nextColor;
-
+    loadState();
     initFloaters();
     animate();
     
-    // Auto-transition from Splash to Home after 2.2s
-    setTimeout(() => {
-        const splash = document.getElementById('splashScreen');
-        if(splash) splash.style.opacity = '0';
-        setTimeout(() => showScreen('homeScreen'), 500);
-    }, 2200);
+    // Auto Splash to Menu
+    setTimeout(() => showScreen('mainMenu'), 2500);
 
     // Listeners
-    canvas.addEventListener('mousemove', e => { const r = canvas.getBoundingClientRect(); mouseX = e.clientX - r.left; mouseY = e.clientY - r.top; });
-    canvas.addEventListener('click', shoot);
-    canvas.addEventListener('touchstart', e => { e.preventDefault(); const r = canvas.getBoundingClientRect(); mouseX = e.touches[0].clientX - r.left; mouseY = e.touches[0].clientY - r.top; shoot(); }, {passive:false});
-}
-
-// ──────── GRID & PROGRESSION ────────
-function updateLevelMap() {
-    const levels = document.querySelectorAll('.level');
-    levels.forEach((el, i) => {
-        const lv = i + 1;
-        if(lv < S.unlockedLevels) el.className = 'level level-done';
-        else if(lv === S.unlockedLevels) el.className = 'level level-active';
-        else el.className = 'level level-locked';
-        
-        el.onclick = () => { if (lv <= S.unlockedLevels) { S.currentLevel = lv; startGame(); } };
+    canvas.addEventListener('mousemove', e => { 
+        const r = canvas.getBoundingClientRect(); 
+        mouseX = e.clientX - r.left; 
+        mouseY = e.clientY - r.top; 
     });
+    canvas.addEventListener('click', shoot);
+    canvas.addEventListener('touchstart', e => { 
+        e.preventDefault(); 
+        const r = canvas.getBoundingClientRect(); 
+        mouseX = e.touches[0].clientX - r.left; 
+        mouseY = e.touches[0].clientY - r.top; 
+        shoot(); 
+    }, {passive:false});
 }
 
-function initLevel(level) {
-    bubbles = []; S.score = 0; if(scoreText) scoreText.innerText = 0;
-    const rows = 5 + Math.min(level, 10);
+// ──────── GAMEPLAY ────────
+function startGameplay() {
+    isGameActive = true;
+    bubbles = [];
+    S.score = 0;
+    updateUI();
+    
+    // Generate Level
+    const rows = 8;
     for (let row = 0; row < rows; row++) {
         for (let col = 0; col < 8; col++) {
             const x = col * 44 + 40 + (row % 2 ? 22 : 0);
             const y = row * rowHeight + 40;
-            bubbles.push({ x, y, color: randomColor(), alive: true, falling: false });
+            bubbles.push({ x, y, color: COLORS[Math.floor(Math.random()*COLORS.length)], alive: true, falling: false });
         }
     }
+    prepNext();
 }
 
-function startGame() { showScreen('gameplay-ui'); initLevel(S.currentLevel); }
-function restartGame() { if(popup) popup.style.display = 'none'; startGame(); }
-function toggleShop() { 
-    const el = document.getElementById('shopScreen'); 
-    if(el) el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'flex' : 'none'; 
-}
-
-function randomColor() { return COLORS[Math.floor(Math.random() * COLORS.length)]; }
-
-// ──────── CORE GAME ENGINE ────────
-function drawBubble(x, y, color, r = R) {
-    ctx.save();
-    const grad = ctx.createRadialGradient(x - 8, y - 8, 5, x, y, r);
-    grad.addColorStop(0, '#ffffff'); grad.addColorStop(0.2, color); grad.addColorStop(1, '#000');
-    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = grad; ctx.fill();
-    ctx.restore();
-}
-
-function drawAimLine() {
-    if (projectile || !isGameActive) return;
-    const sx = canvas.width / 2, sy = canvas.height - 40;
-    const ang = Math.atan2(mouseY - sy, mouseX - sx); if (ang > 0) return;
-    ctx.beginPath(); ctx.setLineDash([6, 6]); ctx.moveTo(sx, sy);
-    let cx = sx, cy = sy, dx = Math.cos(ang), dy = Math.sin(ang);
-    for (let i = 0; i < 20; i++) {
-        cx += dx * 20; cy += dy * 20; if (cx < R || cx > canvas.width - R) dx *= -1;
-        ctx.lineTo(cx, cy);
-    }
-    ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 3; ctx.stroke(); ctx.setLineDash([]);
+function prepNext() {
+    activeColor = reserveColor;
+    reserveColor = COLORS[Math.floor(Math.random()*COLORS.length)];
+    if(currentB) currentB.style.background = activeColor;
+    if(nextB) nextB.style.background = reserveColor;
 }
 
 function shoot() {
@@ -151,92 +100,151 @@ function shoot() {
     initAudio();
     const sx = canvas.width / 2, sy = canvas.height - 40;
     const ang = Math.atan2(mouseY - sy, mouseX - sx); if (ang > 0) return;
-    projectile = { x: sx, y: sy, color: shooterColor, vx: Math.cos(ang) * SPEED, vy: Math.sin(ang) * SPEED };
-    shooterColor = nextColor; nextColor = randomColor(); if(nextBubbleEl) nextBubbleEl.style.background = nextColor;
-    if (S.settings.sound) playSound('shoot');
+    
+    projectile = { x: sx, y: sy, color: activeColor, vx: Math.cos(ang) * SPEED, vy: Math.sin(ang) * SPEED };
+    prepNext();
+    if(S.settings.sound) playSFX('shoot');
 }
 
-function attachProjectile() {
+function moveProjectile() {
+    if (!projectile) return;
+    projectile.x += projectile.vx; projectile.y += projectile.vy;
+    if (projectile.x < R || projectile.x > canvas.width - R) projectile.vx *= -1;
+    
+    drawBall(projectile.x, projectile.y, projectile.color, 22);
+
+    let hit = false;
+    if (projectile.y < R + 20) hit = true;
+    else {
+        bubbles.forEach(b => { 
+            if (b.alive && !b.falling && Math.hypot(b.x - projectile.x, b.y - projectile.y) < 38) hit = true; 
+        });
+    }
+    
+    if (hit) snap();
+    if (projectile && projectile.y > canvas.height) projectile = null;
+}
+
+function snap() {
     const gridY = Math.round((projectile.y - 40) / rowHeight);
     const rowOffset = (gridY % 2) ? 22 : 0;
     const gridX = Math.round((projectile.x - 40 - rowOffset) / 44);
     const nx = gridX * 44 + 40 + rowOffset, ny = gridY * rowHeight + 40;
     
-    const newBubble = { x: nx, y: ny, color: projectile.color, alive: true, falling: false };
-    bubbles.push(newBubble);
+    const newB = { x: nx, y: ny, color: projectile.color, alive: true, falling: false };
+    bubbles.push(newB);
     
-    // Match-3 Logic
+    // Match logic
     const visited = new Set(), matches = [];
     function dfs(b) {
-        if (!b || visited.has(b)) return;
+        if(!b || visited.has(b)) return;
         visited.add(b); matches.push(b);
         bubbles.filter(o => o.alive && !o.falling && Math.hypot(o.x-b.x, o.y-b.y) < 48).forEach(n => {
-            if(n.color === newBubble.color) dfs(n);
+            if(n.color === newB.color) dfs(n);
         });
     }
-    dfs(newBubble);
+    dfs(newB);
     
     if (matches.length >= 3) {
         matches.forEach(b => { b.alive = false; createParticles(b.x, b.y, b.color); S.score += 100; });
-        shakeFrames = 15; if (S.settings.sound) playPop(); 
-        
-        // Float Check
-        const con = new Set();
-        function mark(b) { if(con.has(b)) return; con.add(b); bubbles.filter(o => o.alive && !o.falling && Math.hypot(o.x-b.x, o.y-b.y) < 48).forEach(mark); }
-        bubbles.filter(b => b.y < 60 && b.alive).forEach(mark);
-        bubbles.forEach(b => { if(b.alive && !con.has(b)) b.falling = true; });
+        shakeFrames = 15; if(S.settings.sound) playSFX('pop');
+        checkFloaters();
     }
-    if(scoreText) scoreText.innerText = S.score; projectile = null; 
-    if (bubbles.every(b => !b.alive)) { if (S.currentLevel === S.unlockedLevels) S.unlockedLevels++; S.coins += 500; updateUI(); if(popup) popup.style.display = 'flex'; }
+    
+    if(scoreVal) scoreVal.innerText = S.score.toLocaleString();
+    projectile = null;
 }
 
-function buyPowerup(type, price) {
-    if (S.coins >= price) { S.coins -= price; S.powerups[type]++; updateUI(); playSound('shoot'); }
-    else { alert("Not enough coins! 🪙"); }
+function checkFloaters() {
+    const connected = new Set();
+    function mark(b) {
+        if(connected.has(b)) return;
+        connected.add(b);
+        bubbles.filter(o => o.alive && !o.falling && Math.hypot(o.x-b.x, o.y-b.y) < 48).forEach(mark);
+    }
+    bubbles.filter(b => b.y < 60 && b.alive).forEach(mark);
+    bubbles.forEach(b => { if(b.alive && !connected.has(b)) b.falling = true; });
 }
 
-// ──────── VFX & SFX ────────
-function createParticles(x, y, color) { for (let i = 0; i < 10; i++) particles.push({ x, y, dx: (Math.random()-0.5)*8, dy: (Math.random()-0.5)*8, s: Math.random()*5+2, a: 1, c: color }); }
+// ──────── DRAWING ────────
+function drawBall(x, y, color, r = R) {
+    ctx.save();
+    const grad = ctx.createRadialGradient(x - 8, y - 8, 5, x, y, r);
+    grad.addColorStop(0, '#ffffff'); grad.addColorStop(0.2, color); grad.addColorStop(1, '#000');
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = grad; ctx.fill();
+    ctx.restore();
+}
+
+function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    if (shakeFrames > 0) { ctx.translate((Math.random()-0.5)*10, (Math.random()-0.5)*10); shakeFrames--; }
+    
+    drawFloaters();
+    
+    bubbles.forEach(b => {
+        if (b.falling) { b.y += 10; if (b.y > canvas.height) b.alive = false; }
+        if (b.alive) drawBall(b.x, b.y, b.color);
+    });
+    
+    moveProjectile();
+    drawVFX();
+    
+    if (isGameActive && !projectile) {
+        // Aim line logic...
+        const sx = canvas.width / 2, sy = canvas.height - 40;
+        const ang = Math.atan2(mouseY - sy, mouseX - sx);
+        if (ang < 0) {
+            ctx.beginPath(); ctx.setLineDash([5, 10]); ctx.moveTo(sx, sy);
+            ctx.lineTo(sx + Math.cos(ang) * 200, sy + Math.sin(ang) * 200);
+            ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.stroke(); ctx.setLineDash([]);
+        }
+    }
+    
+    ctx.restore();
+    requestAnimationFrame(animate);
+}
+
+// ──────── UTILS ────────
+function createParticles(x, y, color) { for (let i = 0; i < 8; i++) particles.push({ x, y, dx: (Math.random()-0.5)*6, dy: (Math.random()-0.5)*6, s: Math.random()*5+2, a: 1, c: color }); }
 function drawVFX() {
     particles = particles.filter(p => p.a > 0);
-    particles.forEach(p => { p.x += p.dx; p.y += p.dy; p.dy += 0.2; p.a -= 0.03; ctx.globalAlpha = p.a; ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fillStyle = p.c; ctx.fill(); });
+    particles.forEach(p => { p.x += p.dx; p.y += p.dy; p.dy += 0.15; p.a -= 0.03; ctx.globalAlpha = p.a; ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fillStyle = p.c; ctx.fill(); });
     ctx.globalAlpha = 1;
 }
-function initFloaters() { for (let i = 0; i < 15; i++) floaters.push({ x: Math.random() * 400, y: Math.random() * 800, r: Math.random() * 5 + 1, s: Math.random() * 0.5 + 0.2 }); }
-function drawFloaters() { floaters.forEach(f => { f.y -= f.s; if (f.y < -20) f.y = 860; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,0.1)'; ctx.fill(); }); }
+function initFloaters() { for (let i = 0; i < 15; i++) floaters.push({ x: Math.random()*390, y: Math.random()*844, r: Math.random()*5+1, s: Math.random()*0.5+0.2 }); }
+function drawFloaters() { floaters.forEach(f => { f.y -= f.s; if (f.y < -20) f.y = 860; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI*2); ctx.fillStyle = 'rgba(255,255,255,0.1)'; ctx.fill(); }); }
 
 let audioCtx = null;
 function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-function playPop() {
-    if (!audioCtx || !S.settings.sound) return; const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.connect(g); g.connect(audioCtx.destination);
-    o.frequency.setValueAtTime(600, audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.1);
-    g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1); o.start(); o.stop(audioCtx.currentTime + 0.1);
-}
-function playSound(type) {
-    if (!audioCtx || !S.settings.sound) return; const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.connect(g); g.connect(audioCtx.destination);
-    o.frequency.setValueAtTime(300, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05); o.start(); o.stop(audioCtx.currentTime + 0.05); }
-
-function animate() {
-    if(!ctx) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.save();
-    if (shakeFrames > 0) { ctx.translate((Math.random()-0.5)*10, (Math.random()-0.5)*10); shakeFrames--; }
-    drawFloaters();
-    bubbles.forEach(b => { if (b.falling) { b.y += 8; if (b.y > canvas.height) b.alive = false; } if (b.alive) drawBubble(b.x, b.y, b.color); });
-    drawAimLine();
-    if (projectile) {
-        projectile.x += projectile.vx; projectile.y += projectile.vy;
-        if (projectile.x < R || projectile.x > canvas.width - R) projectile.vx *= -1;
-        drawBubble(projectile.x, projectile.y, projectile.color, 22);
-        let hit = false;
-        if (projectile.y < R + 20) hit = true;
-        else bubbles.forEach(b => { if (b.alive && !b.falling && Math.hypot(b.x - projectile.x, b.y - projectile.y) < 38) hit = true; });
-        if (hit) attachProjectile();
-        if (projectile && (projectile.y < 0 || projectile.y > canvas.height)) projectile = null;
-    }
-    drawVFX();
-    if (isGameActive && !projectile) drawBubble(canvas.width / 2, canvas.height - 40, shooterColor, 24);
-    ctx.restore(); requestAnimationFrame(animate);
+function playSFX(type) {
+    if (!audioCtx) return; const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.connect(g); g.connect(audioCtx.destination);
+    if(type === 'pop') { o.frequency.setValueAtTime(600, 0); o.frequency.exponentialRampToValueAtTime(200, 0.1); g.gain.exponentialRampToValueAtTime(0.01, 0.1); o.start(); o.stop(0.1); }
+    else { o.frequency.setValueAtTime(300, 0); g.gain.exponentialRampToValueAtTime(0.01, 0.05); o.start(); o.stop(0.05); }
 }
 
-// Start once DOM is ready
+function updateUI() {
+    const c = document.getElementById('map-coins'); if(c) c.innerText = S.coins.toLocaleString();
+}
+
+function loadState() {
+    const s = localStorage.getItem('bs_premium_state');
+    if(s) S = JSON.parse(s);
+}
+
+function spinWheel() {
+    const wheel = document.getElementById('mainWheel');
+    if(!wheel) return;
+    const deg = 1800 + Math.random() * 360;
+    wheel.style.transition = 'transform 4s cubic-bezier(0.1, 0, 0.1, 1)';
+    wheel.style.transform = `rotate(${deg}deg)`;
+    setTimeout(() => {
+        S.coins += 100;
+        updateUI();
+        alert("You won 100 Coins! 🪙");
+        wheel.style.transition = 'none';
+        wheel.style.transform = 'rotate(0deg)';
+    }, 4500);
+}
+
 document.addEventListener('DOMContentLoaded', init);
