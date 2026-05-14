@@ -1,7 +1,7 @@
 'use strict';
 // ══════════════════════════════════════════
-//  BUBBLE SHOOTER - REBUILT FROM SCRATCH
-//  Physics | Collision | Snapping | BFS
+//  BUBBLE SHOOTER - PRO LOGIC (From Scratch)
+//  BFS | Gravity | Snapping | Shake
 // ══════════════════════════════════════════
 
 const canvas = document.getElementById('gameCanvas');
@@ -13,8 +13,10 @@ const popup = document.getElementById('popup');
 const R = 20, COLS = 9, ROWS = 20, SPEED = 16;
 const COLORS = ['#ff5c73', '#ffd54f', '#3ddc84', '#42a5ff', '#c76bff'];
 
-let score = 0, grid = [], shooting = false, activeBall = null, mouseX = 195, mouseY = 100;
+let score = 0, grid = [], shooting = false, projectile = null;
+let mouseX = 195, mouseY = 100, shakeFrames = 0;
 let shooterColor = randomColor(), nextColor = randomColor();
+let particles = [], floaters = [];
 
 // ──────── UTILS ────────
 function randomColor() { return COLORS[Math.floor(Math.random() * COLORS.length)]; }
@@ -30,198 +32,166 @@ function createGrid() {
     for (let y = 0; y < 8; y++) {
         grid[y] = [];
         const cols = (y % 2 === 0) ? COLS : COLS - 1;
-        for (let x = 0; x < cols; x++) {
-            grid[y][x] = { color: randomColor() };
-        }
+        for (let x = 0; x < cols; x++) grid[y][x] = { color: randomColor() };
     }
 }
 
 // ──────── DRAWING ────────
-function drawBubble(x, y, color, radius = R) {
+function drawBubble(x, y, color, r = R) {
     ctx.save();
-    ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fillStyle = color; ctx.fill();
-    // Glassy Highlight
-    const grad = ctx.createRadialGradient(x - radius * 0.3, y - radius * 0.3, radius * 0.1, x, y, radius);
-    grad.addColorStop(0, 'rgba(255,255,255,0.6)');
-    grad.addColorStop(1, 'rgba(0,0,0,0.1)');
+    const grad = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, r * 0.1, x, y, r);
+    grad.addColorStop(0, 'rgba(255,255,255,0.6)'); grad.addColorStop(1, 'rgba(0,0,0,0.1)');
     ctx.fillStyle = grad; ctx.fill();
     ctx.restore();
 }
 
 function drawAimLine() {
-    if (shooting) return;
-    const startX = canvas.width / 2, startY = canvas.height - 40;
-    const ang = Math.atan2(mouseY - startY, mouseX - startX);
-    if (ang > 0) return; // Prevent shooting downwards
-
-    ctx.beginPath(); ctx.setLineDash([5, 10]);
-    ctx.moveTo(startX, startY);
-    let curX = startX, curY = startY, dx = Math.cos(ang), dy = Math.sin(ang);
-    for (let i = 0; i < 20; i++) {
-        curX += dx * 20; curY += dy * 20;
-        if (curX < R || curX > canvas.width - R) dx *= -1;
-        ctx.lineTo(curX, curY);
+    if (projectile) return;
+    const sx = canvas.width / 2, sy = canvas.height - 40;
+    const ang = Math.atan2(mouseY - sy, mouseX - sx); if (ang > 0) return;
+    ctx.beginPath(); ctx.setLineDash([5, 10]); ctx.moveTo(sx, sy);
+    let cx = sx, cy = sy, dx = Math.cos(ang), dy = Math.sin(ang);
+    for (let i = 0; i < 18; i++) {
+        cx += dx * 20; cy += dy * 20; if (cx < R || cx > canvas.width - R) dx *= -1;
+        ctx.lineTo(cx, cy);
     }
-    ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 3; ctx.stroke();
-    ctx.setLineDash([]);
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 3; ctx.stroke(); ctx.setLineDash([]);
 }
 
 // ──────── SHOOTING ────────
 function shoot() {
-    if (shooting) return;
-    const startX = canvas.width / 2, startY = canvas.height - 40;
-    const ang = Math.atan2(mouseY - startY, mouseX - startX);
-    if (ang > 0) return;
-
-    activeBall = { x: startX, y: startY, vx: Math.cos(ang) * SPEED, vy: Math.sin(ang) * SPEED, color: shooterColor };
-    shooting = true;
+    if (projectile) return;
+    initAudio();
+    const sx = canvas.width / 2, sy = canvas.height - 40;
+    const ang = Math.atan2(mouseY - sy, mouseX - sx); if (ang > 0) return;
+    projectile = { x: sx, y: sy, vx: Math.cos(ang) * SPEED, vy: Math.sin(ang) * SPEED, color: shooterColor };
+    shooterColor = nextColor; nextColor = randomColor(); nextBubbleEl.style.background = nextColor;
+    playSound('shoot');
 }
 
-function moveBall() {
-    activeBall.x += activeBall.vx; activeBall.y += activeBall.vy;
-    // Wall bounce
-    if (activeBall.x < R || activeBall.x > canvas.width - R) activeBall.vx *= -1;
+function updateProjectile() {
+    if (!projectile) return;
+    projectile.x += projectile.vx; projectile.y += projectile.vy;
+    if (projectile.x < R || projectile.x > canvas.width - R) projectile.vx *= -1;
+    drawBubble(projectile.x, projectile.y, projectile.color);
 
     let hit = false;
-    // Collision with top
-    if (activeBall.y < R + 20) hit = true;
-    // Collision with grid
+    if (projectile.y < R + 20) hit = true;
     else {
-        outer: for (let y = 0; y < grid.length; y++) {
-            if (!grid[y]) continue;
-            for (let x = 0; x < grid[y].length; x++) {
-                if (grid[y][x]) {
-                    const p = getPos(x, y);
-                    if (Math.hypot(activeBall.x - p.x, activeBall.y - p.y) < R * 1.8) { hit = true; break outer; }
-                }
-            }
+        outer: for (let y = 0; y < grid.length; y++) if (grid[y]) for (let x = 0; x < grid[y].length; x++) if (grid[y][x]) {
+            const p = getPos(x, y); if (Math.hypot(projectile.x - p.x, projectile.y - p.y) < R * 1.7) { hit = true; break outer; }
         }
     }
-
-    if (hit) snapAndCheck();
+    if (hit) snap();
+    if (projectile && projectile.y > canvas.height) projectile = null;
 }
 
-function snapAndCheck() {
-    // Find nearest slot
+function snap() {
     let bestDist = Infinity, tx = 0, ty = 0;
     for (let y = 0; y < ROWS; y++) {
         const cols = (y % 2 === 0) ? COLS : COLS - 1;
         for (let x = 0; x < cols; x++) {
             if (grid[y] && grid[y][x]) continue;
-            const p = getPos(x, y);
-            const d = Math.hypot(activeBall.x - p.x, activeBall.y - p.y);
+            const p = getPos(x, y); const d = Math.hypot(projectile.x - p.x, projectile.y - p.y);
             if (d < bestDist) { bestDist = d; tx = x; ty = y; }
         }
     }
-
     if (!grid[ty]) grid[ty] = [];
-    grid[ty][tx] = { color: activeBall.color };
-    
-    // BFS Pop
+    grid[ty][tx] = { color: projectile.color };
     matchAndPop(tx, ty);
-
-    // Reset shooter
-    shooting = false; activeBall = null;
-    shooterColor = nextColor; nextColor = randomColor();
-    nextBubbleEl.style.background = nextColor;
+    projectile = null;
 }
 
 function matchAndPop(x, y) {
-    const targetColor = grid[y][x].color;
-    const queue = [[x, y]], matched = [[x, y]], visited = new Set([`${x},${y}`]);
-
-    while (queue.length > 0) {
-        const [cx, cy] = queue.shift();
-        const neighbors = getNeighbors(cx, cy);
-        neighbors.forEach(([nx, ny]) => {
-            if (grid[ny] && grid[ny][nx] && grid[ny][nx].color === targetColor && !visited.has(`${nx},${ny}`)) {
-                visited.add(`${nx},${ny}`); matched.push([nx, ny]); queue.push([nx, ny]);
+    const col = grid[y][x].color;
+    const q = [[x, y]], matched = [[x, y]], visited = new Set([`${x},${y}`]);
+    while (q.length > 0) {
+        const [cx, cy] = q.shift();
+        const neighbors = (cy % 2 === 0) ? [[1,0],[-1,0],[0,1],[0,-1],[-1,1],[-1,-1]] : [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1]];
+        neighbors.forEach(([ox, oy]) => {
+            const nx = cx + ox, ny = cy + oy;
+            if (grid[ny] && grid[ny][nx] && grid[ny][nx].color === col && !visited.has(`${nx},${ny}`)) {
+                visited.add(`${nx},${ny}`); matched.push([nx, ny]); q.push([nx, ny]);
             }
         });
     }
-
     if (matched.length >= 3) {
-        matched.forEach(([mx, my]) => { grid[my][mx] = null; score += 20; });
-        floatCheck(); // Remove floating bubbles
+        matched.forEach(([mx, my]) => {
+            const p = getPos(mx, my); createParticles(p.x, p.y, grid[my][mx].color);
+            grid[my][mx] = null; score += 20;
+        });
+        playSound('pop'); shakeFrames = 10; floatCheck();
         scoreText.innerText = score;
     }
-    checkGameOver();
-}
-
-function getNeighbors(x, y) {
-    const odd = y % 2 !== 0;
-    const offsets = odd ? 
-        [[1,0], [-1,0], [0,1], [0,-1], [1,1], [1,-1]] : 
-        [[1,0], [-1,0], [0,1], [0,-1], [-1,1], [-1,-1]];
-    return offsets.map(([ox, oy]) => [x + ox, y + oy]);
+    checkWin();
 }
 
 function floatCheck() {
-    const connected = new Set();
-    const queue = [];
-    // Start from top row
-    if (grid[0]) grid[0].forEach((b, x) => { if (b) { connected.add(`0,${x}`); queue.push([x, 0]); } });
-
-    while (queue.length > 0) {
-        const [cx, cy] = queue.shift();
-        getNeighbors(cx, cy).forEach(([nx, ny]) => {
+    const connected = new Set(); const q = [];
+    if (grid[0]) grid[0].forEach((b, x) => { if (b) { connected.add(`0,${x}`); q.push([x, 0]); } });
+    while (q.length > 0) {
+        const [cx, cy] = q.shift();
+        const neighbors = (cy % 2 === 0) ? [[1,0],[-1,0],[0,1],[0,-1],[-1,1],[-1,-1]] : [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1]];
+        neighbors.forEach(([ox, oy]) => {
+            const nx = cx + ox, ny = cy + oy;
             if (grid[ny] && grid[ny][nx] && !connected.has(`${ny},${nx}`)) {
-                connected.add(`${ny},${nx}`); queue.push([nx, ny]);
+                connected.add(`${ny},${nx}`); q.push([nx, ny]);
             }
         });
     }
+    grid.forEach((row, y) => { if (row) row.forEach((b, x) => { if (b && !connected.has(`${y},${x}`)) {
+        const p = getPos(x, y); createParticles(p.x, p.y, b.color); grid[y][x] = null; score += 10;
+    }})});
+}
 
-    grid.forEach((row, y) => {
-        if (!row) return;
-        row.forEach((b, x) => {
-            if (b && !connected.has(`${y},${x}`)) { grid[y][x] = null; score += 10; }
-        });
+// ──────── VFX ────────
+function createParticles(x, y, color) {
+    for (let i = 0; i < 10; i++) particles.push({ x, y, vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8, s: Math.random() * 5 + 2, a: 1, c: color });
+}
+function drawVFX() {
+    particles = particles.filter(p => p.a > 0);
+    particles.forEach(p => {
+        p.x += p.vx; p.y += p.vy; p.vy += 0.2; p.a -= 0.03;
+        ctx.globalAlpha = p.a; ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI * 2); ctx.fillStyle = p.c; ctx.fill();
     });
+    ctx.globalAlpha = 1;
 }
+function initFloaters() { for (let i = 0; i < 15; i++) floaters.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: Math.random() * 5 + 2, s: Math.random() * 0.5 + 0.2 }); }
+function drawFloaters() { floaters.forEach(f => { f.y -= f.s; if (f.y < -20) f.y = canvas.height + 20; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,0.1)'; ctx.fill(); }); }
 
-function checkGameOver() {
-    const empty = grid.every(row => !row || row.every(b => !b));
-    if (empty) {
-        document.getElementById('popup-title').innerText = "Winner! 🎉";
-        popup.style.display = 'flex';
-    } else if (grid.length > 15) {
-        document.getElementById('popup-title').innerText = "Game Over!";
-        popup.style.display = 'flex';
-    }
-}
-
-function restartGame() {
-    popup.style.display = 'none'; score = 0; scoreText.innerText = 0;
-    createGrid(); shooterColor = randomColor(); nextColor = randomColor();
-    nextBubbleEl.style.background = nextColor;
+// ──────── AUDIO (Synthesized) ────────
+let audioCtx = null;
+function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+function playSound(type) {
+    if (!audioCtx) return; const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.connect(g); g.connect(audioCtx.destination);
+    if (type === 'pop') { o.frequency.setValueAtTime(600, audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.1); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1); o.start(); o.stop(audioCtx.currentTime + 0.1); }
+    else { o.frequency.setValueAtTime(300, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05); o.start(); o.stop(audioCtx.currentTime + 0.05); }
 }
 
 // ──────── LOOP ────────
 function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    // Draw Grid
-    grid.forEach((row, y) => {
-        if (!row) return;
-        row.forEach((b, x) => { if (b) { const p = getPos(x, y); drawBubble(p.x, p.y, b.color); } });
-    });
-    // Draw Shooter & Ball
-    if (activeBall) { moveBall(); drawBubble(activeBall.x, activeBall.y, activeBall.color); }
-    else { drawAimLine(); drawBubble(canvas.width / 2, canvas.height - 40, shooterColor, 24); }
-
+    ctx.save();
+    if (shakeFrames > 0) { ctx.translate((Math.random() - 0.5) * 10, (Math.random() - 0.5) * 10); shakeFrames--; }
+    drawFloaters();
+    grid.forEach((row, y) => { if (row) row.forEach((b, x) => { if (b) { const p = getPos(x, y); drawBubble(p.x, p.y, b.color); } }); });
+    if (!projectile) { drawAimLine(); drawBubble(canvas.width / 2, canvas.height - 40, shooterColor, 24); }
+    updateProjectile(); drawVFX();
+    ctx.restore();
     requestAnimationFrame(animate);
 }
 
 // ──────── LISTENERS ────────
-canvas.addEventListener('mousemove', e => {
-    const r = canvas.getBoundingClientRect(); mouseX = e.clientX - r.left; mouseY = e.clientY - r.top;
-});
+canvas.addEventListener('mousemove', e => { const r = canvas.getBoundingClientRect(); mouseX = e.clientX - r.left; mouseY = e.clientY - r.top; });
 canvas.addEventListener('click', shoot);
-canvas.addEventListener('touchstart', e => {
-    const r = canvas.getBoundingClientRect(); mouseX = e.touches[0].clientX - r.left; mouseY = e.touches[0].clientY - r.top; shoot();
-});
+canvas.addEventListener('touchstart', e => { e.preventDefault(); const r = canvas.getBoundingClientRect(); mouseX = e.touches[0].clientX - r.left; mouseY = e.touches[0].clientY - r.top; shoot(); }, {passive:false});
+canvas.addEventListener('touchmove', e => { e.preventDefault(); const r = canvas.getBoundingClientRect(); mouseX = e.touches[0].clientX - r.left; mouseY = e.touches[0].clientY - r.top; }, {passive:false});
 
-// START
-createGrid();
-nextBubbleEl.style.background = nextColor;
-animate();
+function checkWin() { if (grid.every(row => !row || row.every(b => !b))) popup.style.display = 'flex'; }
+function restartGame() { popup.style.display = 'none'; score = 0; scoreText.innerText = 0; createGrid(); shooterColor = randomColor(); nextColor = randomColor(); nextBubbleEl.style.background = nextColor; }
+
+createGrid(); initFloaters(); nextBubbleEl.style.background = nextColor; animate();
+setInterval(() => { localStorage.setItem('bubble_score_pro', score); }, 2000);
+const saved = localStorage.getItem('bubble_score_pro'); if (saved) { score = Number(saved); scoreText.innerText = score; }
