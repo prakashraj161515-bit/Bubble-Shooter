@@ -13,25 +13,22 @@
 <div class="game-container">
 
   <!-- 1. SPLASH -->
-  <div id="splashScreen" class="screen splash">
-    <div class="logo-wrap">
-      <h1 class="logo-main">BUBBLE</h1>
-      <h1 class="logo-sub">SHOOTER</h1>
-    </div>
+  <div id="splashScreen" class="screen splash" style="display: flex; flex-direction: column; justify-content: center; align-items: center; background: linear-gradient(180deg, #7b6cff, #fff); position: absolute; inset: 0; z-index: 1000;">
+    <h1 style="font-size: 50px; font-weight: 900; color: #fff; text-shadow: 0 8px 0 #5a4bd6;">BUBBLE</h1>
+    <h1 style="font-size: 35px; font-weight: 900; color: #ffcf3e; text-shadow: 0 6px 0 #d49e00;">SHOOTER</h1>
   </div>
 
-  <!-- 2. MAP SCREEN (Lighter & Cleaner) -->
+  <!-- 2. MAP SCREEN (Scrollable) -->
   <div id="mapScreen" class="screen hidden light-bg">
     <div class="map-header">
-      <div class="pill gold">LEVEL <span id="map-coins">1</span></div>
+      <div class="pill gold">🪙 <span id="map-coins">1250</span></div>
+      <h2 style="color: #7b6cff; font-weight: 900; font-size: 18px;">LEVELS</h2>
       <button class="round-btn" onclick="showScreen('settingsScreen')">⚙️</button>
     </div>
 
-    <div class="map-content">
-      <!-- "Green Forest" icon removed as requested -->
-      <div class="path-container">
-        <div class="map-node active" style="top: 100px; right: 50px;" onclick="startGame()">▶<div class="stars">CHALLENGE</div></div>
-        <p style="text-align: center; margin-top: 250px; font-weight: 800; color: #ccc;">INFINITE LEVELS (1 - 5000)</p>
+    <div class="map-content" id="mapScrollArea">
+      <div class="path-list" id="levelPath">
+        <!-- Nodes generated via JS -->
       </div>
     </div>
 
@@ -41,16 +38,16 @@
   </div>
 
   <!-- 3. GAMEPLAY UI -->
-  <div id="gameplayScreen" class="screen hidden play-bg">
+  <div id="gameplayScreen" class="screen hidden" style="background: #fff;">
     <div class="game-hud">
       <button class="round-btn" onclick="showScreen('mapScreen')">❮</button>
       <div class="hud-box">
-        <span>BALLS</span>
-        <h3 id="ammo-val">50</h3>
+        <span style="font-size: 10px; font-weight: 800; color: #ccc;">BALLS</span>
+        <h3 id="ammo-val" style="font-size: 24px; color: #7b6cff; font-weight: 900;">50</h3>
       </div>
       <div class="hud-box" style="min-width: 100px;">
-        <span>LEVEL</span>
-        <h3 id="bomb-count">1</h3>
+        <span style="font-size: 10px; font-weight: 800; color: #ccc;">LEVEL</span>
+        <h3 id="level-display" style="font-size: 24px; color: #7b6cff; font-weight: 900;">1</h3>
       </div>
     </div>
 
@@ -69,9 +66,19 @@
     </div>
   </div>
 
-  <!-- 4. SHOP & SETTINGS (Same as before) -->
-  <div id="shopScreen" class="screen hidden overlay">...</div>
-  <div id="settingsScreen" class="screen hidden overlay">...</div>
+  <!-- 4. SHOP & SETTINGS OVERLAYS -->
+  <div id="shopScreen" class="screen hidden overlay">
+    <div class="modal-3d">
+        <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h1 style="color: #7b6cff; font-weight: 900;">SHOP</h1>
+            <button onclick="toggleShop()" style="border: none; background: none; font-size: 24px; cursor: pointer;">✕</button>
+        </header>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div style="background: #f9faff; padding: 15px; border-radius: 20px; text-align: center;">💣<br><button style="width: 100%; border: none; background: #ffcf3e; color: #fff; border-radius: 10px; margin-top: 10px; padding: 5px;">200</button></div>
+            <div style="background: #f9faff; padding: 15px; border-radius: 20px; text-align: center;">🌈<br><button style="width: 100%; border: none; background: #ffcf3e; color: #fff; border-radius: 10px; margin-top: 10px; padding: 5px;">200</button></div>
+        </div>
+    </div>
+  </div>
 
 </div>
 
