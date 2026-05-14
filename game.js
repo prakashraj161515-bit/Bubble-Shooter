@@ -83,27 +83,34 @@ function init() {
 
 function startGame() {
     showScreen('gameplayScreen');
+    const width = canvas.width;
+    const numCols = 10;
+    const spacingX = width / numCols; 
+    const dynamicR = (spacingX / 2) * 0.95; // Slightly smaller than half-spacing for a gapless look
+    
+    // Update global R for this session
+    window.activeR = dynamicR; 
+    
     S.ammo = 50; S.score = 2450; S.objective.count = 0;
     bubbles = [];
     let rows = 11; 
-    const spacingX = 36; 
-    const spacingY = 31; 
-    const sideMargin = (390 - (9 * spacingX + R*2)) / 2;
+    const spacingY = spacingX * 0.85; // Hexagonal vertical overlap
     
     for (let row = 0; row < rows; row++) {
         const isOffset = row % 2 !== 0;
-        const width = isOffset ? 9 : 10;
-        const startX = sideMargin + (isOffset ? spacingX/2 : 0); 
+        const rowWidth = isOffset ? numCols - 1 : numCols;
+        const startX = isOffset ? spacingX / 2 : 0; 
         
-        for (let col = 0; col < width; col++) {
-            const x = startX + col * spacingX;
-            const y = row * spacingY + 30; 
-            bubbles.push({ x, y, color: COLORS[Math.floor(Math.random()*COLORS.length)], alive: true, falling: false });
+        for (let col = 0; col < rowWidth; col++) {
+            const x = startX + col * spacingX + (spacingX / 2); // Center of bubble
+            const y = row * spacingY + (spacingX / 2) + 20; 
+            bubbles.push({ x, y, color: COLORS[Math.floor(Math.random()*COLORS.length)], alive: true, falling: false, r: dynamicR });
         }
     }
     prepNext();
     updateUI();
 }
+
 
 
 
@@ -182,32 +189,28 @@ function prepNext() {
 }
 
 // ──────── ULTRA-GLOSSY 3D BUBBLES ────────
-function drawBall(x, y, color, r = R) {
+function drawBall(x, y, color, r) {
+    const radius = r || window.activeR || R;
     ctx.save();
     // Shadow
     ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 5;
     
     // Core Gradient
-    const grad = ctx.createRadialGradient(x - r*0.35, y - r*0.35, r*0.05, x, y, r);
-    grad.addColorStop(0, '#fff'); // Main Gloss Point
-    grad.addColorStop(0.2, shadeColor(color, 30));
-    grad.addColorStop(0.5, color);
-    grad.addColorStop(1, shadeColor(color, -60)); // Depth
+    const grad = ctx.createRadialGradient(x - radius*0.35, y - radius*0.35, radius*0.05, x, y, radius);
+    grad.addColorStop(0, '#fff'); grad.addColorStop(0.2, shadeColor(color, 30));
+    grad.addColorStop(0.5, color); grad.addColorStop(1, shadeColor(color, -60));
 
-    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fillStyle = grad; ctx.fill();
+    ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI*2); ctx.fillStyle = grad; ctx.fill();
     
     // Top-Left Ellipse Shine
     ctx.beginPath();
-    ctx.ellipse(x - r*0.4, y - r*0.4, r*0.4, r*0.25, Math.PI/4, 0, Math.PI*2);
-    ctx.fillStyle = 'rgba(255,255,255,0.45)';
-    ctx.fill();
+    ctx.ellipse(x - radius*0.4, y - radius*0.4, radius*0.4, radius*0.25, Math.PI/4, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,255,0.45)'; ctx.fill();
 
     // Bottom Rim Glow
     ctx.beginPath();
-    ctx.arc(x, y, r * 0.85, 0.8, 2.5);
-    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
+    ctx.arc(x, y, radius * 0.85, 0.8, 2.5);
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 2.5; ctx.stroke();
 
     ctx.restore();
 }
@@ -219,14 +222,15 @@ function shadeColor(color, percent) {
 
 function animate() {
     if(!ctx) return; ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.save();
+    const curR = window.activeR || R;
     if (shakeFrames > 0) { ctx.translate((Math.random()-0.5)*10, (Math.random()-0.5)*10); shakeFrames--; }
     drawFloaters();
-    bubbles.forEach(b => { if (b.falling) { b.y += 10; if (b.y > canvas.height) b.alive = false; } if (b.alive) drawBall(b.x, b.y, b.color); });
+    bubbles.forEach(b => { if (b.falling) { b.y += 10; if (b.y > canvas.height) b.alive = false; } if (b.alive) drawBall(b.x, b.y, b.color, b.r); });
     if (projectile) {
         projectile.x += projectile.vx; projectile.y += projectile.vy;
-        if (projectile.x < R || projectile.x > canvas.width - R) projectile.vx *= -1;
-        drawBall(projectile.x, projectile.y, projectile.color, 22);
-        let hit = false; if (projectile.y < R + 20) hit = true; else bubbles.forEach(b => { if (b.alive && !b.falling && Math.hypot(b.x - projectile.x, b.y - projectile.y) < 38) hit = true; });
+        if (projectile.x < curR || projectile.x > canvas.width - curR) projectile.vx *= -1;
+        drawBall(projectile.x, projectile.y, projectile.color, curR + 2);
+        let hit = false; if (projectile.y < curR + 20) hit = true; else bubbles.forEach(b => { if (b.alive && !b.falling && Math.hypot(b.x - projectile.x, b.y - projectile.y) < curR * 1.8) hit = true; });
         if (hit) snap(); if (projectile && projectile.y > canvas.height) projectile = null;
     }
     drawVFX();
@@ -242,6 +246,7 @@ function animate() {
     }
     ctx.restore(); requestAnimationFrame(animate);
 }
+
 
 function createParticles(x, y, color) { for (let i = 0; i < 8; i++) particles.push({ x, y, dx: (Math.random()-0.5)*6, dy: (Math.random()-0.5)*6, s: Math.random()*5+2, a: 1, c: color }); }
 function drawVFX() { particles = particles.filter(p => p.a > 0); particles.forEach(p => { p.x += p.dx; p.y += p.dy; p.dy += 0.15; p.a -= 0.03; ctx.globalAlpha = p.a; ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fillStyle = p.c; ctx.fill(); }); ctx.globalAlpha = 1; }
