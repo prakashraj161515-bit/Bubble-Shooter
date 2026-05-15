@@ -95,7 +95,7 @@ function startGame() {
     S.ammo = 50; S.score = 2450; S.objective.count = 0;
     bubbles = [];
     let rows = 11; 
-    const spacingY = spacingX * 0.87; // Adjusted to avoid overlap
+    const spacingY = spacingX * 0.866; // Perfect hexagonal touch
     introAnimFrame = 60; // Start animation counter
     
     for (let row = 0; row < rows; row++) {
@@ -105,7 +105,7 @@ function startGame() {
         
         for (let col = 0; col < rowWidth; col++) {
             const x = startX + col * spacingX + (spacingX / 2);
-            const targetY = row * spacingY + (spacingX / 2); // Removed +20 to move it higher
+            const targetY = row * spacingY + (spacingX / 2); 
             bubbles.push({ 
                 x, 
                 targetY, 
@@ -115,7 +115,6 @@ function startGame() {
                 row: row
             });
         }
-
     }
     prepNext();
     updateUI();
@@ -147,7 +146,7 @@ function snap() {
     if (!projectile) return;
     const curR = window.activeR || 18;
     const spacingX = canvas.width / 10;
-    const spacingY = spacingX * 0.87;
+    const spacingY = spacingX * 0.866;
     
     // Calculate grid position accounting for clusterOffset
     const gridY = Math.round((projectile.y - clusterOffset - 30) / spacingY);
@@ -266,7 +265,7 @@ function updateClusterPosition() {
     if (activeBubbles.length === 0) return;
     const maxRow = Math.max(...activeBubbles.map(b => b.row));
     const spacingX = canvas.width / 10;
-    const spacingY = spacingX * 0.87;
+    const spacingY = spacingX * 0.866;
     const clusterHeight = (maxRow + 1) * spacingY;
     const halfHeight = canvas.height / 2;
     
@@ -280,7 +279,7 @@ function updateClusterPosition() {
 
 function animate() {
     if(!ctx) return; ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.save();
-    const curR = window.activeR || R;
+    const curR = window.activeR || 18;
     updateClusterPosition();
     if (shakeFrames > 0) { ctx.translate((Math.random()-0.5)*10, (Math.random()-0.5)*10); shakeFrames--; }
     drawFloaters();
@@ -316,7 +315,7 @@ function animate() {
         const ang = Math.atan2(mouseY - sy, mouseX - sx);
         if (ang < 0) {
             let dx = Math.cos(ang), dy = Math.sin(ang);
-            for (let i = 1; i < 20; i++) {
+            for (let i = 0; i < 20; i++) {
                 const dotX = sx + dx * (i * 25);
                 const dotY = sy + dy * (i * 25);
                 
