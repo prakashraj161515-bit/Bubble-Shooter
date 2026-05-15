@@ -179,8 +179,9 @@ function checkEnd() {
 }
 
 function updateUI() {
-    if(scoreVal) scoreVal.innerText = S.score.toLocaleString();
-    const curR = window.activeR || R;
+    if(!scoreVal) return;
+    scoreVal.innerText = S.score.toLocaleString();
+    const curR = window.activeR || 18; // Safe fallback
     if(currentBallEl) {
         const c = activeColor;
         currentBallEl.style.width = `${curR * 2}px`;
@@ -205,11 +206,11 @@ function prepNext() {
 
 // ──────── ULTRA-GLOSSY 3D BUBBLES ────────
 function drawBall(x, y, color, r) {
-    const radius = r || window.activeR || R;
+    const radius = r || window.activeR || 18;
     ctx.save();
     
-    // 3D Sine Float Effect
-    const floatY = introAnimFrame <= 0 ? Math.sin(Date.now()/500 + x/50) * 2 : 0;
+    // 3D Sine Float Effect (Safeguard introAnimFrame)
+    const floatY = (typeof introAnimFrame !== 'undefined' && introAnimFrame <= 0) ? Math.sin(Date.now()/500 + x/50) * 2 : 0;
     const finalY = y + floatY;
 
     // Shadow
@@ -234,6 +235,7 @@ function drawBall(x, y, color, r) {
 
     ctx.restore();
 }
+
 
 function shadeColor(color, percent) {
     let f=parseInt(color.slice(1),16),t=percent<0?0:255,p=percent<0?percent*-1:percent,R=f>>16,G=f>>8&0x00FF,B=f&0x0000FF;
