@@ -95,7 +95,7 @@ function startGame() {
     S.ammo = 50; S.score = 2450; S.objective.count = 0;
     bubbles = [];
     let rows = 11; 
-    const spacingY = spacingX * 0.85;
+    const spacingY = spacingX * 0.87; // Adjusted to avoid overlap
     introAnimFrame = 60; // Start animation counter
     
     for (let row = 0; row < rows; row++) {
@@ -147,7 +147,7 @@ function snap() {
     if (!projectile) return;
     const curR = window.activeR || 18;
     const spacingX = canvas.width / 10;
-    const spacingY = spacingX * 0.85;
+    const spacingY = spacingX * 0.87;
     
     // Calculate grid position accounting for clusterOffset
     const gridY = Math.round((projectile.y - clusterOffset - 30) / spacingY);
@@ -228,9 +228,7 @@ function drawBall(x, y, color, r) {
     const radius = r || window.activeR || 18;
     ctx.save();
     
-    // 3D Sine Float Effect (Safeguard introAnimFrame)
-    const floatY = (typeof introAnimFrame !== 'undefined' && introAnimFrame <= 0) ? Math.sin(Date.now()/500 + x/50) * 2 : 0;
-    const finalY = y + floatY;
+    const finalY = y; // Removed floating animation
 
     // Shadow
     ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 5;
@@ -256,6 +254,7 @@ function drawBall(x, y, color, r) {
 }
 
 
+
 function shadeColor(color, percent) {
     let f=parseInt(color.slice(1),16),t=percent<0?0:255,p=percent<0?percent*-1:percent,R=f>>16,G=f>>8&0x00FF,B=f&0x0000FF;
     return "#"+(0x1000000+(Math.round((t-R)*p/100)+R)*0x10000+(Math.round((t-G)*p/100)+G)*0x100+(Math.round((t-B)*p/100)+B)).toString(16).slice(1);
@@ -267,7 +266,7 @@ function updateClusterPosition() {
     if (activeBubbles.length === 0) return;
     const maxRow = Math.max(...activeBubbles.map(b => b.row));
     const spacingX = canvas.width / 10;
-    const spacingY = spacingX * 0.85;
+    const spacingY = spacingX * 0.87;
     const clusterHeight = (maxRow + 1) * spacingY;
     const halfHeight = canvas.height / 2;
     
