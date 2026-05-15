@@ -19,7 +19,10 @@ let S = {
 };
 
 let bubbles = [], projectile = null, particles = [], floaters = [];
+let clusterOffset = 0; // For dynamic vertical shift
+let introAnimFrame = 0;
 let mouseX = 195, mouseY = 100, shakeFrames = 0;
+
 let activeColor = COLORS[0], reserveColor = COLORS[1];
 let isGameActive = false;
 
@@ -86,15 +89,14 @@ function startGame() {
     const width = canvas.width;
     const numCols = 10;
     const spacingX = width / numCols; 
-    const dynamicR = (spacingX / 2) * 0.95; // Slightly smaller than half-spacing for a gapless look
-    
-    // Update global R for this session
+    const dynamicR = (spacingX / 2) * 0.95;
     window.activeR = dynamicR; 
     
     S.ammo = 50; S.score = 2450; S.objective.count = 0;
     bubbles = [];
     let rows = 11; 
-    const spacingY = spacingX * 0.85; // Hexagonal vertical overlap
+    const spacingY = spacingX * 0.85;
+    introAnimFrame = 60; // Start animation counter
     
     for (let row = 0; row < rows; row++) {
         const isOffset = row % 2 !== 0;
@@ -102,14 +104,22 @@ function startGame() {
         const startX = isOffset ? spacingX / 2 : 0; 
         
         for (let col = 0; col < rowWidth; col++) {
-            const x = startX + col * spacingX + (spacingX / 2); // Center of bubble
-            const y = row * spacingY + (spacingX / 2) + 20; 
-            bubbles.push({ x, y, color: COLORS[Math.floor(Math.random()*COLORS.length)], alive: true, falling: false, r: dynamicR });
+            const x = startX + col * spacingX + (spacingX / 2);
+            const targetY = row * spacingY + (spacingX / 2) + 20; 
+            bubbles.push({ 
+                x, 
+                targetY, // Final position
+                y: canvas.height + 100, // Start position (bottom)
+                color: COLORS[Math.floor(Math.random()*COLORS.length)], 
+                alive: true, falling: false, r: dynamicR,
+                row: row
+            });
         }
     }
     prepNext();
     updateUI();
 }
+
 
 
 
@@ -220,21 +230,54 @@ function shadeColor(color, percent) {
     return "#"+(0x1000000+(Math.round((t-R)*p/100)+R)*0x10000+(Math.round((t-G)*p/100)+G)*0x100+(Math.round((t-B)*p/100)+B)).toString(16).slice(1);
 }
 
+function updateClusterPosition() {
+    if (introAnimFrame > 0) return; 
+    const activeBubbles = bubbles.filter(b => b.alive && !b.falling);
+    if (activeBubbles.length === 0) return;
+    const maxRow = Math.max(...activeBubbles.map(b => b.row));
+    const spacingX = canvas.width / 10;
+    const spacingY = spacingX * 0.85;
+    const clusterHeight = (maxRow + 1) * spacingY;
+    const halfHeight = canvas.height / 2;
+    const idealOffset = halfHeight - clusterHeight;
+    const targetOffset = Math.max(0, idealOffset);
+    clusterOffset += (targetOffset - clusterOffset) * 0.05;
+}
+
 function animate() {
     if(!ctx) return; ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.save();
     const curR = window.activeR || R;
+    updateClusterPosition();
     if (shakeFrames > 0) { ctx.translate((Math.random()-0.5)*10, (Math.random()-0.5)*10); shakeFrames--; }
     drawFloaters();
-    bubbles.forEach(b => { if (b.falling) { b.y += 10; if (b.y > canvas.height) b.alive = false; } if (b.alive) drawBall(b.x, b.y, b.color, b.r); });
+    bubbles.forEach(b => { 
+        if (b.alive) {
+            if (introAnimFrame > 0) {
+                b.y += (b.targetY - b.y) * 0.15;
+            } else if (!b.falling) {
+                const currentTarget = b.targetY + clusterOffset;
+                b.y += (currentTarget - b.y) * 0.1;
+            } else {
+                b.y += 10;
+                if (b.y > canvas.height) b.alive = false;
+            }
+            drawBall(b.x, b.y, b.color, b.r);
+        }
+    });
+    if (introAnimFrame > 0) introAnimFrame--;
     if (projectile) {
         projectile.x += projectile.vx; projectile.y += projectile.vy;
         if (projectile.x < curR || projectile.x > canvas.width - curR) projectile.vx *= -1;
         drawBall(projectile.x, projectile.y, projectile.color, curR + 2);
-        let hit = false; if (projectile.y < curR + 20) hit = true; else bubbles.forEach(b => { if (b.alive && !b.falling && Math.hypot(b.x - projectile.x, b.y - projectile.y) < curR * 1.8) hit = true; });
+        let hit = false; 
+        if (projectile.y < curR + 20 + clusterOffset) hit = true; 
+        else bubbles.forEach(b => { 
+            if (b.alive && !b.falling && Math.hypot(b.x - projectile.x, b.y - projectile.y) < curR * 1.8) hit = true; 
+        });
         if (hit) snap(); if (projectile && projectile.y > canvas.height) projectile = null;
     }
     drawVFX();
-    if (isGameActive && !projectile) {
+    if (isGameActive && !projectile && introAnimFrame <= 0) {
         const sx = canvas.width/2, sy = canvas.height-40, ang = Math.atan2(mouseY-sy, mouseX-sx);
         if (ang < 0) {
             for(let i=0; i<15; i++) {
@@ -246,6 +289,7 @@ function animate() {
     }
     ctx.restore(); requestAnimationFrame(animate);
 }
+
 
 
 function createParticles(x, y, color) { for (let i = 0; i < 8; i++) particles.push({ x, y, dx: (Math.random()-0.5)*6, dy: (Math.random()-0.5)*6, s: Math.random()*5+2, a: 1, c: color }); }
