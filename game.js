@@ -105,16 +105,17 @@ function startGame() {
         
         for (let col = 0; col < rowWidth; col++) {
             const x = startX + col * spacingX + (spacingX / 2);
-            const targetY = row * spacingY + (spacingX / 2) + 20; 
+            const targetY = row * spacingY + (spacingX / 2); // Removed +20 to move it higher
             bubbles.push({ 
                 x, 
-                targetY, // Final position
-                y: canvas.height + 100, // Start position (bottom)
+                targetY, 
+                y: canvas.height + 100, 
                 color: COLORS[Math.floor(Math.random()*COLORS.length)], 
                 alive: true, falling: false, r: dynamicR,
                 row: row
             });
         }
+
     }
     prepNext();
     updateUI();
