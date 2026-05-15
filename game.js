@@ -240,10 +240,14 @@ function updateClusterPosition() {
     const spacingY = spacingX * 0.85;
     const clusterHeight = (maxRow + 1) * spacingY;
     const halfHeight = canvas.height / 2;
-    const idealOffset = halfHeight - clusterHeight;
+    
+    // User wants it 3 balls above center
+    const limit = halfHeight - (3 * spacingY); 
+    const idealOffset = limit - clusterHeight;
     const targetOffset = Math.max(0, idealOffset);
     clusterOffset += (targetOffset - clusterOffset) * 0.05;
 }
+
 
 function animate() {
     if(!ctx) return; ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.save();
