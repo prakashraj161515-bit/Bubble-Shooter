@@ -312,15 +312,27 @@ function animate() {
     }
     drawVFX();
     if (isGameActive && !projectile && introAnimFrame <= 0) {
-        const sx = canvas.width/2, sy = canvas.height-40, ang = Math.atan2(mouseY-sy, mouseX-sx);
+        const sx = canvas.width / 2, sy = canvas.height - 40;
+        const ang = Math.atan2(mouseY - sy, mouseX - sx);
         if (ang < 0) {
-            for(let i=0; i<15; i++) {
-                const dotX = sx + Math.cos(ang) * (i * 25);
-                const dotY = sy + Math.sin(ang) * (i * 25);
-                ctx.beginPath(); ctx.arc(dotX, dotY, 2.5, 0, Math.PI*2); ctx.fillStyle = 'rgba(123, 108, 255, 0.7)'; ctx.fill();
+            let dx = Math.cos(ang), dy = Math.sin(ang);
+            for (let i = 1; i < 20; i++) {
+                const dotX = sx + dx * (i * 25);
+                const dotY = sy + dy * (i * 25);
+                
+                // Stop aim line if it hits a bubble
+                let collision = false;
+                bubbles.forEach(b => {
+                    if (b.alive && !b.falling && Math.hypot(b.x - dotX, b.y - dotY) < curR * 1.5) collision = true;
+                });
+                if (collision || dotX < 0 || dotX > canvas.width || dotY < 0) break;
+
+                ctx.beginPath(); ctx.arc(dotX, dotY, 2.5, 0, Math.PI * 2); 
+                ctx.fillStyle = 'rgba(123, 108, 255, 0.7)'; ctx.fill();
             }
         }
     }
+
     ctx.restore(); requestAnimationFrame(animate);
 }
 
