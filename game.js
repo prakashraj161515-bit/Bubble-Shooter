@@ -5,7 +5,7 @@
 // ══════════════════════════════════════════
 
 let canvas, ctx, scoreVal, currentBallEl, nextBallEl, goalText;
-const R = 18, rowHeight = 32, SPEED = 16;
+const R = 18, rowHeight = 32, SPEED = 32;
 
 
 const COLORS = ['#ff4d4d', '#ffcc00', '#33cc33', '#3399ff', '#cc33ff', '#ff8c1a'];
