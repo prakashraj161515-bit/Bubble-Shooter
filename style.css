@@ -60,19 +60,21 @@ body { background: #dce1ff; display: flex; justify-content: center; align-items:
 
 .controls-wrap-p { display: flex; align-items: flex-end; gap: 20px; position: relative; z-index: 10; margin-bottom: 20px; }
 .pu-box-p { 
-    width: 95px; height: 95px; background: #fff; border-radius: 30px; 
+    width: 75px; height: 75px; background: #fff; border-radius: 22px; 
     display: flex; justify-content: center; align-items: center; position: relative;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 2px solid #fff;
+    box-shadow: 0 8px 0 #ddd, 0 12px 20px rgba(0,0,0,0.1); border: 2px solid #fff;
+    cursor: pointer; transition: all 0.1s active;
 }
-.pu-box-p img { width: 65px; height: 65px; object-fit: contain; }
-.pu-badge-p { position: absolute; bottom: -5px; right: -5px; background: var(--p-purple); color: #fff; font-size: 11px; padding: 4px 10px; border-radius: 12px; font-weight: 800; border: 3px solid #fff; }
+.pu-box-p:active { transform: translateY(4px); box-shadow: 0 4px 0 #ddd, 0 6px 10px rgba(0,0,0,0.1); }
+.pu-box-p img { width: 50px; height: 50px; object-fit: contain; }
 
 .cannon-wrap-p { 
-    width: 85px; height: 85px; background: #fff; border-radius: 50%; 
+    width: 80px; height: 80px; background: #fff; border-radius: 50%; 
     display: flex; justify-content: center; align-items: center; position: relative;
-    box-shadow: 0 10px 25px rgba(123,108,255,0.15); border: 3px solid #fff; margin-bottom: 25px;
+    box-shadow: 0 8px 15px rgba(123,108,255,0.1); border: 2px solid #fff; margin-bottom: 25px;
 }
-.cannon-ball-p { width: 62px; height: 62px; border-radius: 50%; box-shadow: inset -3px -3px 10px rgba(0,0,0,0.2); }
+.cannon-ball-p { border-radius: 50%; box-shadow: inset -3px -3px 8px rgba(0,0,0,0.3); }
+
 
 
 .swap-box-p { 

@@ -180,14 +180,18 @@ function checkEnd() {
 
 function updateUI() {
     if(scoreVal) scoreVal.innerText = S.score.toLocaleString();
-    if(goalText) goalText.innerText = `${S.objective.count}/${S.objective.total}`;
+    const curR = window.activeR || R;
     if(currentBallEl) {
         const c = activeColor;
-        currentBallEl.style.background = `radial-gradient(circle at 30% 30%, #fff 0%, ${c} 40%, ${shadeColor(c, -50)} 100%)`;
+        currentBallEl.style.width = `${curR * 2}px`;
+        currentBallEl.style.height = `${curR * 2}px`;
+        currentBallEl.style.background = `radial-gradient(circle at 30% 30%, #fff, ${c} 45%, ${shadeColor(c, -40)})`;
     }
     if(nextBallEl) {
         const c = reserveColor;
-        nextBallEl.style.background = `radial-gradient(circle at 30% 30%, #fff 0%, ${c} 40%, ${shadeColor(c, -50)} 100%)`;
+        nextBallEl.style.width = `${curR * 1.2}px`;
+        nextBallEl.style.height = `${curR * 1.2}px`;
+        nextBallEl.style.background = `radial-gradient(circle at 30% 30%, #fff, ${c} 45%, ${shadeColor(c, -40)})`;
     }
     const mc = document.getElementById('map-coins');
     if(mc) mc.innerText = S.coins.toLocaleString();
@@ -203,24 +207,29 @@ function prepNext() {
 function drawBall(x, y, color, r) {
     const radius = r || window.activeR || R;
     ctx.save();
+    
+    // 3D Sine Float Effect
+    const floatY = introAnimFrame <= 0 ? Math.sin(Date.now()/500 + x/50) * 2 : 0;
+    const finalY = y + floatY;
+
     // Shadow
     ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 5;
     
     // Core Gradient
-    const grad = ctx.createRadialGradient(x - radius*0.35, y - radius*0.35, radius*0.05, x, y, radius);
+    const grad = ctx.createRadialGradient(x - radius*0.35, finalY - radius*0.35, radius*0.05, x, finalY, radius);
     grad.addColorStop(0, '#fff'); grad.addColorStop(0.2, shadeColor(color, 30));
     grad.addColorStop(0.5, color); grad.addColorStop(1, shadeColor(color, -60));
 
-    ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI*2); ctx.fillStyle = grad; ctx.fill();
+    ctx.beginPath(); ctx.arc(x, finalY, radius, 0, Math.PI*2); ctx.fillStyle = grad; ctx.fill();
     
     // Top-Left Ellipse Shine
     ctx.beginPath();
-    ctx.ellipse(x - radius*0.4, y - radius*0.4, radius*0.4, radius*0.25, Math.PI/4, 0, Math.PI*2);
+    ctx.ellipse(x - radius*0.4, finalY - radius*0.4, radius*0.4, radius*0.25, Math.PI/4, 0, Math.PI*2);
     ctx.fillStyle = 'rgba(255,255,255,0.45)'; ctx.fill();
 
     // Bottom Rim Glow
     ctx.beginPath();
-    ctx.arc(x, y, radius * 0.85, 0.8, 2.5);
+    ctx.arc(x, finalY, radius * 0.85, 0.8, 2.5);
     ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 2.5; ctx.stroke();
 
     ctx.restore();
