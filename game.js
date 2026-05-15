@@ -144,31 +144,50 @@ function shoot() {
 }
 
 function snap() {
-    const gridY = Math.round((projectile.y - 40) / rowHeight);
-    const rowOff = (gridY % 2) ? 22 : 0;
-    const gridX = Math.round((projectile.x - 40 - rowOff) / 44);
-    const nx = gridX * 44 + 40 + rowOff, ny = gridY * rowHeight + 40;
-    const newB = { x: nx, y: ny, color: projectile.color, alive: true, falling: false };
+    if (!projectile) return;
+    const curR = window.activeR || 18;
+    const spacingX = canvas.width / 10;
+    const spacingY = spacingX * 0.85;
+    
+    // Calculate grid position accounting for clusterOffset
+    const gridY = Math.round((projectile.y - clusterOffset - 30) / spacingY);
+    const isOffset = gridY % 2 !== 0;
+    const startX = isOffset ? spacingX / 2 : 0;
+    const gridX = Math.round((projectile.x - startX - (spacingX / 2)) / spacingX);
+    
+    const nx = startX + gridX * spacingX + (spacingX / 2);
+    const ny = gridY * spacingY + (spacingX / 2) + 30; // targetY without offset
+
+    const newB = { x: nx, targetY: ny, y: projectile.y, color: projectile.color, alive: true, falling: false, r: curR, row: gridY };
     bubbles.push(newB);
+
     const visited = new Set(), matches = [];
     function dfs(b) {
         if(!b || visited.has(b)) return; visited.add(b); matches.push(b);
-        bubbles.filter(o => o.alive && !o.falling && Math.hypot(o.x-b.x, o.y-b.y) < 48).forEach(n => { if(n.color === newB.color) dfs(n); });
+        bubbles.filter(o => o.alive && !o.falling && Math.hypot(o.x-b.x, o.y-b.y) < spacingX * 1.2).forEach(n => { 
+            if(n.color === newB.color) dfs(n); 
+        });
     }
     dfs(newB);
+
     if (matches.length >= 3) {
         matches.forEach(b => { 
             b.alive = false; createParticles(b.x, b.y, b.color); S.score += 100;
-            if (b.color === '#cc33ff') S.objective.count++;
         });
         shakeFrames = 15; if(S.settings.sound) playSFX('pop');
+        
+        // Orphan logic: Check what's connected to Row 0
         const con = new Set();
-        function mark(b) { if(con.has(b)) return; con.add(b); bubbles.filter(o => o.alive && !o.falling && Math.hypot(o.x-b.x, o.y-b.y) < 48).forEach(mark); }
-        bubbles.filter(b => b.y < 60 && b.alive).forEach(mark);
+        function mark(b) { 
+            if(con.has(b)) return; con.add(b); 
+            bubbles.filter(o => o.alive && !o.falling && Math.hypot(o.x-b.x, o.y-b.y) < spacingX * 1.2).forEach(mark); 
+        }
+        bubbles.filter(b => b.row === 0 && b.alive).forEach(mark);
         bubbles.forEach(b => { if(b.alive && !con.has(b)) b.falling = true; });
     }
     projectile = null; checkEnd(); updateUI();
 }
+
 
 function checkEnd() {
     const remaining = bubbles.filter(b => b.alive);
