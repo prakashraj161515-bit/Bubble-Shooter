@@ -137,6 +137,8 @@ function getShooterPos() {
     };
 }
 
+const SPEED = 12; // Ensured speed is set
+
 function shoot(e) {
     if (projectile || !isGameActive || introAnimFrame > 0) return;
     initAudio();
@@ -144,7 +146,6 @@ function shoot(e) {
     const pos = getShooterPos();
     const cRect = canvas.getBoundingClientRect();
     
-    // Get correct click coordinates
     let tx, ty;
     if (e && e.clientX !== undefined) {
         tx = e.clientX - cRect.left;
@@ -155,19 +156,22 @@ function shoot(e) {
     }
 
     const ang = Math.atan2(ty - pos.y, tx - pos.x); 
-    // Allow shooting in any upward direction
     if (ty > pos.y) return; 
     
+    // Create projectile and ensure it starts moving immediately
     projectile = { 
         x: pos.x, 
         y: pos.y, 
         color: activeColor, 
         vx: Math.cos(ang) * SPEED, 
-        vy: Math.sin(ang) * SPEED 
+        vy: Math.sin(ang) * SPEED,
+        r: window.activeR || 18
     };
+    
     prepNext(); 
     updateUI();
 }
+
 
 
 
