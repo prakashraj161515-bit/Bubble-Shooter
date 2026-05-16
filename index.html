@@ -31,14 +31,22 @@
   <div id="gameplayScreen" class="screen hidden play-bg">
     
     <header class="hud-top-premium">
-      <button class="hud-btn-p" onclick="showScreen('mapScreen')">⏸</button>
-      <div class="score-box-p">
-        <span style="font-size:9px; font-weight:800; color:#aaa;">SCORE</span>
-        <h3 id="score">2,450</h3>
-        <div class="score-bar-p"><div class="fill"></div></div>
+      <button class="hamburger-btn" onclick="showScreen('mapScreen')">
+        <div class="line"></div>
+        <div class="line"></div>
+        <div class="line"></div>
+      </button>
+
+      <div class="star-progress-track">
+        <div class="star-progress-fill" style="width: 45%;"></div>
+        <div class="star-wrapper" style="left: 33%;"><div class="p-star active">★</div></div>
+        <div class="star-wrapper" style="left: 66%;"><div class="p-star">★</div></div>
+        <div class="star-wrapper" style="left: 100%;"><div class="p-star">★</div></div>
       </div>
 
-      <button class="hud-btn-p" onclick="showScreen('settingsScreen')">⚙️</button>
+      <div class="score-pill">
+        <h3 id="score">2450</h3>
+      </div>
     </header>
 
     <canvas id="gameCanvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;"></canvas>
