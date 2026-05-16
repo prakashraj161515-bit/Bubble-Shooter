@@ -199,3 +199,17 @@ body { background: #dce1ff; display: flex; justify-content: center; align-items:
 .node-premium { position: absolute; width: 80px; height: 80px; border-radius: 50%; background: #444; display: flex; justify-content: center; align-items: center; font-weight: 900; font-size: 30px; color: #fff; box-shadow: 0 10px 0 #222, 0 15px 30px rgba(0,0,0,0.3); }
 .node-premium.unlocked { background: radial-gradient(circle at 20px 20px, #3ddc84, #1b8a4a); box-shadow: 0 10px 0 #1b8a4a, 0 15px 30px rgba(61,220,132,0.3); border: 2px solid #fff; }
 
+/* Focus Current Level FAB */
+.focus-current-btn {
+    position: absolute; bottom: 100px; right: 20px;
+    width: 56px; height: 56px; border-radius: 28px;
+    background: linear-gradient(180deg, #5de1ff, #00aaff);
+    border: 3px solid #fff; box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+    display: flex; justify-content: center; align-items: center;
+    cursor: pointer; z-index: 100; transition: opacity 0.3s, transform 0.3s;
+}
+.focus-current-btn:active { transform: scale(0.9) !important; }
+.focus-current-btn.hidden {
+    opacity: 0; pointer-events: none; transform: translateY(20px);
+}
+

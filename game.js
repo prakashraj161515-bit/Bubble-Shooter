@@ -68,10 +68,47 @@ function renderMap() {
         const nodes = document.querySelectorAll('.node-premium.unlocked');
         if (nodes.length > 0) {
             const activeNode = nodes[targetLevel - 1];
-            // Use auto behavior for instant scroll on large maps
             if (activeNode) activeNode.scrollIntoView({ behavior: 'auto', block: 'center' });
         }
     }, 100);
+    
+    // Add scroll listener for the FAB
+    const scroller = document.getElementById('mapScrollArea');
+    const focusBtn = document.getElementById('focusCurrentBtn');
+    if (scroller && focusBtn) {
+        scroller.addEventListener('scroll', () => {
+            const targetLevel = S.currentLevel || 1;
+            const nodes = document.querySelectorAll('.node-premium.unlocked');
+            if (nodes.length > 0) {
+                const activeNode = nodes[targetLevel - 1];
+                if (activeNode) {
+                    const rect = activeNode.getBoundingClientRect();
+                    // mapScrollArea takes up most of the screen. We check if node is in viewport.
+                    const isVisible = (rect.top >= 0 && rect.bottom <= window.innerHeight);
+                    if (!isVisible) {
+                        focusBtn.classList.remove('hidden');
+                        const svgArrow = focusBtn.querySelector('svg');
+                        if (svgArrow) {
+                            // If node is above viewport (rect.top < 0), point UP. Otherwise DOWN.
+                            if (rect.top < 0) svgArrow.style.transform = 'rotate(180deg)';
+                            else svgArrow.style.transform = 'rotate(0deg)';
+                        }
+                    } else {
+                        focusBtn.classList.add('hidden');
+                    }
+                }
+            }
+        });
+    }
+}
+
+function scrollToCurrentLevel() {
+    const targetLevel = S.currentLevel || 1;
+    const nodes = document.querySelectorAll('.node-premium.unlocked');
+    if (nodes.length > 0) {
+        const activeNode = nodes[targetLevel - 1];
+        if (activeNode) activeNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
 }
 
 // ──────── INITIALIZATION ────────

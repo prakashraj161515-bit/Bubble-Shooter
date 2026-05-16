@@ -20,6 +20,14 @@
       <button class="hud-btn-p" style="width:45px; height:45px;" onclick="showScreen('settingsScreen')">⚙️</button>
     </header>
     <div class="map-scroller" id="mapScrollArea"><div id="levelPath" style="position:relative;"></div></div>
+    
+    <!-- Focus Current Level Button -->
+    <button id="focusCurrentBtn" class="focus-current-btn hidden" onclick="scrollToCurrentLevel()">
+      <svg id="focusArrow" viewBox="0 0 24 24" fill="white" width="30" height="30" style="transition: transform 0.3s;">
+          <path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z"/>
+      </svg>
+    </button>
+    
     <footer style="height:90px; background:#fff; display:flex; justify-content:space-around; align-items:center; border-top:1px solid #eee;">
       <div style="text-align:center; color:#aaa; font-size:10px; font-weight:800;"><i>🏠</i><br>HOME</div>
       <div style="text-align:center; color:#7b6cff; font-size:10px; font-weight:800;"><i>🗺️</i><br>MAP</div>
