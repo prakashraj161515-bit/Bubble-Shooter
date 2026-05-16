@@ -97,14 +97,14 @@ body { background: #dce1ff; display: flex; justify-content: center; align-items:
 
 /* Wide Rectangle Powerup Grid */
 .pu-grid-p {
-    display: flex; gap: 8px; pointer-events: auto; width: 95%; justify-content: center;
+    display: flex; gap: 8px; pointer-events: auto; width: 96%; max-width: 420px; justify-content: center;
 }
 .pu-glass-btn {
-    flex: 1; height: 65px; border-radius: 12px; position: relative;
+    flex: 1; height: 60px; border-radius: 12px; position: relative;
     background: linear-gradient(180deg, #b8c4ff, #7b8cff);
-    border: 2.2px solid #fff; box-shadow: 0 6px 12px rgba(0,0,0,0.12);
+    border: 2px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.15);
     display: flex; justify-content: center; align-items: center; cursor: pointer;
-    overflow: hidden; min-width: 80px;
+    overflow: hidden;
 }
 /* Glossy Shine */
 .pu-glass-btn::before {
