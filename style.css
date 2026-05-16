@@ -99,11 +99,12 @@ body { background: #dce1ff; display: flex; justify-content: center; align-items:
 }
 
 .swap-arrows { 
-    position: absolute; width: 200%; height: 200%; opacity: 0.9; cursor: pointer; 
-    animation: spin-premium 5s linear infinite; z-index: 6;
+    position: absolute; width: 250%; height: 250%; opacity: 0.9; cursor: pointer; 
+    animation: spin-premium 6s linear infinite; z-index: 6;
     pointer-events: none;
     transform-origin: center center;
 }
+
 
 
 @keyframes spin-premium { 
