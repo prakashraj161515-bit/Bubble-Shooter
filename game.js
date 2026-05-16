@@ -282,6 +282,19 @@ function updateUI() {
     const ammoEl = document.getElementById('ammo-val');
     if(ammoEl) ammoEl.innerText = S.ammo;
     
+    // Update progress bar and stars
+    const maxScore = 5000; // Example target for 3 stars
+    const progress = Math.min((S.score / maxScore) * 100, 100);
+    const fillEl = document.querySelector('.star-progress-fill');
+    if (fillEl) fillEl.style.width = progress + '%';
+    
+    const stars = document.querySelectorAll('.p-star');
+    if (stars.length === 3) {
+        if (progress >= 33) stars[0].classList.add('active'); else stars[0].classList.remove('active');
+        if (progress >= 66) stars[1].classList.add('active'); else stars[1].classList.remove('active');
+        if (progress >= 100) stars[2].classList.add('active'); else stars[2].classList.remove('active');
+    }
+    
     const curR = window.activeR || 20;
     if (currentBallEl) {
         currentBallEl.style.background = activeColor;
