@@ -58,35 +58,69 @@ body { background: #dce1ff; display: flex; justify-content: center; align-items:
 }
 .wave-svg { position: absolute; top: -50px; left: 0; width: 100%; height: 60px; fill: #f0f4ff; }
 
-.controls-wrap-p { display: flex; align-items: flex-end; gap: 20px; position: relative; z-index: 10; margin-bottom: 20px; }
-.pu-box-p { 
-    width: 75px; height: 75px; background: #fff; border-radius: 22px; 
-    display: flex; justify-content: center; align-items: center; position: relative;
-    box-shadow: 0 8px 0 #ddd, 0 12px 20px rgba(0,0,0,0.1); border: 2px solid #fff;
-    cursor: pointer; transition: all 0.1s active;
-}
-.pu-box-p:active { transform: translateY(4px); box-shadow: 0 4px 0 #ddd, 0 6px 10px rgba(0,0,0,0.1); }
-.pu-box-p img { width: 50px; height: 50px; object-fit: contain; }
-
-.cannon-wrap-p { 
-    width: 80px; height: 80px; background: #fff; border-radius: 50%; 
-    display: flex; justify-content: center; align-items: center; position: relative;
-    box-shadow: 0 8px 15px rgba(123,108,255,0.1); border: 2px solid #fff; margin-bottom: 25px;
-}
-.cannon-ball-p { border-radius: 50%; box-shadow: inset -3px -3px 8px rgba(0,0,0,0.3); }
-
-
-
-.swap-box-p { 
-    position: absolute; bottom: 35px; left: 40px; width: 45px; height: 45px; background: #fff; 
-    border-radius: 50%; border: 2.5px solid #fff; display: flex; justify-content: center; align-items: center; 
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1); cursor: pointer; z-index: 110;
+/* ──────── PRECISE PHOTO CLONE HUD ──────── */
+.hud-bottom-p {
+    position: absolute; bottom: 0; width: 100%; height: 260px;
+    background: transparent; pointer-events: none;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+    padding-bottom: 25px;
 }
 
-.swap-ball-p { width: 30px; height: 30px; border-radius: 50%; box-shadow: inset -2px -2px 5px rgba(0,0,0,0.2); }
-.swap-icon-p { position: absolute; width: 100%; height: 100%; animation: rotate 4s linear infinite; pointer-events: none; }
+/* Ammo Pill Box */
+.ammo-pill {
+    background: #4a4a8c; color: #fff; font-weight: 900; font-size: 18px;
+    padding: 4px 15px; border-radius: 20px; margin-bottom: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2); pointer-events: auto;
+}
 
-@keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+/* Shooter Row */
+.shooter-row {
+    display: flex; align-items: center; gap: 15px; margin-bottom: 25px; pointer-events: auto;
+}
+.main-ball-wrap {
+    width: 65px; height: 65px; position: relative;
+    display: flex; justify-content: center; align-items: center;
+}
+.main-ball-wrap::after {
+    content: '✶'; position: absolute; color: rgba(255,255,255,0.7); font-size: 35px;
+}
+
+.swap-arrows { width: 35px; height: 35px; opacity: 0.6; cursor: pointer; }
+
+.reserve-ball-wrap {
+    width: 45px; height: 45px; display: flex; justify-content: center; align-items: center;
+}
+
+/* Powerup Grid */
+.pu-grid-p {
+    display: flex; gap: 10px; pointer-events: auto; width: 92%; justify-content: center;
+}
+.pu-glass-btn {
+    flex: 1; height: 75px; border-radius: 15px; position: relative;
+    background: linear-gradient(180deg, #b8c4ff, #7b8cff);
+    border: 2px solid #fff; box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+    display: flex; justify-content: center; align-items: center; cursor: pointer;
+    overflow: hidden;
+}
+/* Glossy Shine */
+.pu-glass-btn::before {
+    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 50%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 100%);
+    border-radius: 12px 12px 50% 50%;
+}
+.pu-glass-btn img { width: 45px; height: 45px; object-fit: contain; z-index: 2; }
+
+/* Pink Badge */
+.pu-badge-premium {
+    position: absolute; bottom: -5px; right: -5px; 
+    background: #e633ff; color: #fff; font-size: 13px; font-weight: 900;
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; justify-content: center; align-items: center;
+    border: 2px solid #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    z-index: 5;
+}
+.pu-badge-check { background: #4dff4d; }
+
 
 /* MAP SCREEN (UNCHANGED AS REQUESTED) */
 .map-screen { background: #f8f9ff; display: flex; flex-direction: column; }

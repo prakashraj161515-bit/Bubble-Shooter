@@ -197,25 +197,24 @@ function checkEnd() {
 }
 
 function updateUI() {
-    if(!scoreVal) return;
-    scoreVal.innerText = S.score.toLocaleString();
-    const curR = window.activeR || 18; // Safe fallback
+    if(scoreVal) scoreVal.innerText = S.score.toLocaleString();
+    const ammoEl = document.getElementById('ammo-val');
+    if(ammoEl) ammoEl.innerText = S.ammo;
+    
+    const curR = window.activeR || 18;
     if(currentBallEl) {
         const c = activeColor;
-        currentBallEl.style.width = `${curR * 2}px`;
-        currentBallEl.style.height = `${curR * 2}px`;
         currentBallEl.style.background = `radial-gradient(circle at 30% 30%, #fff, ${c} 45%, ${shadeColor(c, -40)})`;
     }
     if(nextBallEl) {
         const c = reserveColor;
-        nextBallEl.style.width = `${curR * 1.2}px`;
-        nextBallEl.style.height = `${curR * 1.2}px`;
         nextBallEl.style.background = `radial-gradient(circle at 30% 30%, #fff, ${c} 45%, ${shadeColor(c, -40)})`;
     }
     const mc = document.getElementById('map-coins');
     if(mc) mc.innerText = S.coins.toLocaleString();
     saveState();
 }
+
 
 function prepNext() {
     activeColor = reserveColor; reserveColor = COLORS[Math.floor(Math.random()*COLORS.length)];

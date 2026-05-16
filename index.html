@@ -44,34 +44,42 @@
     <canvas id="gameCanvas" width="390" height="480"></canvas>
 
     <footer class="hud-bottom-p">
-      <!-- THE SMOOTH WAVE SVG -->
-      <svg class="wave-svg" viewBox="0 0 390 60" preserveAspectRatio="none">
-        <path d="M0,60 L0,40 C0,40 60,0 130,0 C200,0 260,40 320,40 C380,40 390,40 390,40 L390,60 Z" />
-      </svg>
+      <div class="ammo-pill" id="ammo-val">55</div>
       
-      <div class="controls-wrap-p">
-        <!-- Powerup Bomb -->
-        <div class="pu-box-p">
+      <div class="shooter-row">
+        <div class="main-ball-wrap">
+          <div id="currentBall" class="cannon-ball-p" style="width:58px; height:58px;"></div>
+        </div>
+        <img src="https://img.icons8.com/ios-filled/100/4a4a8c/refresh.png" class="swap-arrows" onclick="swapBubbles()">
+        <div class="reserve-ball-wrap">
+          <div id="nextBall" class="cannon-ball-p" style="width:40px; height:40px;"></div>
+        </div>
+      </div>
+
+      <div class="pu-grid-p">
+        <!-- Bomb -->
+        <div class="pu-glass-btn">
           <img src="https://img.icons8.com/plasticine/200/bomb.png" alt="bomb">
-          <span class="pu-badge-p">2</span>
+          <div class="pu-badge-premium">19</div>
         </div>
-
-        <!-- Main Cannon -->
-        <div class="cannon-wrap-p">
-          <div id="currentBall" class="cannon-ball-p"></div>
-          <div class="swap-box-p" onclick="swapBubbles()">
-            <div id="nextBall" class="swap-ball-p"></div>
-            <img class="swap-icon-p" src="https://img.icons8.com/ios-glyphs/60/7b6cff/synchronize.png" alt="swap">
-          </div>
+        <!-- Aim -->
+        <div class="pu-glass-btn" style="background: linear-gradient(180deg, #5ec3ff, #0091ff);">
+          <img src="https://img.icons8.com/fluency/100/line-chart.png" style="transform: rotate(45deg); opacity:0.8;" alt="aim">
+          <div class="pu-badge-premium pu-badge-check">✓</div>
         </div>
-
-        <!-- Powerup Fireball -->
-        <div class="pu-box-p">
+        <!-- Exchange -->
+        <div class="pu-glass-btn" style="background: linear-gradient(180deg, #5ec3ff, #0091ff);">
+          <img src="https://img.icons8.com/fluency/100/recycle.png" alt="exchange">
+          <div class="pu-badge-premium">2</div>
+        </div>
+        <!-- Fireball -->
+        <div class="pu-glass-btn">
           <img src="https://img.icons8.com/color/200/fire-element.png" alt="fireball">
-          <span class="pu-badge-p">1</span>
+          <div class="pu-badge-premium">13</div>
         </div>
       </div>
     </footer>
+
 
   </div>
 
