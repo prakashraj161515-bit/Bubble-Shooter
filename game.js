@@ -402,17 +402,37 @@ function animate() {
     });
     if (introAnimFrame > 0) introAnimFrame--;
     if (projectile) {
-        projectile.x += projectile.vx; projectile.y += projectile.vy;
-        if (projectile.x < curR || projectile.x > canvas.width - curR) projectile.vx *= -1;
+        let hit = false;
+        let steps = 4; // Sub-stepping for precise collision
+        let stepVx = projectile.vx / steps;
+        let stepVy = projectile.vy / steps;
+        
+        for (let i = 0; i < steps; i++) {
+            projectile.x += stepVx; 
+            projectile.y += stepVy;
+            
+            if (projectile.x < curR || projectile.x > canvas.width - curR) {
+                projectile.vx *= -1;
+                stepVx *= -1; // Reflect current step
+            }
+            
+            if (projectile.y < curR + 20 + clusterOffset) hit = true; 
+            else {
+                for (let b of bubbles) {
+                    if (b.alive && !b.falling && Math.hypot(b.x - projectile.x, (b.targetY + clusterOffset) - projectile.y) < curR * 1.8) {
+                        hit = true; break;
+                    }
+                }
+            }
+            if (hit) break; // Stop moving exactly at the collision point
+        }
+        
         drawBall(projectile.x, projectile.y, projectile.color, curR + 2);
-        let hit = false; 
-        if (projectile.y < curR + 20 + clusterOffset) hit = true; 
-        else bubbles.forEach(b => { 
-            if (b.alive && !b.falling && Math.hypot(b.x - projectile.x, b.y - projectile.y) < curR * 1.8) hit = true; 
-        });
-        if (hit) snap(); if (projectile && projectile.y > canvas.height) projectile = null;
+        if (hit) snap(); 
+        if (projectile && projectile.y > canvas.height) projectile = null;
     }
     drawVFX();
+
     if (isGameActive && !projectile && introAnimFrame <= 0) {
         const pos = getShooterPos();
         const ang = Math.atan2(mouseY - pos.y, mouseX - pos.x);
