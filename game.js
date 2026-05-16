@@ -11,7 +11,7 @@ const R = 18, rowHeight = 32, SPEED = 32;
 const COLORS = ['#ff4d4d', '#ffcc00', '#33cc33', '#3399ff', '#cc33ff', '#ff8c1a'];
 
 let S = {
-    score: 2450, coins: 1250, ammo: 50,
+    score: 0, coins: 1250, ammo: 50,
     currentLevel: Number(localStorage.getItem('bs_level')) || 1,
     unlockedLevels: Number(localStorage.getItem('bs_unlocked')) || 4,
     objective: { count: 0, total: 6 },
@@ -111,7 +111,7 @@ function startGame() {
     const dynamicR = (spacingX / 2) * 0.95;
     window.activeR = dynamicR; 
     
-    S.ammo = 50; S.score = 2450; S.objective.count = 0;
+    S.ammo = 50; S.score = 0; S.objective.count = 0;
     bubbles = [];
     let rows = 11; 
     const spacingY = spacingX * 0.866; // Perfect hexagonal touch
