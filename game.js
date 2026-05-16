@@ -285,7 +285,7 @@ function updateClusterPosition() {
     const limit = halfHeight - (3 * spacingY); 
     const idealOffset = limit - clusterHeight;
     const targetOffset = Math.max(0, idealOffset);
-    clusterOffset += (targetOffset - clusterOffset) * 0.05;
+    clusterOffset += (targetOffset - clusterOffset) * 0.03; // Smoother shift (from 0.05 to 0.03)
 }
 
 
@@ -293,7 +293,10 @@ function animate() {
     if(!ctx) return; ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.save();
     const curR = window.activeR || 18;
     updateClusterPosition();
-    if (shakeFrames > 0) { ctx.translate((Math.random()-0.5)*10, (Math.random()-0.5)*10); shakeFrames--; }
+    if (shakeFrames > 0) { 
+        ctx.translate((Math.random()-0.5)*3, (Math.random()-0.5)*3); // Reduced from 10 to 3
+        shakeFrames--; 
+    }
     drawFloaters();
     bubbles.forEach(b => { 
         if (b.alive) {
