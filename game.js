@@ -126,21 +126,35 @@ function startGame() {
 
 
 
-function swapBubbles() {
-    const temp = activeColor;
-    activeColor = reserveColor;
-    reserveColor = temp;
-    updateUI();
+function getShooterPos() {
+    const el = document.getElementById('currentBall');
+    if (!el) return { x: canvas.width / 2, y: canvas.height - 150 };
+    const rect = el.getBoundingClientRect();
+    const cRect = canvas.getBoundingClientRect();
+    return {
+        x: rect.left - cRect.left + rect.width / 2,
+        y: rect.top - cRect.top + rect.height / 2
+    };
 }
 
 function shoot() {
     if (projectile || !isGameActive) return;
     initAudio();
-    const sx = canvas.width / 2, sy = canvas.height - 40;
-    const ang = Math.atan2(mouseY - sy, mouseX - sx); if (ang > 0) return;
-    projectile = { x: sx, y: sy, color: activeColor, vx: Math.cos(ang) * SPEED, vy: Math.sin(ang) * SPEED };
-    prepNext(); updateUI();
+    const pos = getShooterPos();
+    const ang = Math.atan2(mouseY - pos.y, mouseX - pos.x); 
+    if (ang > 0) return; // Prevent shooting downwards
+    
+    projectile = { 
+        x: pos.x, 
+        y: pos.y, 
+        color: activeColor, 
+        vx: Math.cos(ang) * SPEED, 
+        vy: Math.sin(ang) * SPEED 
+    };
+    prepNext(); 
+    updateUI();
 }
+
 
 function snap() {
     if (!projectile) return;
@@ -289,6 +303,13 @@ function updateClusterPosition() {
 }
 
 
+function swapBubbles() {
+    const temp = activeColor;
+    activeColor = reserveColor;
+    reserveColor = temp;
+    updateUI();
+}
+
 function animate() {
     if(!ctx) return; ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.save();
     const curR = window.activeR || 18;
@@ -326,13 +347,13 @@ function animate() {
     }
     drawVFX();
     if (isGameActive && !projectile && introAnimFrame <= 0) {
-        const sx = canvas.width / 2, sy = canvas.height - 40;
-        const ang = Math.atan2(mouseY - sy, mouseX - sx);
+        const pos = getShooterPos();
+        const ang = Math.atan2(mouseY - pos.y, mouseX - pos.x);
         if (ang < 0) {
             let dx = Math.cos(ang), dy = Math.sin(ang);
             for (let i = 0; i < 20; i++) {
-                const dotX = sx + dx * (i * 25);
-                const dotY = sy + dy * (i * 25);
+                const dotX = pos.x + dx * (i * 25);
+                const dotY = pos.y + dy * (i * 25);
                 
                 // Stop aim line if it hits a bubble
                 let collision = false;
@@ -349,6 +370,7 @@ function animate() {
 
     ctx.restore(); requestAnimationFrame(animate);
 }
+
 
 
 
