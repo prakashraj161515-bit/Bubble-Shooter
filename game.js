@@ -81,8 +81,11 @@ function init() {
     loadState();
     initFloaters();
     animate();
-    // We will bind events dynamically when the game starts
+    
+    // Initialize the map screen on load
+    showScreen('mapScreen');
 }
+
 
 
 function startGame() {
