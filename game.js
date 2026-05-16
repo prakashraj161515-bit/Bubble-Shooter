@@ -197,22 +197,50 @@ function snap() {
     const spacingX = canvas.width / 10;
     const spacingY = spacingX * 0.866;
     
-    // Calculate grid position accounting for clusterOffset
-    const gridY = Math.round((projectile.y - clusterOffset - (spacingX / 2)) / spacingY);
-    const isOffset = gridY % 2 !== 0;
-    const startX = isOffset ? spacingX / 2 : 0;
-    const gridX = Math.round((projectile.x - startX - (spacingX / 2)) / spacingX);
-    
-    const nx = startX + gridX * spacingX + (spacingX / 2);
-    const ny = gridY * spacingY + (spacingX / 2); // targetY perfectly aligned
+    let bestDist = Infinity;
+    let bestCell = null;
 
-    const newB = { x: nx, targetY: ny, y: projectile.y, color: projectile.color, alive: true, falling: false, r: curR, row: gridY };
+    // Search rows around the projectile's estimated row to find closest empty slot
+    const estRow = Math.round((projectile.y - clusterOffset - (spacingX / 2)) / spacingY);
+    
+    for (let r = Math.max(0, estRow - 2); r <= estRow + 2; r++) {
+        const isOffset = r % 2 !== 0;
+        const rowWidth = isOffset ? 9 : 10;
+        const startX = isOffset ? spacingX / 2 : 0;
+        
+        for (let c = 0; c < rowWidth; c++) {
+            const nx = startX + c * spacingX + (spacingX / 2);
+            const ny = r * spacingY + (spacingX / 2);
+            const absoluteNy = ny + clusterOffset;
+            
+            // Check if cell is occupied
+            let occupied = false;
+            for (let b of bubbles) {
+                if (b.alive && !b.falling && Math.hypot(b.x - nx, b.targetY - ny) < 5) {
+                    occupied = true; break;
+                }
+            }
+            
+            if (!occupied) {
+                const dist = Math.hypot(projectile.x - nx, projectile.y - absoluteNy);
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    bestCell = { nx, ny, row: r };
+                }
+            }
+        }
+    }
+    
+    if (!bestCell) return;
+
+    const newB = { x: bestCell.nx, targetY: bestCell.ny, y: projectile.y, color: projectile.color, alive: true, falling: false, r: curR, row: bestCell.row };
     bubbles.push(newB);
 
     const visited = new Set(), matches = [];
     function dfs(b) {
         if(!b || visited.has(b)) return; visited.add(b); matches.push(b);
-        bubbles.filter(o => o.alive && !o.falling && Math.hypot(o.x-b.x, o.y-b.y) < spacingX * 1.2).forEach(n => { 
+        // Use targetY for matching, since y is still animating
+        bubbles.filter(o => o.alive && !o.falling && Math.hypot(o.x - b.x, o.targetY - b.targetY) < spacingX * 1.2).forEach(n => { 
             if(n.color === newB.color) dfs(n); 
         });
     }
@@ -228,13 +256,14 @@ function snap() {
         const con = new Set();
         function mark(b) { 
             if(con.has(b)) return; con.add(b); 
-            bubbles.filter(o => o.alive && !o.falling && Math.hypot(o.x-b.x, o.y-b.y) < spacingX * 1.2).forEach(mark); 
+            bubbles.filter(o => o.alive && !o.falling && Math.hypot(o.x - b.x, o.targetY - b.targetY) < spacingX * 1.2).forEach(mark); 
         }
         bubbles.filter(b => b.row === 0 && b.alive).forEach(mark);
         bubbles.forEach(b => { if(b.alive && !con.has(b)) b.falling = true; });
     }
     projectile = null; checkEnd(); updateUI();
 }
+
 
 
 function checkEnd() {
