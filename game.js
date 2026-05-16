@@ -242,6 +242,15 @@ function drawBall(x, y, color, r) {
 
     ctx.beginPath(); ctx.arc(x, finalY, radius, 0, Math.PI*2); ctx.fillStyle = grad; ctx.fill();
     
+    // Star ✶ Design for All Balls
+    ctx.save();
+    ctx.font = `${radius * 1.2}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.fillText('✶', x, finalY + (radius * 0.08)); // Symmetrical centering
+    ctx.restore();
+    
     // Top-Left Ellipse Shine
     ctx.beginPath();
     ctx.ellipse(x - radius*0.4, finalY - radius*0.4, radius*0.4, radius*0.25, Math.PI/4, 0, Math.PI*2);
