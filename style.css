@@ -75,32 +75,36 @@ body { background: #dce1ff; display: flex; justify-content: center; align-items:
 
 /* Shooter Row */
 .shooter-row {
-    display: flex; align-items: center; gap: 15px; margin-bottom: 25px; pointer-events: auto;
+    display: flex; align-items: center; gap: 20px; margin-bottom: 30px; pointer-events: auto;
 }
 .main-ball-wrap {
-    width: 65px; height: 65px; position: relative;
+    width: 62px; height: 62px; position: relative; border-radius: 50%;
     display: flex; justify-content: center; align-items: center;
 }
 .main-ball-wrap::after {
-    content: '✶'; position: absolute; color: rgba(255,255,255,0.7); font-size: 35px;
+    content: '✶'; position: absolute; color: rgba(255,255,255,0.7); font-size: 35px; z-index: 5;
 }
 
-.swap-arrows { width: 35px; height: 35px; opacity: 0.6; cursor: pointer; }
+.swap-arrows { 
+    width: 32px; height: 32px; opacity: 0.7; cursor: pointer; 
+    animation: spin-premium 4s linear infinite; 
+}
+@keyframes spin-premium { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 .reserve-ball-wrap {
-    width: 45px; height: 45px; display: flex; justify-content: center; align-items: center;
+    width: 42px; height: 42px; display: flex; justify-content: center; align-items: center; border-radius: 50%;
 }
 
-/* Powerup Grid */
+/* Wide Rectangle Powerup Grid */
 .pu-grid-p {
-    display: flex; gap: 10px; pointer-events: auto; width: 92%; justify-content: center;
+    display: flex; gap: 8px; pointer-events: auto; width: 95%; justify-content: center;
 }
 .pu-glass-btn {
-    flex: 1; height: 75px; border-radius: 15px; position: relative;
+    flex: 1; height: 65px; border-radius: 12px; position: relative;
     background: linear-gradient(180deg, #b8c4ff, #7b8cff);
-    border: 2px solid #fff; box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+    border: 2.2px solid #fff; box-shadow: 0 6px 12px rgba(0,0,0,0.12);
     display: flex; justify-content: center; align-items: center; cursor: pointer;
-    overflow: hidden;
+    overflow: hidden; min-width: 80px;
 }
 /* Glossy Shine */
 .pu-glass-btn::before {
@@ -108,7 +112,8 @@ body { background: #dce1ff; display: flex; justify-content: center; align-items:
     background: linear-gradient(180deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 100%);
     border-radius: 12px 12px 50% 50%;
 }
-.pu-glass-btn img { width: 45px; height: 45px; object-fit: contain; z-index: 2; }
+.pu-glass-btn img { width: 38px; height: 38px; object-fit: contain; z-index: 2; }
+
 
 /* Pink Badge */
 .pu-badge-premium {
