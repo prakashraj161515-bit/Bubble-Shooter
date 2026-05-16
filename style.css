@@ -99,10 +99,17 @@ body { background: #dce1ff; display: flex; justify-content: center; align-items:
 }
 
 .swap-arrows { 
-    position: absolute; width: 140%; height: 140%; opacity: 0.8; cursor: pointer; 
-    animation: spin-premium 6s linear infinite; z-index: 6;
+    position: absolute; width: 130%; height: 130%; opacity: 0.9; cursor: pointer; 
+    animation: spin-premium 5s linear infinite; z-index: 6;
+    pointer-events: none;
+    transform-origin: center center; /* Rotation around the ball center */
 }
-@keyframes spin-premium { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes spin-premium { 
+    from { transform: rotate(0deg) scale(1); } 
+    50% { transform: rotate(180deg) scale(1.05); }
+    to { transform: rotate(360deg) scale(1); } 
+}
+
 
 
 /* Wide Rectangle Powerup Grid */
