@@ -137,12 +137,26 @@ function getShooterPos() {
     };
 }
 
-function shoot() {
-    if (projectile || !isGameActive) return;
+function shoot(e) {
+    if (projectile || !isGameActive || introAnimFrame > 0) return;
     initAudio();
+    
     const pos = getShooterPos();
-    const ang = Math.atan2(mouseY - pos.y, mouseX - pos.x); 
-    if (ang > 0) return; // Prevent shooting downwards
+    const cRect = canvas.getBoundingClientRect();
+    
+    // Get correct click coordinates
+    let tx, ty;
+    if (e && e.clientX !== undefined) {
+        tx = e.clientX - cRect.left;
+        ty = e.clientY - cRect.top;
+    } else {
+        tx = mouseX;
+        ty = mouseY;
+    }
+
+    const ang = Math.atan2(ty - pos.y, tx - pos.x); 
+    // Allow shooting in any upward direction
+    if (ty > pos.y) return; 
     
     projectile = { 
         x: pos.x, 
@@ -154,6 +168,8 @@ function shoot() {
     prepNext(); 
     updateUI();
 }
+
+
 
 
 function snap() {
