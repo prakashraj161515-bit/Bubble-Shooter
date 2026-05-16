@@ -140,8 +140,8 @@ body { background: #dce1ff; display: flex; justify-content: center; align-items:
 }
 
 @keyframes fire-flicker {
-    0%, 100% { transform: scale(1) translateY(0); filter: drop-shadow(0 0 5px #fff); }
-    50% { transform: scale(1.05) translateY(-2px); filter: drop-shadow(0 0 12px #ccffff); }
+    0%, 100% { transform: scale(1) translate(0, 0); filter: drop-shadow(0 0 4px #fff); }
+    50% { transform: scale(1.05) translate(-2px, 2px); filter: drop-shadow(0 0 10px #88ccff); }
 }
 .fireball-anim {
     animation: fire-flicker 1.5s infinite ease-in-out;

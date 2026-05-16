@@ -119,15 +119,17 @@
               </radialGradient>
             </defs>
             
-            <path d="M 40,30 Q 50,15 65,30" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
-            <polygon points="68,31 58,25 62,38" fill="#fff" />
-            
-            <path d="M 72,55 Q 65,80 45,75" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
-            <polygon points="43,74 53,70 48,82" fill="#fff" />
-            
-            <path d="M 28,55 Q 20,35 35,28" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
-            <polygon points="37,27 28,21 30,33" fill="#fff" />
+            <!-- Fat Glossy Arrows -->
+            <path d="M 65,30 A 35 35 0 0 1 75,50" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="6" stroke-linecap="round"/>
+            <polygon points="70,45 77,57 84,45" fill="rgba(255,255,255,0.8)" />
 
+            <path d="M 60,75 A 35 35 0 0 1 35,70" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="6" stroke-linecap="round"/>
+            <polygon points="45,65 30,70 45,78" fill="rgba(255,255,255,0.8)" />
+
+            <path d="M 20,50 A 35 35 0 0 1 35,25" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="6" stroke-linecap="round"/>
+            <polygon points="28,32 38,20 42,32" fill="rgba(255,255,255,0.8)" />
+
+            <!-- 3D Bubbles -->
             <circle cx="50" cy="20" r="15" fill="url(#cyG)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
             <circle cx="44" cy="13" r="4" fill="#fff" opacity="0.8"/>
 
@@ -140,23 +142,31 @@
           <div class="pu-badge-premium pu-badge-purple">2</div>
         </div>
         
-        <!-- Fireball -->
+        <!-- Fireball (Falling Comet) -->
         <div class="pu-glass-btn pu-purple">
-          <svg viewBox="0 0 100 100" style="width:80%; height:80%;" class="fireball-anim">
+          <svg viewBox="0 0 100 100" style="width:85%; height:85%;" class="fireball-anim">
             <defs>
-              <radialGradient id="fireG" cx="50%" cy="60%" r="50%">
+              <linearGradient id="cometG" x1="0%" y1="100%" x2="100%" y2="0%">
                 <stop offset="0%" stop-color="#ffffff"/>
-                <stop offset="40%" stop-color="#ccffff"/>
-                <stop offset="80%" stop-color="#66b3ff"/>
+                <stop offset="40%" stop-color="#88ccff"/>
                 <stop offset="100%" stop-color="rgba(102, 179, 255, 0)"/>
-              </radialGradient>
+              </linearGradient>
               <filter id="glow">
                 <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
                 <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
               </filter>
             </defs>
-            <path d="M50,90 C20,90 20,55 35,40 C40,35 45,20 50,5 C55,20 60,35 65,40 C80,55 80,90 50,90 Z" fill="url(#fireG)" filter="url(#glow)"/>
-            <path d="M50,80 C35,80 35,60 42,50 C45,45 48,35 50,25 C52,35 55,45 58,50 C65,60 65,80 50,80 Z" fill="#ffffff"/>
+            
+            <!-- Meteor Body / Tail -->
+            <path d="M25,75 C45,85 70,50 90,10 C50,30 15,55 25,75 Z" fill="url(#cometG)" filter="url(#glow)"/>
+            
+            <!-- Action Streaks -->
+            <path d="M15,65 L75,5" fill="none" stroke="url(#cometG)" stroke-width="3" stroke-linecap="round"/>
+            <path d="M35,85 L95,25" fill="none" stroke="url(#cometG)" stroke-width="3" stroke-linecap="round"/>
+            
+            <!-- Glowing Core (Head) -->
+            <circle cx="30" cy="70" r="12" fill="#fff" filter="url(#glow)"/>
+            <circle cx="30" cy="70" r="8" fill="#ccffff"/>
           </svg>
           <div class="pu-badge-premium pu-badge-purple">13</div>
         </div>
