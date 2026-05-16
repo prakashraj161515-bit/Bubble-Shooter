@@ -43,13 +43,15 @@ function renderMap() {
     path.innerHTML = '';
     const totalLevels = 5000;
     const center = 155, amplitude = 100, frequency = 300;
-    path.style.height = `${totalLevels * 150}px`;
+    const totalHeight = totalLevels * 140 + 150;
+    path.style.height = `${totalHeight}px`;
     
     const fragment = document.createDocumentFragment();
     for (let i = 1; i <= totalLevels; i++) {
         const node = document.createElement('div');
         node.className = 'node-premium';
-        const yPos = i * 140; 
+        // Invert Y coordinate so Level 1 is at the bottom
+        const yPos = totalHeight - (i * 140); 
         const xPos = center + Math.sin(yPos / frequency) * amplitude;
         node.style.top = `${yPos}px`; node.style.left = `${xPos}px`;
         if (i <= S.unlockedLevels) {
@@ -62,8 +64,13 @@ function renderMap() {
     path.appendChild(fragment);
     
     setTimeout(() => {
-        const activeNode = document.querySelectorAll('.node-premium.unlocked')[S.unlockedLevels-1];
-        if (activeNode) activeNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const targetLevel = S.currentLevel || 1;
+        const nodes = document.querySelectorAll('.node-premium.unlocked');
+        if (nodes.length > 0) {
+            const activeNode = nodes[targetLevel - 1];
+            // Use auto behavior for instant scroll on large maps
+            if (activeNode) activeNode.scrollIntoView({ behavior: 'auto', block: 'center' });
+        }
     }, 100);
 }
 
