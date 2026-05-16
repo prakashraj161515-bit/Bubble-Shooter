@@ -198,13 +198,13 @@ function snap() {
     const spacingY = spacingX * 0.866;
     
     // Calculate grid position accounting for clusterOffset
-    const gridY = Math.round((projectile.y - clusterOffset - 30) / spacingY);
+    const gridY = Math.round((projectile.y - clusterOffset - (spacingX / 2)) / spacingY);
     const isOffset = gridY % 2 !== 0;
     const startX = isOffset ? spacingX / 2 : 0;
     const gridX = Math.round((projectile.x - startX - (spacingX / 2)) / spacingX);
     
     const nx = startX + gridX * spacingX + (spacingX / 2);
-    const ny = gridY * spacingY + (spacingX / 2) + 30; // targetY without offset
+    const ny = gridY * spacingY + (spacingX / 2); // targetY perfectly aligned
 
     const newB = { x: nx, targetY: ny, y: projectile.y, color: projectile.color, alive: true, falling: false, r: curR, row: gridY };
     bubbles.push(newB);
