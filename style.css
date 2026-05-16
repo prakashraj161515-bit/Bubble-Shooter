@@ -157,3 +157,9 @@ body { background: #dce1ff; display: flex; justify-content: center; align-items:
     pointer-events: none;
 }
 
+/* MAP SCREEN (RESTORED) */
+.map-screen { background: #f8f9ff; display: flex; flex-direction: column; }
+.map-scroller { flex: 1; overflow-y: auto; background: url('https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&w=800&q=80') center; background-size: cover; scrollbar-width: none; position: relative; }
+.node-premium { position: absolute; width: 80px; height: 80px; border-radius: 50%; background: #444; display: flex; justify-content: center; align-items: center; font-weight: 900; font-size: 30px; color: #fff; box-shadow: 0 10px 0 #222, 0 15px 30px rgba(0,0,0,0.3); }
+.node-premium.unlocked { background: radial-gradient(circle at 20px 20px, #3ddc84, #1b8a4a); box-shadow: 0 10px 0 #1b8a4a, 0 15px 30px rgba(61,220,132,0.3); border: 2px solid #fff; }
+
