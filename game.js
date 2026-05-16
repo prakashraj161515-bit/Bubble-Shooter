@@ -13,7 +13,7 @@ const COLORS = ['#ff4d4d', '#ffcc00', '#33cc33', '#3399ff', '#cc33ff', '#ff8c1a'
 let S = {
     score: 0, coins: 1250, ammo: 50,
     currentLevel: Number(localStorage.getItem('bs_level')) || 1,
-    unlockedLevels: Number(localStorage.getItem('bs_unlocked')) || 4,
+    unlockedLevels: 5000, // Temporarily unlock all 5000 levels
     objective: { count: 0, total: 6 },
     settings: { sound: true, music: true }
 };
@@ -41,9 +41,11 @@ function renderMap() {
     const path = document.getElementById('levelPath');
     if (!path) return;
     path.innerHTML = '';
-    const totalLevels = 100;
+    const totalLevels = 5000;
     const center = 155, amplitude = 100, frequency = 300;
     path.style.height = `${totalLevels * 150}px`;
+    
+    const fragment = document.createDocumentFragment();
     for (let i = 1; i <= totalLevels; i++) {
         const node = document.createElement('div');
         node.className = 'node-premium';
@@ -55,8 +57,10 @@ function renderMap() {
             node.innerHTML = `<span>${i}</span><div style="position:absolute;bottom:-22px;width:100%;text-align:center;font-size:14px;color:#ffcf3e;">⭐⭐⭐</div>`;
             node.onclick = () => { S.currentLevel = i; startGame(); };
         } else { node.innerHTML = `<span>${i}</span><div style="position:absolute;bottom:-20px;width:100%;text-align:center;color:#999;font-size:14px;">🔒🔒🔒</div>`; }
-        path.appendChild(node);
+        fragment.appendChild(node);
     }
+    path.appendChild(fragment);
+    
     setTimeout(() => {
         const activeNode = document.querySelectorAll('.node-premium.unlocked')[S.unlockedLevels-1];
         if (activeNode) activeNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
