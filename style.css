@@ -139,7 +139,14 @@ body { background: #dce1ff; display: flex; justify-content: center; align-items:
     to { transform: rotate(360deg) scale(1); } 
 }
 
-
+@keyframes fire-flicker {
+    0%, 100% { transform: scale(1) translateY(0); filter: drop-shadow(0 0 5px #fff); }
+    50% { transform: scale(1.05) translateY(-2px); filter: drop-shadow(0 0 12px #ccffff); }
+}
+.fireball-anim {
+    animation: fire-flicker 1.5s infinite ease-in-out;
+    transform-origin: center bottom;
+}
 
 /* Wide Rectangle Powerup Grid */
 .pu-grid-p {
