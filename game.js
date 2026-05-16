@@ -201,14 +201,18 @@ function updateUI() {
     const ammoEl = document.getElementById('ammo-val');
     if(ammoEl) ammoEl.innerText = S.ammo;
     
-    const curR = window.activeR || 18;
-    if(currentBallEl) {
-        const c = activeColor;
-        currentBallEl.style.background = `radial-gradient(circle at 30% 30%, #fff, ${c} 45%, ${shadeColor(c, -40)})`;
+    const curR = window.activeR || 20;
+    if (currentBallEl) {
+        currentBallEl.style.background = activeColor;
+        currentBallEl.style.width = (curR * 2.2) + 'px';
+        currentBallEl.style.height = (curR * 2.2) + 'px';
+        currentBallEl.style.borderRadius = '50%';
     }
-    if(nextBallEl) {
-        const c = reserveColor;
-        nextBallEl.style.background = `radial-gradient(circle at 30% 30%, #fff, ${c} 45%, ${shadeColor(c, -40)})`;
+    if (nextBallEl) {
+        nextBallEl.style.background = reserveColor;
+        nextBallEl.style.width = (curR * 1.6) + 'px';
+        nextBallEl.style.height = (curR * 1.6) + 'px';
+        nextBallEl.style.borderRadius = '50%';
     }
     const mc = document.getElementById('map-coins');
     if(mc) mc.innerText = S.coins.toLocaleString();
