@@ -233,8 +233,11 @@ function snap() {
     
     if (!bestCell) return;
 
-    const newB = { x: bestCell.nx, targetY: bestCell.ny, y: projectile.y, color: projectile.color, alive: true, falling: false, r: curR, row: bestCell.row };
+    // Set y directly to the target final position to eliminate the 'sliding up' animation
+    const finalVisualY = bestCell.ny + clusterOffset;
+    const newB = { x: bestCell.nx, targetY: bestCell.ny, y: finalVisualY, color: projectile.color, alive: true, falling: false, r: curR, row: bestCell.row };
     bubbles.push(newB);
+
 
     const visited = new Set(), matches = [];
     function dfs(b) {
