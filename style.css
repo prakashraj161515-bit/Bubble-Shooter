@@ -99,11 +99,12 @@ body { background: #dce1ff; display: flex; justify-content: center; align-items:
 }
 
 .swap-arrows { 
-    position: absolute; width: 130%; height: 130%; opacity: 0.9; cursor: pointer; 
+    position: absolute; width: 160%; height: 160%; opacity: 0.9; cursor: pointer; 
     animation: spin-premium 5s linear infinite; z-index: 6;
     pointer-events: none;
-    transform-origin: center center; /* Rotation around the ball center */
+    transform-origin: center center;
 }
+
 @keyframes spin-premium { 
     from { transform: rotate(0deg) scale(1); } 
     50% { transform: rotate(180deg) scale(1.05); }
