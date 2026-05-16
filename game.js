@@ -67,6 +67,11 @@ function renderMap() {
 function init() {
     canvas = document.getElementById('gameCanvas');
     if (!canvas) return;
+    
+    // Make canvas internal resolution match display size
+    canvas.width = canvas.clientWidth || window.innerWidth || 390;
+    canvas.height = canvas.clientHeight || window.innerHeight || 844;
+    
     ctx = canvas.getContext('2d');
     scoreVal = document.getElementById('score');
     currentBallEl = document.getElementById('currentBall');
@@ -76,16 +81,27 @@ function init() {
     loadState();
     initFloaters();
     animate();
-    showScreen('mapScreen');
-
-    canvas.addEventListener('mousemove', e => { 
-        const r = canvas.getBoundingClientRect(); mouseX = e.clientX - r.left; mouseY = e.clientY - r.top; 
-    });
-    canvas.addEventListener('click', shoot);
+    // We will bind events dynamically when the game starts
 }
+
 
 function startGame() {
     showScreen('gameplayScreen');
+    
+    // Ensure canvas dimensions are correct now that it's visible
+    canvas.width = canvas.clientWidth || window.innerWidth;
+    canvas.height = canvas.clientHeight || window.innerHeight;
+    
+    // Bind pointerdown for unified mouse/touch handling on canvas
+    canvas.onpointerdown = (e) => {
+        shoot(e);
+    };
+    canvas.onpointermove = (e) => {
+        const cRect = canvas.getBoundingClientRect();
+        mouseX = e.clientX - cRect.left;
+        mouseY = e.clientY - cRect.top;
+    };
+
     const width = canvas.width;
     const numCols = 10;
     const spacingX = width / numCols; 
@@ -137,8 +153,6 @@ function getShooterPos() {
     };
 }
 
-const SPEED = 12; // Ensured speed is set
-
 function shoot(e) {
     if (projectile || !isGameActive || introAnimFrame > 0) return;
     initAudio();
@@ -146,6 +160,7 @@ function shoot(e) {
     const pos = getShooterPos();
     const cRect = canvas.getBoundingClientRect();
     
+    // Get correct click coordinates
     let tx, ty;
     if (e && e.clientX !== undefined) {
         tx = e.clientX - cRect.left;
@@ -156,22 +171,19 @@ function shoot(e) {
     }
 
     const ang = Math.atan2(ty - pos.y, tx - pos.x); 
+    // Allow shooting in any upward direction
     if (ty > pos.y) return; 
     
-    // Create projectile and ensure it starts moving immediately
     projectile = { 
         x: pos.x, 
         y: pos.y, 
         color: activeColor, 
         vx: Math.cos(ang) * SPEED, 
-        vy: Math.sin(ang) * SPEED,
-        r: window.activeR || 18
+        vy: Math.sin(ang) * SPEED 
     };
-    
     prepNext(); 
     updateUI();
 }
-
 
 
 
