@@ -10,10 +10,50 @@ const R = 18, rowHeight = 32, SPEED = 32;
 
 const COLORS = ['#ff4d4d', '#ffcc00', '#33cc33', '#3399ff', '#cc33ff', '#ff8c1a'];
 
+// Maps generator color names → hex used by renderer
+const COLORS_MAP = {
+    red:    '#ff4d4d',
+    yellow: '#ffcc00',
+    green:  '#33cc33',
+    blue:   '#3399ff',
+    purple: '#cc33ff'
+};
+const GEN_COLORS = ['red', 'blue', 'green', 'yellow', 'purple'];
+
+// ──────── SMART LEVEL GENERATOR ────────
+function getDifficulty(level) {
+    if (level < 20)  return { rows: 5,  cols: 8,  colors: 3, hardChance: 0.0 };
+    if (level < 80)  return { rows: 7,  cols: 9,  colors: 4, hardChance: 0.0 };
+    if (level < 160) return { rows: 8,  cols: 10, colors: 5, hardChance: 0.1 };
+    return               { rows: 10, cols: 11, colors: 5, hardChance: 0.2 };
+}
+
+function createBubble(color)     { return { color, type: 'normal', hp: 1 }; }
+function createHardBubble(color) { return { color, type: 'hard',   hp: 2 }; }
+
+function generateLevel(level, playerFails = 0) {
+    let { rows, cols, colors, hardChance } = getDifficulty(level);
+    if (playerFails >= 3) { hardChance = 0; colors = Math.max(2, colors - 1); }
+    const selectedColors = GEN_COLORS.slice(0, colors);
+    const grid = [];
+    for (let row = 0; row < rows; row++) {
+        const currentRow = [];
+        for (let col = 0; col < cols; col++) {
+            if (level > 30 && Math.random() < 0.08) { currentRow.push(null); continue; }
+            const color = selectedColors[Math.floor(Math.random() * selectedColors.length)];
+            currentRow.push(level >= 80 && Math.random() < hardChance
+                ? createHardBubble(color) : createBubble(color));
+        }
+        grid.push(currentRow);
+    }
+    return grid;
+}
+
 let S = {
     score: 0, coins: 1250, ammo: 50,
     currentLevel: Number(localStorage.getItem('bs_level')) || 1,
-    unlockedLevels: 5000, // Temporarily unlock all 5000 levels
+    unlockedLevels: 5000,
+    playerFails: 0,          // Tracks consecutive fails for Adaptive Easy Mode
     objective: { count: 0, total: 6 },
     settings: { sound: true, music: true }
 };
@@ -154,35 +194,46 @@ function startGame() {
     };
 
     const width = canvas.width;
-    const numCols = 10;
-    const spacingX = width / numCols; 
+    // ── Smart Level Generator ──────────────────────────────
+    const diff = getDifficulty(S.currentLevel);
+    let { rows, cols, colors, hardChance } = diff;
+
+    // Adaptive Easy Mode: if player failed 3+ times, reduce difficulty
+    if (S.playerFails >= 3) {
+        hardChance = 0;
+        colors = Math.max(2, colors - 1);
+        console.log(`[EasyMode] Level ${S.currentLevel} | Colors: ${colors}`);
+    }
+
+    const levelGrid = generateLevel(S.currentLevel, S.playerFails);
+    const numCols = cols;
+    const spacingX = width / numCols;
     const dynamicR = (spacingX / 2) * 0.95;
-    window.activeR = dynamicR; 
-    
+    window.activeR = dynamicR;
+    window.numCols = numCols;
+
     S.ammo = 50; S.score = 0; S.objective.count = 0;
     bubbles = [];
-    let rows = 11; 
-    const spacingY = spacingX * 0.866; // Perfect hexagonal touch
-    introAnimFrame = 60; // Start animation counter
-    
-    for (let row = 0; row < rows; row++) {
+    const spacingY = spacingX * 0.866;
+    introAnimFrame = 60;
+
+    levelGrid.forEach((rowData, row) => {
         const isOffset = row % 2 !== 0;
-        const rowWidth = isOffset ? numCols - 1 : numCols;
-        const startX = isOffset ? spacingX / 2 : 0; 
-        
-        for (let col = 0; col < rowWidth; col++) {
+        const startX = isOffset ? spacingX / 2 : 0;
+        rowData.forEach((cell, col) => {
+            if (!cell) return; // null = gap
             const x = startX + col * spacingX + (spacingX / 2);
-            const targetY = row * spacingY + (spacingX / 2); 
-            bubbles.push({ 
-                x, 
-                targetY, 
-                y: canvas.height + 100, 
-                color: COLORS[Math.floor(Math.random()*COLORS.length)], 
-                alive: true, falling: false, r: dynamicR,
-                row: row
+            const targetY = row * spacingY + (spacingX / 2);
+            bubbles.push({
+                x, targetY,
+                y: canvas.height + 100,
+                color: COLORS_MAP[cell.color] || COLORS[0],
+                type: cell.type,   // 'normal' | 'hard'
+                hp: cell.hp,       // 1 or 2
+                alive: true, falling: false, r: dynamicR, row
             });
-        }
-    }
+        });
+    });
     prepNext();
     updateUI();
 }
@@ -298,8 +349,15 @@ function snap() {
     dfs(newB);
 
     if (matches.length >= 3) {
-        matches.forEach(b => { 
-            b.alive = false; createParticles(b.x, b.y, b.color); S.score += 100;
+        matches.forEach(b => {
+            if (b.hp >= 2) {
+                // Hard bubble: take 1 damage, survive if still has hp
+                b.hp--;
+                createParticles(b.x, b.y, '#aaaaaa'); // Gray chip-off effect
+                S.score += 50;
+            } else {
+                b.alive = false; createParticles(b.x, b.y, b.color); S.score += 100;
+            }
         });
         shakeFrames = 15; if(S.settings.sound) playSFX('pop');
         
@@ -368,30 +426,45 @@ function prepNext() {
 }
 
 // ──────── ULTRA-GLOSSY 3D BUBBLES ────────
-function drawBall(x, y, color, r) {
+function drawBall(x, y, color, r, hp) {
     const radius = r || window.activeR || 18;
     ctx.save();
-    
-    const finalY = y; // Removed floating animation
+    const finalY = y;
 
-    // Shadow
     ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 5;
     
-    // Core Gradient
     const grad = ctx.createRadialGradient(x - radius*0.35, finalY - radius*0.35, radius*0.05, x, finalY, radius);
     grad.addColorStop(0, '#fff'); grad.addColorStop(0.2, shadeColor(color, 30));
     grad.addColorStop(0.5, color); grad.addColorStop(1, shadeColor(color, -60));
 
     ctx.beginPath(); ctx.arc(x, finalY, radius, 0, Math.PI*2); ctx.fillStyle = grad; ctx.fill();
     
-    // Star ✶ Design for All Balls
-    ctx.save();
-    ctx.font = `${radius * 1.2}px Arial`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = 'rgba(255,255,255,0.7)';
-    ctx.fillText('✶', x, finalY + (radius * 0.08)); // Symmetrical centering
-    ctx.restore();
+    // ── Hard Bubble (hp=2): rock/steel overlay ──────────────
+    if (hp >= 2) {
+        // Dark cracked overlay
+        ctx.beginPath(); ctx.arc(x, finalY, radius, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fill();
+        // Crack lines
+        ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(x - radius*0.3, finalY - radius*0.5);
+        ctx.lineTo(x + radius*0.1, finalY + radius*0.2);
+        ctx.lineTo(x + radius*0.4, finalY + radius*0.5); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x + radius*0.2, finalY - radius*0.4);
+        ctx.lineTo(x - radius*0.2, finalY + radius*0.1); ctx.stroke();
+        // Steel ring border
+        ctx.beginPath(); ctx.arc(x, finalY, radius - 1, 0, Math.PI*2);
+        ctx.strokeStyle = '#aaa'; ctx.lineWidth = 2.5; ctx.stroke();
+    }
+    
+    // Star ✶ for normal balls only
+    if (!hp || hp < 2) {
+        ctx.save();
+        ctx.font = `${radius * 1.2}px Arial`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.fillText('✶', x, finalY + (radius * 0.08));
+        ctx.restore();
+    }
     
     // Top-Left Ellipse Shine
     ctx.beginPath();
@@ -399,8 +472,7 @@ function drawBall(x, y, color, r) {
     ctx.fillStyle = 'rgba(255,255,255,0.45)'; ctx.fill();
 
     // Bottom Rim Glow
-    ctx.beginPath();
-    ctx.arc(x, finalY, radius * 0.85, 0.8, 2.5);
+    ctx.beginPath(); ctx.arc(x, finalY, radius * 0.85, 0.8, 2.5);
     ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 2.5; ctx.stroke();
 
     ctx.restore();
@@ -458,7 +530,7 @@ function animate() {
                 b.y += 10;
                 if (b.y > canvas.height) b.alive = false;
             }
-            drawBall(b.x, b.y, b.color, b.r);
+            drawBall(b.x, b.y, b.color, b.r, b.hp);
         }
     });
     if (introAnimFrame > 0) introAnimFrame--;
