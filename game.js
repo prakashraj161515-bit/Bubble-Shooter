@@ -28,13 +28,27 @@ function getDifficulty(level) {
     return               { rows: 10, cols: 11, colors: 5, hardChance: 0.2 };
 }
 
-function createBubble(color)     { return { color, type: 'normal', hp: 1 }; }
-function createHardBubble(color) { return { color, type: 'hard',   hp: 2 }; }
+// ──────── VISUAL DIFFICULTY THEME (every 80 levels) ────────
+function getBubbleTheme(level) {
+    const tier = Math.floor(level / 80);
+    switch(tier) {
+        case 0: return 'normal';  // Level 1-79:   Shiny colorful
+        case 1: return 'stone';   // Level 80-159: Rocky cracked
+        case 2: return 'ice';     // Level 160-239: Frozen crystal
+        case 3: return 'fire';    // Level 240-319: Lava/fire
+        case 4: return 'void';    // Level 320-399: Dark energy
+        default: return 'cosmic'; // Level 400+:   Cosmic rainbow
+    }
+}
+
+function createBubble(color, theme='normal')     { return { color, type: 'normal', hp: 1, theme }; }
+function createHardBubble(color, theme='normal') { return { color, type: 'hard',   hp: 2, theme }; }
 
 function generateLevel(level, playerFails = 0) {
     let { rows, cols, colors, hardChance } = getDifficulty(level);
     if (playerFails >= 3) { hardChance = 0; colors = Math.max(2, colors - 1); }
     const selectedColors = GEN_COLORS.slice(0, colors);
+    const theme = getBubbleTheme(level);
     const grid = [];
     for (let row = 0; row < rows; row++) {
         const currentRow = [];
@@ -42,7 +56,7 @@ function generateLevel(level, playerFails = 0) {
             if (level > 30 && Math.random() < 0.08) { currentRow.push(null); continue; }
             const color = selectedColors[Math.floor(Math.random() * selectedColors.length)];
             currentRow.push(level >= 80 && Math.random() < hardChance
-                ? createHardBubble(color) : createBubble(color));
+                ? createHardBubble(color, theme) : createBubble(color, theme));
         }
         grid.push(currentRow);
     }
@@ -429,54 +443,94 @@ function prepNext() {
 }
 
 // ──────── ULTRA-GLOSSY 3D BUBBLES ────────
-function drawBall(x, y, color, r, hp) {
+function drawBall(x, y, color, r, hp, theme) {
     const radius = r || window.activeR || 18;
     ctx.save();
     const finalY = y;
 
-    ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 5;
-    
+    ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 12; ctx.shadowOffsetY = 5;
+
+    // ── Base gradient (same for all themes) ────────────────
     const grad = ctx.createRadialGradient(x - radius*0.35, finalY - radius*0.35, radius*0.05, x, finalY, radius);
     grad.addColorStop(0, '#fff'); grad.addColorStop(0.2, shadeColor(color, 30));
     grad.addColorStop(0.5, color); grad.addColorStop(1, shadeColor(color, -60));
+    ctx.beginPath(); ctx.arc(x, finalY, radius, 0, Math.PI*2);
+    ctx.fillStyle = grad; ctx.fill();
 
-    ctx.beginPath(); ctx.arc(x, finalY, radius, 0, Math.PI*2); ctx.fillStyle = grad; ctx.fill();
-    
-    // ── Hard Bubble (hp=2): rock/steel overlay ──────────────
-    if (hp >= 2) {
-        // Dark cracked overlay
+    // ══ THEME OVERLAYS ══════════════════════════════════════
+    if (theme === 'stone' || hp >= 2) {
+        // Rocky grey overlay + crack lines
         ctx.beginPath(); ctx.arc(x, finalY, radius, 0, Math.PI*2);
-        ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fill();
-        // Crack lines
-        ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.moveTo(x - radius*0.3, finalY - radius*0.5);
-        ctx.lineTo(x + radius*0.1, finalY + radius*0.2);
-        ctx.lineTo(x + radius*0.4, finalY + radius*0.5); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(x + radius*0.2, finalY - radius*0.4);
-        ctx.lineTo(x - radius*0.2, finalY + radius*0.1); ctx.stroke();
-        // Steel ring border
-        ctx.beginPath(); ctx.arc(x, finalY, radius - 1, 0, Math.PI*2);
-        ctx.strokeStyle = '#aaa'; ctx.lineWidth = 2.5; ctx.stroke();
-    }
-    
-    // Star ✶ for normal balls only
-    if (!hp || hp < 2) {
+        ctx.fillStyle = 'rgba(30,30,30,0.38)'; ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(x-radius*0.3,finalY-radius*0.5); ctx.lineTo(x+radius*0.1,finalY+radius*0.2); ctx.lineTo(x+radius*0.4,finalY+radius*0.5); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x+radius*0.2,finalY-radius*0.4); ctx.lineTo(x-radius*0.2,finalY+radius*0.1); ctx.stroke();
+        ctx.beginPath(); ctx.arc(x,finalY,radius-1,0,Math.PI*2); ctx.strokeStyle='#999'; ctx.lineWidth=2.5; ctx.stroke();
+
+    } else if (theme === 'ice') {
+        // Frosty crystal overlay
+        ctx.beginPath(); ctx.arc(x,finalY,radius,0,Math.PI*2);
+        ctx.fillStyle='rgba(180,240,255,0.35)'; ctx.fill();
+        // Snowflake lines
+        ctx.strokeStyle='rgba(255,255,255,0.8)'; ctx.lineWidth=1.2;
+        for(let a=0;a<3;a++){
+            ctx.save(); ctx.translate(x,finalY); ctx.rotate(a*Math.PI/3);
+            ctx.beginPath(); ctx.moveTo(0,-radius*0.7); ctx.lineTo(0,radius*0.7); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(-radius*0.3,-radius*0.3); ctx.lineTo(0,-radius*0.6); ctx.lineTo(radius*0.3,-radius*0.3); ctx.stroke();
+            ctx.restore();
+        }
+        ctx.beginPath(); ctx.arc(x,finalY,radius-1,0,Math.PI*2); ctx.strokeStyle='rgba(180,240,255,0.9)'; ctx.lineWidth=2; ctx.stroke();
+        ctx.shadowColor='rgba(100,220,255,0.7)'; ctx.shadowBlur=15;
+
+    } else if (theme === 'fire') {
+        // Lava/fire glow
+        ctx.beginPath(); ctx.arc(x,finalY,radius,0,Math.PI*2);
+        ctx.fillStyle='rgba(255,80,0,0.3)'; ctx.fill();
+        // Inner glow core
+        const fireGrad = ctx.createRadialGradient(x,finalY,0,x,finalY,radius);
+        fireGrad.addColorStop(0,'rgba(255,255,180,0.6)');
+        fireGrad.addColorStop(0.5,'rgba(255,120,0,0.3)');
+        fireGrad.addColorStop(1,'rgba(255,0,0,0)');
+        ctx.beginPath(); ctx.arc(x,finalY,radius,0,Math.PI*2); ctx.fillStyle=fireGrad; ctx.fill();
+        ctx.beginPath(); ctx.arc(x,finalY,radius-1,0,Math.PI*2); ctx.strokeStyle='#ff6600'; ctx.lineWidth=2.5; ctx.stroke();
+        ctx.shadowColor='rgba(255,100,0,0.8)'; ctx.shadowBlur=20;
+
+    } else if (theme === 'void') {
+        // Dark energy with purple sparks
+        ctx.beginPath(); ctx.arc(x,finalY,radius,0,Math.PI*2);
+        ctx.fillStyle='rgba(10,0,30,0.55)'; ctx.fill();
+        ctx.strokeStyle='rgba(180,0,255,0.8)'; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(x,finalY,radius-1,0,Math.PI*2); ctx.stroke();
+        // Inner purple ring
+        ctx.beginPath(); ctx.arc(x,finalY,radius*0.6,0,Math.PI*2); ctx.strokeStyle='rgba(200,100,255,0.5)'; ctx.lineWidth=1.5; ctx.stroke();
+        ctx.shadowColor='rgba(150,0,255,0.9)'; ctx.shadowBlur=18;
+
+    } else if (theme === 'cosmic') {
+        // Rainbow shimmer
+        const t = Date.now()/1000;
+        const cosGrad = ctx.createLinearGradient(x-radius,finalY-radius,x+radius,finalY+radius);
+        cosGrad.addColorStop(0,`hsl(${(t*60)%360},100%,60%)`);
+        cosGrad.addColorStop(0.5,`hsl(${(t*60+120)%360},100%,60%)`);
+        cosGrad.addColorStop(1,`hsl(${(t*60+240)%360},100%,60%)`);
+        ctx.beginPath(); ctx.arc(x,finalY,radius,0,Math.PI*2); ctx.fillStyle=cosGrad; ctx.globalAlpha=0.4; ctx.fill(); ctx.globalAlpha=1;
+        ctx.beginPath(); ctx.arc(x,finalY,radius-1,0,Math.PI*2);
+        ctx.strokeStyle=`hsl(${(t*90)%360},100%,70%)`; ctx.lineWidth=2.5; ctx.stroke();
+        ctx.shadowColor=`hsl(${(t*60)%360},100%,60%)`; ctx.shadowBlur=20;
+
+    } else {
+        // Normal: star ✶
         ctx.save();
-        ctx.font = `${radius * 1.2}px Arial`;
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillStyle = 'rgba(255,255,255,0.7)';
-        ctx.fillText('✶', x, finalY + (radius * 0.08));
+        ctx.font=`${radius*1.2}px Arial`; ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillStyle='rgba(255,255,255,0.7)';
+        ctx.fillText('✶', x, finalY+(radius*0.08));
         ctx.restore();
     }
-    
-    // Top-Left Ellipse Shine
-    ctx.beginPath();
-    ctx.ellipse(x - radius*0.4, finalY - radius*0.4, radius*0.4, radius*0.25, Math.PI/4, 0, Math.PI*2);
-    ctx.fillStyle = 'rgba(255,255,255,0.45)'; ctx.fill();
 
-    // Bottom Rim Glow
-    ctx.beginPath(); ctx.arc(x, finalY, radius * 0.85, 0.8, 2.5);
-    ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 2.5; ctx.stroke();
+    // ── Universal shine (top-left highlight) ─────────────────
+    ctx.shadowColor='transparent'; ctx.shadowBlur=0;
+    ctx.beginPath();
+    ctx.ellipse(x-radius*0.4, finalY-radius*0.4, radius*0.4, radius*0.25, Math.PI/4, 0, Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,0.45)'; ctx.fill();
 
     ctx.restore();
 }
@@ -492,17 +546,9 @@ function updateClusterPosition() {
     if (introAnimFrame > 0) return; 
     const activeBubbles = bubbles.filter(b => b.alive && !b.falling);
     if (activeBubbles.length === 0) return;
-    const maxRow = Math.max(...activeBubbles.map(b => b.row));
-    const spacingX = canvas.width / 10;
-    const spacingY = spacingX * 0.866;
-    const clusterHeight = (maxRow + 1) * spacingY;
-    const halfHeight = canvas.height / 2;
-    
-    // User wants it 3 balls above center
-    const limit = halfHeight - (3 * spacingY); 
-    const idealOffset = limit - clusterHeight;
-    const targetOffset = Math.max(0, idealOffset);
-    clusterOffset += (targetOffset - clusterOffset) * 0.03; // Smoother shift (from 0.05 to 0.03)
+    // Pin cluster to the top — never scroll down regardless of how few balls are left
+    const topPadding = 100; // pixels from canvas top
+    clusterOffset = topPadding;
 }
 
 
@@ -533,7 +579,7 @@ function animate() {
                 b.y += 10;
                 if (b.y > canvas.height) b.alive = false;
             }
-            drawBall(b.x, b.y, b.color, b.r, b.hp);
+            drawBall(b.x, b.y, b.color, b.r, b.hp, b.theme);
         }
     });
     if (introAnimFrame > 0) introAnimFrame--;
