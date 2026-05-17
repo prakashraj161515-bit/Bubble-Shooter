@@ -242,8 +242,9 @@ function startGame() {
                 x, targetY,
                 y: canvas.height + 100,
                 color: COLORS_MAP[cell.color] || COLORS[0],
-                type: cell.type,   // 'normal' | 'hard'
-                hp: cell.hp,       // 1 or 2
+                type: cell.type,
+                hp: cell.hp,
+                theme: cell.theme,   // ← THIS was missing — fix for visual themes
                 alive: true, falling: false, r: dynamicR, row
             });
         });
