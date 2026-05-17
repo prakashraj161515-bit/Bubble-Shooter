@@ -293,18 +293,19 @@ function shoot(e) {
 function snap() {
     if (!projectile) return;
     const curR = window.activeR || 18;
-    const spacingX = canvas.width / 10;
+    // Use the actual numCols set by the level generator — this was the root bug
+    const numCols = window.numCols || 10;
+    const spacingX = canvas.width / numCols;
     const spacingY = spacingX * 0.866;
     
     let bestDist = Infinity;
     let bestCell = null;
 
-    // Search rows around the projectile's estimated row to find closest empty slot
     const estRow = Math.round((projectile.y - clusterOffset - (spacingX / 2)) / spacingY);
     
     for (let r = Math.max(0, estRow - 2); r <= estRow + 2; r++) {
         const isOffset = r % 2 !== 0;
-        const rowWidth = isOffset ? 9 : 10;
+        const rowWidth = isOffset ? numCols - 1 : numCols;
         const startX = isOffset ? spacingX / 2 : 0;
         
         for (let c = 0; c < rowWidth; c++) {
@@ -312,10 +313,9 @@ function snap() {
             const ny = r * spacingY + (spacingX / 2);
             const absoluteNy = ny + clusterOffset;
             
-            // Check if cell is occupied
             let occupied = false;
             for (let b of bubbles) {
-                if (b.alive && !b.falling && Math.hypot(b.x - nx, b.targetY - ny) < 5) {
+                if (b.alive && !b.falling && Math.hypot(b.x - nx, b.targetY - ny) < curR * 0.8) {
                     occupied = true; break;
                 }
             }
@@ -332,16 +332,17 @@ function snap() {
     
     if (!bestCell) return;
 
-    // Set y directly to the target final position to eliminate the 'sliding up' animation
     const finalVisualY = bestCell.ny + clusterOffset;
-    const newB = { x: bestCell.nx, targetY: bestCell.ny, y: finalVisualY, color: projectile.color, alive: true, falling: false, r: curR, row: bestCell.row };
+    const newB = { 
+        x: bestCell.nx, targetY: bestCell.ny, y: finalVisualY, 
+        color: projectile.color, alive: true, falling: false, 
+        r: curR, row: bestCell.row, hp: 1, type: 'normal'
+    };
     bubbles.push(newB);
-
 
     const visited = new Set(), matches = [];
     function dfs(b) {
         if(!b || visited.has(b)) return; visited.add(b); matches.push(b);
-        // Use targetY for matching, since y is still animating
         bubbles.filter(o => o.alive && !o.falling && Math.hypot(o.x - b.x, o.targetY - b.targetY) < spacingX * 1.2).forEach(n => { 
             if(n.color === newB.color) dfs(n); 
         });
@@ -351,9 +352,8 @@ function snap() {
     if (matches.length >= 3) {
         matches.forEach(b => {
             if (b.hp >= 2) {
-                // Hard bubble: take 1 damage, survive if still has hp
                 b.hp--;
-                createParticles(b.x, b.y, '#aaaaaa'); // Gray chip-off effect
+                createParticles(b.x, b.y, '#aaaaaa');
                 S.score += 50;
             } else {
                 b.alive = false; createParticles(b.x, b.y, b.color); S.score += 100;
@@ -361,17 +361,20 @@ function snap() {
         });
         shakeFrames = 15; if(S.settings.sound) playSFX('pop');
         
-        // Orphan logic: Check what's connected to Row 0
+        // Orphan detection: start from ALL bubbles in the very top row (smallest targetY)
+        const minY = Math.min(...bubbles.filter(b => b.alive && !b.falling).map(b => b.targetY));
         const con = new Set();
         function mark(b) { 
             if(con.has(b)) return; con.add(b); 
             bubbles.filter(o => o.alive && !o.falling && Math.hypot(o.x - b.x, o.targetY - b.targetY) < spacingX * 1.2).forEach(mark); 
         }
-        bubbles.filter(b => b.row === 0 && b.alive).forEach(mark);
+        // Anchor = bubbles in the topmost row (within half a spacingY of the minimum)
+        bubbles.filter(b => b.alive && !b.falling && b.targetY <= minY + spacingY * 0.5).forEach(mark);
         bubbles.forEach(b => { if(b.alive && !con.has(b)) b.falling = true; });
     }
     projectile = null; checkEnd(); updateUI();
 }
+
 
 
 
