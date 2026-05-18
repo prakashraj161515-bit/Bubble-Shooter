@@ -44,6 +44,25 @@ function pickRandomTheme(availableThemes) {
 function createBubble(color, theme='normal')     { return { color, type: 'normal', hp: 1, theme }; }
 function createHardBubble(color, theme='normal') { return { color, type: 'hard',   hp: 2, theme }; }
 
+// ──────── PATTERN SYSTEM ────────
+function getPattern(level){
+    const patterns = ["full", "triangle", "diamond", "checker", "zigzag", "cross", "spiral", "tunnel"];
+    return patterns[level % patterns.length];
+}
+
+function shouldPlaceBubble(pattern, row, col, rows, cols){
+    switch(pattern){
+        case "triangle": return col <= row;
+        case "diamond": return Math.abs(col - cols/2) < row;
+        case "checker": return (row + col) % 2 === 0;
+        case "zigzag": return row % 2 === col % 2;
+        case "cross": return row === Math.floor(rows/2) || col === Math.floor(cols/2);
+        case "spiral": return Math.random() > 0.35;
+        case "tunnel": return col !== Math.floor(cols/2) && col !== Math.floor(cols/2)-1;
+        default: return true;
+    }
+}
+
 function generateLevel(level, playerFails = 0) {
     let { rows, cols, colors, hardChance } = getDifficulty(level);
     if (playerFails >= 3) { hardChance = 0; colors = Math.max(2, colors - 1); }
@@ -51,10 +70,15 @@ function generateLevel(level, playerFails = 0) {
     const availableThemes = getAvailableThemes(level);
     // Max 15% hard balls to avoid frustration
     const hardRate = Math.min(hardChance, 0.15);
+    const pattern = getPattern(level);
     const grid = [];
     for (let row = 0; row < rows; row++) {
         const currentRow = [];
         for (let col = 0; col < cols; col++) {
+            if (!shouldPlaceBubble(pattern, row, col, rows, cols)) {
+                currentRow.push(null);
+                continue;
+            }
             if (level > 30 && Math.random() < 0.08) { currentRow.push(null); continue; }
             const color = selectedColors[Math.floor(Math.random() * selectedColors.length)];
             const isHard = availableThemes.length > 0 && Math.random() < hardRate;
@@ -69,9 +93,10 @@ function generateLevel(level, playerFails = 0) {
 
 
 let S = {
-    score: 0, coins: 1250, ammo: 50,
+    score: 0, coins: 1250, ammo: 25,
     currentLevel: Number(localStorage.getItem('bs_level')) || 1,
-    unlockedLevels: 5000,
+    unlockedLevels: Number(localStorage.getItem('bs_unlocked')) || 1,
+    levelStars: JSON.parse(localStorage.getItem('bs_stars')) || {},
     playerFails: 0,          // Tracks consecutive fails for Adaptive Easy Mode
     objective: { count: 0, total: 6 },
     settings: { sound: true, music: true }
@@ -115,7 +140,11 @@ function renderMap() {
         node.style.top = `${yPos}px`; node.style.left = `${xPos}px`;
         if (i <= S.unlockedLevels) {
             node.classList.add('unlocked');
-            node.innerHTML = `<span>${i}</span><div style="position:absolute;bottom:-22px;width:100%;text-align:center;font-size:14px;color:#ffcf3e;">⭐⭐⭐</div>`;
+            let stars = S.levelStars[i] || 0;
+            // First level or newly unlocked gets 0 stars, but we show at least 1 star if completed before.
+            // If it's unlocked but not completed (i == S.unlockedLevels), show empty stars or 1 star.
+            let starStr = stars > 0 ? "⭐".repeat(stars) : "⭐"; 
+            node.innerHTML = `<span>${i}</span><div style="position:absolute;bottom:-22px;width:100%;text-align:center;font-size:14px;color:#ffcf3e;">${starStr}</div>`;
             node.onclick = () => { S.currentLevel = i; startGame(); };
         } else { node.innerHTML = `<span>${i}</span><div style="position:absolute;bottom:-20px;width:100%;text-align:center;color:#999;font-size:14px;">🔒🔒🔒</div>`; }
         fragment.appendChild(node);
@@ -231,10 +260,12 @@ function startGame() {
     window.activeR = dynamicR;
     window.numCols = numCols;
 
-    S.ammo = 50; S.score = 0; S.objective.count = 0;
+    S.ammo = 25; S.score = 0; S.objective.count = 0;
     bubbles = [];
     const spacingY = spacingX * 0.866;
     introAnimFrame = 60;
+    
+    if (window.startLevelAnimation) window.startLevelAnimation(S.currentLevel);
 
     levelGrid.forEach((rowData, row) => {
         const isOffset = row % 2 !== 0;
@@ -276,8 +307,11 @@ function getShooterPos() {
 }
 
 function shoot(e) {
-    if (projectile || !isGameActive || introAnimFrame > 0) return;
+    if (projectile || !isGameActive || introAnimFrame > 0 || S.ammo <= 0) return;
     initAudio();
+    
+    S.ammo--;
+    updateUI();
     
     const pos = getShooterPos();
     const cRect = canvas.getBoundingClientRect();
@@ -429,9 +463,24 @@ function checkEnd() {
     const remaining = bubbles.filter(b => b.alive);
     if (remaining.length === 0 || S.objective.count >= S.objective.total) {
         if (S.currentLevel === S.unlockedLevels) S.unlockedLevels++;
+        
+        // Calculate and save stars
+        const newStars = S.score >= 3000 ? 3 : (S.score >= 1500 ? 2 : 1);
+        S.levelStars[S.currentLevel] = Math.max(newStars, S.levelStars[S.currentLevel] || 0);
+        S.playerFails = 0;
+        saveState();
+
         // Use premium modal if available, else fallback
         if (window.showLevelComplete) showLevelComplete();
         else { alert('LEVEL CLEAR! 🎉'); showScreen('mapScreen'); }
+    } else if (S.ammo <= 0) {
+        // Only lose if no bubbles are falling/animating and no projectile
+        const active = bubbles.some(b => b.falling || b.y < b.targetY);
+        if (!active && !projectile) {
+            S.playerFails++;
+            alert("OUT OF MOVES! 😢\nTry again.");
+            showScreen('mapScreen');
+        }
     }
 }
 
@@ -686,12 +735,34 @@ function drawFloaters() { floaters.forEach(f => { f.y -= f.s; if (f.y < -20) f.y
 let audioCtx = null;
 function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
 function playSFX(type) { if (!audioCtx) return; const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.connect(g); g.connect(audioCtx.destination); if(type === 'pop') { o.frequency.setValueAtTime(600, audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.1); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1); o.start(); o.stop(audioCtx.currentTime + 0.1); } }
-function saveState() { localStorage.setItem('bs_level', S.currentLevel); localStorage.setItem('bs_unlocked', S.unlockedLevels); }
+function saveState() { 
+    localStorage.setItem('bs_level', S.currentLevel); 
+    localStorage.setItem('bs_unlocked', S.unlockedLevels); 
+    localStorage.setItem('bs_stars', JSON.stringify(S.levelStars || {}));
+}
 function loadState() { 
     const l = localStorage.getItem('bs_level'); 
     if(l) S.currentLevel = Number(l); 
     // Force all 5000 levels unlocked — override any old saved value
     S.unlockedLevels = 5000;
     localStorage.setItem('bs_unlocked', '5000');
+    
+    const s = localStorage.getItem('bs_stars');
+    if(s) S.levelStars = JSON.parse(s);
 }
+
+// ──────── LEVEL START ANIMATION ────────
+window.startLevelAnimation = function(level) {
+    const div = document.createElement("div");
+    div.innerText = `LEVEL ${level}`;
+    div.style.cssText = "position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:50px;color:#fff;font-weight:900;text-shadow:0 10px 30px rgba(0,0,0,0.5);z-index:9999;pointer-events:none;";
+    document.body.appendChild(div);
+    if (window.gsap) {
+        gsap.fromTo(div, {scale:0.5, opacity:0}, {scale:1, opacity:1, duration:0.4});
+        gsap.to(div, {opacity:0, y:"-120px", delay:1.2, duration:0.4, onComplete:()=>div.remove()});
+    } else {
+        setTimeout(() => div.remove(), 1500);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', init);
