@@ -203,15 +203,25 @@
 .complete-card h1 { font-size:38px; color:#5b4dff; margin-bottom:8px; }
 .complete-card p { color:#888; margin-bottom:22px; font-size:16px; }
 .complete-btn { width:220px; height:60px; border:none; border-radius:20px; background:linear-gradient(to right,#ffb300,#ff7a00); color:white; font-size:20px; font-weight:700; cursor:pointer; box-shadow:0 8px 20px rgba(255,150,0,0.4); }
+.failed-btn { width:220px; height:60px; border:none; border-radius:20px; background:linear-gradient(to right,#ff4d4d,#cc0000); color:white; font-size:20px; font-weight:700; cursor:pointer; box-shadow:0 8px 20px rgba(200,0,0,0.4); }
 .combo-text { position:fixed; top:160px; left:50%; transform:translateX(-50%); color:#fff; font-size:38px; font-weight:800; text-shadow:0 5px 15px rgba(0,0,0,0.3); opacity:0; z-index:999; pointer-events:none; }
 </style>
 
 <!-- LEVEL COMPLETE MODAL -->
 <div class="level-complete" id="levelComplete">
   <div class="complete-card">
-    <h1>LEVEL COMPLETE 🎉</h1>
+    <h1>LEVEL CLEAR 🎉</h1>
     <p>You cleared all bubbles!</p>
     <button class="complete-btn" id="nextLevelBtn">NEXT LEVEL ▶</button>
+  </div>
+</div>
+
+<!-- LEVEL FAILED MODAL -->
+<div class="level-complete" id="levelFailed">
+  <div class="complete-card">
+    <h1 style="color:#ff4d4d;">OUT OF MOVES 😢</h1>
+    <p>You didn't clear the board in time.</p>
+    <button class="failed-btn" id="retryLevelBtn">TRY AGAIN ↻</button>
   </div>
 </div>
 <div class="combo-text" id="comboText">COMBO x3</div>
@@ -281,18 +291,29 @@ window.increaseCombo = function() {
 };
 
 // ── Level Complete Modal ──────────────────────────────────
+// ── Level Complete / Failed Modals ──────────────────────────
 window.showLevelComplete = function() {
   const modal = document.getElementById('levelComplete');
   modal.style.display = 'flex';
-  if(window.gsap) gsap.from('.complete-card', {scale:0.5, duration:0.4, ease:'back.out(1.7)'});
+  if(window.gsap) gsap.from(modal.querySelector('.complete-card'), {scale:0.5, duration:0.4, ease:'back.out(1.7)'});
+};
+
+window.showLevelFailed = function() {
+  const modal = document.getElementById('levelFailed');
+  modal.style.display = 'flex';
+  if(window.gsap) gsap.from(modal.querySelector('.complete-card'), {scale:0.5, duration:0.4, ease:'back.out(1.7)'});
 };
 
 document.getElementById('nextLevelBtn').addEventListener('click', () => {
   document.getElementById('levelComplete').style.display = 'none';
-  // Go to next level
   if(window.S) {
     S.currentLevel = Math.min(S.currentLevel + 1, 5000);
   }
+  if(window.startGame) startGame();
+});
+
+document.getElementById('retryLevelBtn').addEventListener('click', () => {
+  document.getElementById('levelFailed').style.display = 'none';
   if(window.startGame) startGame();
 });
 

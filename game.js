@@ -478,8 +478,8 @@ function checkEnd() {
         const active = bubbles.some(b => b.falling || b.y < b.targetY);
         if (!active && !projectile) {
             S.playerFails++;
-            alert("OUT OF MOVES! 😢\nTry again.");
-            showScreen('mapScreen');
+            if (window.showLevelFailed) showLevelFailed();
+            else { alert("OUT OF MOVES! 😢\nTry again."); showScreen('mapScreen'); }
         }
     }
 }
