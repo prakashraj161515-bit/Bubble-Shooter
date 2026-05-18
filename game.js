@@ -562,9 +562,7 @@ function drawBall(x, y, color, r, hp, theme) {
     ctx.fillStyle='rgba(255,255,255,0.38)'; ctx.fill();
 
     ctx.restore();
-
-
-
+}
 
 
 
