@@ -373,18 +373,23 @@ function snap() {
         const poppedPositions = [];
         matches.forEach(b => {
             if (b.theme !== 'normal' && b.hp >= 2) {
-                // Themed blocker: first hit cracks it, second pops it
                 b.hp--;
                 createParticles(b.x, b.y, '#aaaaaa');
                 S.score += 50;
+                if (window.showPoints) showPoints(b.x, b.y - 20, '+50');
             } else {
                 b.alive = false;
                 poppedPositions.push({ x: b.x, targetY: b.targetY });
                 createParticles(b.x, b.y, b.color);
+                if (window.animateBubblePop) animateBubblePop(b.x, b.y, b.color);
+                if (window.showPoints) showPoints(b.x, b.y - 20, '+100');
                 S.score += 100;
             }
         });
-        shakeFrames = 15; if(S.settings.sound) playSFX('pop');
+        shakeFrames = 15;
+        if (window.screenShake) screenShake();
+        if (window.increaseCombo) increaseCombo();
+        if(S.settings.sound) playSFX('pop');
 
         // Adjacent difficulty balls take 1 damage when normal balls pop next to them
         if (poppedPositions.length > 0) {
@@ -424,7 +429,9 @@ function checkEnd() {
     const remaining = bubbles.filter(b => b.alive);
     if (remaining.length === 0 || S.objective.count >= S.objective.total) {
         if (S.currentLevel === S.unlockedLevels) S.unlockedLevels++;
-        alert("LEVEL CLEAR! 🎉"); showScreen('mapScreen');
+        // Use premium modal if available, else fallback
+        if (window.showLevelComplete) showLevelComplete();
+        else { alert('LEVEL CLEAR! 🎉'); showScreen('mapScreen'); }
     }
 }
 
