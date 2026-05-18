@@ -93,13 +93,14 @@ function generateLevel(level, playerFails = 0) {
 
 
 let S = {
-    score: 0, coins: 1250, ammo: 25,
+    score: 0, coins: Number(localStorage.getItem('bs_coins')) || 1250, ammo: 25,
     currentLevel: Number(localStorage.getItem('bs_level')) || 1,
     unlockedLevels: Number(localStorage.getItem('bs_unlocked')) || 1,
     levelStars: JSON.parse(localStorage.getItem('bs_stars')) || {},
+    powerups: JSON.parse(localStorage.getItem('bs_powerups')) || { bomb: 3, aim: 3, fireball: 1 },
     playerFails: 0,          // Tracks consecutive fails for Adaptive Easy Mode
     objective: { count: 0, total: 6 },
-    settings: { sound: true, music: true }
+    settings: JSON.parse(localStorage.getItem('bs_settings')) || { sound: true, music: true }
 };
 
 let bubbles = [], projectile = null, particles = [], floaters = [];
@@ -337,6 +338,7 @@ function shoot(e) {
         vx: Math.cos(ang) * SPEED, 
         vy: Math.sin(ang) * SPEED 
     };
+    window.superAimActive = false; // Turn off super aim after shot
     prepNext(); 
     updateUI();
 }
@@ -385,6 +387,33 @@ function snap() {
     }
     
     if (!bestCell) return;
+    
+    // POWER-UP: Bomb & Fireball Destruction
+    if (projectile.color === 'bomb') {
+        const boomX = bestCell.nx, boomY = bestCell.ny;
+        bubbles.forEach(b => {
+            if (b.alive && Math.hypot(b.x - boomX, b.targetY - boomY) <= spacingX * 2.5) {
+                b.alive = false;
+                createParticles(b.x, b.targetY, b.color);
+                S.score += 50;
+            }
+        });
+        if (window.screenShake) screenShake();
+        if(S.settings.sound) playSFX('pop');
+        projectile = null; checkEnd(); updateUI(); return;
+    } else if (projectile.color === 'fireball') {
+        const boomX = bestCell.nx;
+        bubbles.forEach(b => {
+            if (b.alive && Math.abs(b.x - boomX) <= spacingX * 1.5) {
+                b.alive = false;
+                createParticles(b.x, b.targetY, b.color);
+                S.score += 50;
+            }
+        });
+        if (window.screenShake) screenShake();
+        if(S.settings.sound) playSFX('pop');
+        projectile = null; checkEnd(); updateUI(); return;
+    }
 
     const finalVisualY = bestCell.ny + clusterOffset;
     const newB = { 
@@ -517,6 +546,23 @@ function updateUI() {
     }
     const mc = document.getElementById('map-coins');
     if(mc) mc.innerText = S.coins.toLocaleString();
+    const sc = document.getElementById('shop-coins');
+    if(sc) sc.innerText = S.coins.toLocaleString();
+    
+    // Update powerup badges
+    const bb = document.getElementById('badge-bomb');
+    if(bb && S.powerups) bb.innerText = S.powerups.bomb;
+    const ba = document.getElementById('badge-aim');
+    if(ba && S.powerups) ba.innerText = S.powerups.aim;
+    const bf = document.getElementById('badge-fireball');
+    if(bf && S.powerups) bf.innerText = S.powerups.fireball;
+
+    // Update settings buttons
+    const sBtn = document.getElementById('toggleSoundBtn');
+    if(sBtn) { sBtn.innerText = S.settings.sound ? "ON" : "OFF"; sBtn.style.background = S.settings.sound ? "#3ddc84" : "#ccc"; }
+    const mBtn = document.getElementById('toggleMusicBtn');
+    if(mBtn) { mBtn.innerText = S.settings.music ? "ON" : "OFF"; mBtn.style.background = S.settings.music ? "#3ddc84" : "#ccc"; }
+
     saveState();
 }
 
@@ -535,6 +581,21 @@ function drawBall(x, y, color, r, hp, theme) {
 
     // ── STEP 1: Always draw the color base first ──────────────
     ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 4;
+    
+    if (color === 'bomb') {
+        ctx.fillStyle = '#222';
+        ctx.beginPath(); ctx.arc(x, finalY, radius, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = 0; ctx.fillStyle = '#fff'; ctx.font = `${radius}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('💣', x, finalY + 2);
+        ctx.restore(); return;
+    } else if (color === 'fireball') {
+        ctx.fillStyle = '#ff6600';
+        ctx.beginPath(); ctx.arc(x, finalY, radius, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = 0; ctx.fillStyle = '#fff'; ctx.font = `${radius}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('☄️', x, finalY + 2);
+        ctx.restore(); return;
+    }
+
     const grad = ctx.createRadialGradient(x-radius*0.35,finalY-radius*0.35,radius*0.05,x,finalY,radius);
     grad.addColorStop(0,'#fff'); grad.addColorStop(0.2,shadeColor(color,30));
     grad.addColorStop(0.5,color); grad.addColorStop(1,shadeColor(color,-60));
@@ -705,20 +766,18 @@ function animate() {
         const ang = Math.atan2(mouseY - pos.y, mouseX - pos.x);
         if (ang < 0) {
             let dx = Math.cos(ang), dy = Math.sin(ang);
-            for (let i = 0; i < 20; i++) {
-                const dotX = pos.x + dx * (i * 25);
-                const dotY = pos.y + dy * (i * 25);
-                
-                // Stop aim line if it hits a bubble
-                let collision = false;
-                bubbles.forEach(b => {
-                    if (b.alive && !b.falling && Math.hypot(b.x - dotX, b.y - dotY) < curR * 1.5) collision = true;
-                });
-                if (collision || dotX < 0 || dotX > canvas.width || dotY < 0) break;
-
-                ctx.beginPath(); ctx.arc(dotX, dotY, 2.5, 0, Math.PI * 2); 
-                ctx.fillStyle = 'rgba(123, 108, 255, 0.7)'; ctx.fill();
+            let tx = pos.x, ty = pos.y;
+            ctx.beginPath(); ctx.moveTo(tx, ty);
+            const lineSteps = window.superAimActive ? 30 : 15;
+            for(let i=0; i<lineSteps; i++){
+                tx += dx*35; ty += dy*35;
+                if(tx<curR || tx>canvas.width-curR) { dx *= -1; tx += dx*35; }
+                ctx.lineTo(tx, ty);
             }
+            ctx.strokeStyle = window.superAimActive ? 'rgba(61,220,132,0.8)' : 'rgba(255,255,255,0.4)';
+            ctx.lineWidth = window.superAimActive ? 4 : 2;
+            ctx.setLineDash(window.superAimActive ? [10, 10] : [5, 10]);
+            ctx.stroke(); ctx.setLineDash([]);
         }
     }
 
@@ -739,6 +798,9 @@ function saveState() {
     localStorage.setItem('bs_level', S.currentLevel); 
     localStorage.setItem('bs_unlocked', S.unlockedLevels); 
     localStorage.setItem('bs_stars', JSON.stringify(S.levelStars || {}));
+    localStorage.setItem('bs_coins', S.coins);
+    localStorage.setItem('bs_powerups', JSON.stringify(S.powerups || {}));
+    localStorage.setItem('bs_settings', JSON.stringify(S.settings || {}));
 }
 function loadState() { 
     const l = localStorage.getItem('bs_level'); 
@@ -749,6 +811,63 @@ function loadState() {
     
     const s = localStorage.getItem('bs_stars');
     if(s) S.levelStars = JSON.parse(s);
+    
+    const c = localStorage.getItem('bs_coins');
+    if(c) S.coins = Number(c);
+    
+    const pu = localStorage.getItem('bs_powerups');
+    if(pu) S.powerups = JSON.parse(pu);
+    
+    const st = localStorage.getItem('bs_settings');
+    if(st) S.settings = JSON.parse(st);
+}
+
+// ──────── SHOP & POWERUPS ────────
+window.buyItem = function(item, cost) {
+    if (S.coins >= cost) {
+        S.coins -= cost;
+        if (!S.powerups) S.powerups = { bomb:0, aim:0, fireball:0 };
+        S.powerups[item] = (S.powerups[item] || 0) + 1;
+        saveState();
+        updateUI();
+        if(window.showPoints) showPoints(window.innerWidth/2, window.innerHeight/2, 'PURCHASED!');
+    } else {
+        alert("Not enough coins! 😢");
+    }
+}
+
+window.usePowerup = function(item) {
+    if (!S.powerups || S.powerups[item] <= 0) {
+        alert("You don't have this power-up! Buy it in the shop.");
+        return;
+    }
+    if (projectile || introAnimFrame > 0) return; // Only allow when idle
+
+    if (item === 'bomb') {
+        S.powerups.bomb--;
+        activeColor = 'bomb';
+        const cb = document.getElementById('currentBall');
+        if(cb) { cb.style.background = 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><text y=\'80\' font-size=\'80\'>💣</text></svg>") center/contain no-repeat'; cb.style.boxShadow = '0 0 25px red'; }
+    } else if (item === 'aim') {
+        S.powerups.aim--;
+        window.superAimActive = true;
+    } else if (item === 'fireball') {
+        S.powerups.fireball--;
+        activeColor = 'fireball';
+        const cb = document.getElementById('currentBall');
+        if(cb) { cb.style.background = 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><text y=\'80\' font-size=\'80\'>☄️</text></svg>") center/contain no-repeat'; cb.style.boxShadow = '0 0 25px orange'; }
+    }
+    saveState();
+    updateUI();
+}
+
+window.toggleSound = function() { S.settings.sound = !S.settings.sound; saveState(); updateUI(); }
+window.toggleMusic = function() { S.settings.music = !S.settings.music; saveState(); updateUI(); }
+window.resetProgress = function() {
+    if(confirm("Are you sure you want to reset all progress?")) {
+        localStorage.clear();
+        location.reload();
+    }
 }
 
 // ──────── LEVEL START ANIMATION ────────
