@@ -55,8 +55,14 @@ function generateLevel(level, playerFails = 0) {
         for (let col = 0; col < cols; col++) {
             if (level > 30 && Math.random() < 0.08) { currentRow.push(null); continue; }
             const color = selectedColors[Math.floor(Math.random() * selectedColors.length)];
-            currentRow.push(level >= 80 && Math.random() < hardChance
-                ? createHardBubble(color, theme) : createBubble(color, theme));
+            // Hard balls: random % of balls — NOT all balls
+            // Capped at 20% max to avoid frustration
+            const hardRate = Math.min(hardChance, 0.2);
+            const isHard = level >= 80 && Math.random() < hardRate;
+            // Normal balls always get theme='normal' — only hard balls get the level theme
+            currentRow.push(isHard
+                ? createHardBubble(color, theme)   // e.g. ice, fire, stone
+                : createBubble(color, 'normal'));   // always plain colorful
         }
         grid.push(currentRow);
     }
@@ -365,17 +371,40 @@ function snap() {
     dfs(newB);
 
     if (matches.length >= 3) {
+        const poppedPositions = [];
         matches.forEach(b => {
-            if (b.hp >= 2) {
+            if (b.theme !== 'normal' && b.hp >= 2) {
+                // Themed blocker: first hit cracks it, second pops it
                 b.hp--;
                 createParticles(b.x, b.y, '#aaaaaa');
                 S.score += 50;
             } else {
-                b.alive = false; createParticles(b.x, b.y, b.color); S.score += 100;
+                b.alive = false;
+                poppedPositions.push({ x: b.x, targetY: b.targetY });
+                createParticles(b.x, b.y, b.color);
+                S.score += 100;
             }
         });
         shakeFrames = 15; if(S.settings.sound) playSFX('pop');
-        
+
+        // Adjacent difficulty balls take 1 damage when normal balls pop next to them
+        if (poppedPositions.length > 0) {
+            bubbles.forEach(b => {
+                if (!b.alive || b.falling || b.theme === 'normal') return;
+                const isAdjacentToPop = poppedPositions.some(p =>
+                    Math.hypot(b.x - p.x, b.targetY - p.targetY) < spacingX * 1.3
+                );
+                if (isAdjacentToPop) {
+                    b.hp--;
+                    createParticles(b.x, b.y, '#ccccff');
+                    if (b.hp <= 0) {
+                        b.alive = false;
+                        S.score += 150; // Bonus for clearing a blocker
+                    }
+                }
+            });
+        }
+
         // Orphan detection: start from ALL bubbles in the very top row (smallest targetY)
         const minY = Math.min(...bubbles.filter(b => b.alive && !b.falling).map(b => b.targetY));
         const con = new Set();
@@ -383,7 +412,6 @@ function snap() {
             if(con.has(b)) return; con.add(b); 
             bubbles.filter(o => o.alive && !o.falling && Math.hypot(o.x - b.x, o.targetY - b.targetY) < spacingX * 1.2).forEach(mark); 
         }
-        // Anchor = bubbles in the topmost row (within half a spacingY of the minimum)
         bubbles.filter(b => b.alive && !b.falling && b.targetY <= minY + spacingY * 0.5).forEach(mark);
         bubbles.forEach(b => { if(b.alive && !con.has(b)) b.falling = true; });
     }
@@ -446,92 +474,120 @@ function prepNext() {
 // ──────── ULTRA-GLOSSY 3D BUBBLES ────────
 function drawBall(x, y, color, r, hp, theme) {
     const radius = r || window.activeR || 18;
+    const isDamaged = (theme !== 'normal' && hp === 1); // took 1 hit already
     ctx.save();
     const finalY = y;
 
-    ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 12; ctx.shadowOffsetY = 5;
-
-    // ── Base gradient (same for all themes) ────────────────
-    const grad = ctx.createRadialGradient(x - radius*0.35, finalY - radius*0.35, radius*0.05, x, finalY, radius);
-    grad.addColorStop(0, '#fff'); grad.addColorStop(0.2, shadeColor(color, 30));
-    grad.addColorStop(0.5, color); grad.addColorStop(1, shadeColor(color, -60));
-    ctx.beginPath(); ctx.arc(x, finalY, radius, 0, Math.PI*2);
-    ctx.fillStyle = grad; ctx.fill();
-
-    // ══ THEME OVERLAYS ══════════════════════════════════════
-    if (theme === 'stone' || hp >= 2) {
-        // Rocky grey overlay + crack lines
-        ctx.beginPath(); ctx.arc(x, finalY, radius, 0, Math.PI*2);
-        ctx.fillStyle = 'rgba(30,30,30,0.38)'; ctx.fill();
-        ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.moveTo(x-radius*0.3,finalY-radius*0.5); ctx.lineTo(x+radius*0.1,finalY+radius*0.2); ctx.lineTo(x+radius*0.4,finalY+radius*0.5); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(x+radius*0.2,finalY-radius*0.4); ctx.lineTo(x-radius*0.2,finalY+radius*0.1); ctx.stroke();
-        ctx.beginPath(); ctx.arc(x,finalY,radius-1,0,Math.PI*2); ctx.strokeStyle='#999'; ctx.lineWidth=2.5; ctx.stroke();
+    // ══════════════════════════════════════════════
+    // THEMED BALLS — drawn FULLY as the theme
+    // ══════════════════════════════════════════════
+    if (theme === 'stone') {
+        // Full stone/rock look
+        ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 10;
+        const sg = ctx.createRadialGradient(x-radius*0.3,finalY-radius*0.3,radius*0.1,x,finalY,radius);
+        sg.addColorStop(0,'#c8c8c8'); sg.addColorStop(0.4,'#888'); sg.addColorStop(1,'#444');
+        ctx.beginPath(); ctx.arc(x,finalY,radius,0,Math.PI*2); ctx.fillStyle=sg; ctx.fill();
+        // Crack lines
+        ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.moveTo(x-radius*0.3,finalY-radius*0.6); ctx.lineTo(x+radius*0.1,finalY+radius*0.1); ctx.lineTo(x+radius*0.5,finalY+radius*0.5); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x+radius*0.2,finalY-radius*0.4); ctx.lineTo(x-radius*0.3,finalY+radius*0.3); ctx.stroke();
+        ctx.beginPath(); ctx.arc(x,finalY,radius-1,0,Math.PI*2); ctx.strokeStyle='#666'; ctx.lineWidth=3; ctx.stroke();
+        if (isDamaged) { // Big crack when damaged
+            ctx.strokeStyle='rgba(255,80,80,0.8)'; ctx.lineWidth=2.5;
+            ctx.beginPath(); ctx.moveTo(x-radius*0.5,finalY-radius*0.8); ctx.lineTo(x+radius*0.1,finalY); ctx.lineTo(x-radius*0.2,finalY+radius*0.8); ctx.stroke();
+        }
 
     } else if (theme === 'ice') {
-        // Frosty crystal overlay
-        ctx.beginPath(); ctx.arc(x,finalY,radius,0,Math.PI*2);
-        ctx.fillStyle='rgba(180,240,255,0.35)'; ctx.fill();
-        // Snowflake lines
-        ctx.strokeStyle='rgba(255,255,255,0.8)'; ctx.lineWidth=1.2;
-        for(let a=0;a<3;a++){
+        // Full ice/crystal look — white-blue base
+        ctx.shadowColor = 'rgba(100,220,255,0.8)'; ctx.shadowBlur = 18;
+        const ig = ctx.createRadialGradient(x-radius*0.35,finalY-radius*0.35,radius*0.05,x,finalY,radius);
+        ig.addColorStop(0,'#ffffff'); ig.addColorStop(0.3,'#cff4ff'); ig.addColorStop(0.7,'#7dd8f8'); ig.addColorStop(1,'#1a8cc7');
+        ctx.beginPath(); ctx.arc(x,finalY,radius,0,Math.PI*2); ctx.fillStyle=ig; ctx.fill();
+        // Full snowflake (6 arms)
+        ctx.strokeStyle='rgba(255,255,255,0.9)'; ctx.lineWidth=1.5;
+        for(let a=0;a<6;a++){
             ctx.save(); ctx.translate(x,finalY); ctx.rotate(a*Math.PI/3);
-            ctx.beginPath(); ctx.moveTo(0,-radius*0.7); ctx.lineTo(0,radius*0.7); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(-radius*0.3,-radius*0.3); ctx.lineTo(0,-radius*0.6); ctx.lineTo(radius*0.3,-radius*0.3); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0,-radius*0.75); ctx.lineTo(0,radius*0.75); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(-radius*0.28,-radius*0.45); ctx.lineTo(0,-radius*0.6); ctx.lineTo(radius*0.28,-radius*0.45); ctx.stroke();
             ctx.restore();
         }
-        ctx.beginPath(); ctx.arc(x,finalY,radius-1,0,Math.PI*2); ctx.strokeStyle='rgba(180,240,255,0.9)'; ctx.lineWidth=2; ctx.stroke();
-        ctx.shadowColor='rgba(100,220,255,0.7)'; ctx.shadowBlur=15;
+        ctx.beginPath(); ctx.arc(x,finalY,radius-1,0,Math.PI*2); ctx.strokeStyle='rgba(150,230,255,0.9)'; ctx.lineWidth=2.5; ctx.stroke();
+        if (isDamaged) { // Cracked ice
+            ctx.strokeStyle='rgba(100,180,255,0.7)'; ctx.lineWidth=2;
+            ctx.beginPath(); ctx.moveTo(x-radius*0.4,finalY-radius*0.7); ctx.lineTo(x+radius*0.2,finalY+radius*0.1); ctx.lineTo(x+radius*0.5,finalY+radius*0.6); ctx.stroke();
+        }
 
     } else if (theme === 'fire') {
-        // Lava/fire glow
-        ctx.beginPath(); ctx.arc(x,finalY,radius,0,Math.PI*2);
-        ctx.fillStyle='rgba(255,80,0,0.3)'; ctx.fill();
-        // Inner glow core
-        const fireGrad = ctx.createRadialGradient(x,finalY,0,x,finalY,radius);
-        fireGrad.addColorStop(0,'rgba(255,255,180,0.6)');
-        fireGrad.addColorStop(0.5,'rgba(255,120,0,0.3)');
-        fireGrad.addColorStop(1,'rgba(255,0,0,0)');
-        ctx.beginPath(); ctx.arc(x,finalY,radius,0,Math.PI*2); ctx.fillStyle=fireGrad; ctx.fill();
+        // Full lava/fire look — orange-red base
+        ctx.shadowColor = 'rgba(255,100,0,0.9)'; ctx.shadowBlur = 22;
+        const fg = ctx.createRadialGradient(x-radius*0.3,finalY-radius*0.3,radius*0.1,x,finalY,radius);
+        fg.addColorStop(0,'#fff7a0'); fg.addColorStop(0.3,'#ff9900'); fg.addColorStop(0.7,'#ff4400'); fg.addColorStop(1,'#aa0000');
+        ctx.beginPath(); ctx.arc(x,finalY,radius,0,Math.PI*2); ctx.fillStyle=fg; ctx.fill();
+        // Flame swirl lines
+        ctx.strokeStyle='rgba(255,255,150,0.7)'; ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.moveTo(x,finalY-radius*0.7); ctx.bezierCurveTo(x+radius*0.5,finalY-radius*0.3,x-radius*0.4,finalY+radius*0.2,x,finalY+radius*0.6); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x-radius*0.3,finalY-radius*0.5); ctx.bezierCurveTo(x+radius*0.3,finalY,x-radius*0.2,finalY+radius*0.3,x+radius*0.1,finalY+radius*0.7); ctx.stroke();
         ctx.beginPath(); ctx.arc(x,finalY,radius-1,0,Math.PI*2); ctx.strokeStyle='#ff6600'; ctx.lineWidth=2.5; ctx.stroke();
-        ctx.shadowColor='rgba(255,100,0,0.8)'; ctx.shadowBlur=20;
+        if (isDamaged) { // Cracked with dark lines
+            ctx.strokeStyle='rgba(80,0,0,0.8)'; ctx.lineWidth=2;
+            ctx.beginPath(); ctx.moveTo(x-radius*0.5,finalY-radius*0.6); ctx.lineTo(x+radius*0.1,finalY+radius*0.2); ctx.lineTo(x+radius*0.4,finalY+radius*0.6); ctx.stroke();
+        }
 
     } else if (theme === 'void') {
-        // Dark energy with purple sparks
-        ctx.beginPath(); ctx.arc(x,finalY,radius,0,Math.PI*2);
-        ctx.fillStyle='rgba(10,0,30,0.55)'; ctx.fill();
-        ctx.strokeStyle='rgba(180,0,255,0.8)'; ctx.lineWidth=2;
-        ctx.beginPath(); ctx.arc(x,finalY,radius-1,0,Math.PI*2); ctx.stroke();
-        // Inner purple ring
-        ctx.beginPath(); ctx.arc(x,finalY,radius*0.6,0,Math.PI*2); ctx.strokeStyle='rgba(200,100,255,0.5)'; ctx.lineWidth=1.5; ctx.stroke();
-        ctx.shadowColor='rgba(150,0,255,0.9)'; ctx.shadowBlur=18;
+        // Full void/dark energy look
+        ctx.shadowColor = 'rgba(180,0,255,0.9)'; ctx.shadowBlur = 25;
+        const vg = ctx.createRadialGradient(x,finalY,radius*0.1,x,finalY,radius);
+        vg.addColorStop(0,'#330066'); vg.addColorStop(0.5,'#110022'); vg.addColorStop(1,'#000000');
+        ctx.beginPath(); ctx.arc(x,finalY,radius,0,Math.PI*2); ctx.fillStyle=vg; ctx.fill();
+        ctx.beginPath(); ctx.arc(x,finalY,radius-1,0,Math.PI*2); ctx.strokeStyle='rgba(200,0,255,0.9)'; ctx.lineWidth=2.5; ctx.stroke();
+        ctx.beginPath(); ctx.arc(x,finalY,radius*0.55,0,Math.PI*2); ctx.strokeStyle='rgba(255,100,255,0.5)'; ctx.lineWidth=1.5; ctx.stroke();
+        // Energy cross
+        ctx.strokeStyle='rgba(220,100,255,0.5)'; ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.moveTo(x-radius*0.6,finalY); ctx.lineTo(x+radius*0.6,finalY); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x,finalY-radius*0.6); ctx.lineTo(x,finalY+radius*0.6); ctx.stroke();
+        if (isDamaged) {
+            ctx.strokeStyle='rgba(255,150,255,0.8)'; ctx.lineWidth=2;
+            ctx.beginPath(); ctx.moveTo(x-radius*0.5,finalY-radius*0.7); ctx.lineTo(x+radius*0.3,finalY+radius*0.5); ctx.stroke();
+        }
 
     } else if (theme === 'cosmic') {
-        // Rainbow shimmer
-        const t = Date.now()/1000;
-        const cosGrad = ctx.createLinearGradient(x-radius,finalY-radius,x+radius,finalY+radius);
-        cosGrad.addColorStop(0,`hsl(${(t*60)%360},100%,60%)`);
-        cosGrad.addColorStop(0.5,`hsl(${(t*60+120)%360},100%,60%)`);
-        cosGrad.addColorStop(1,`hsl(${(t*60+240)%360},100%,60%)`);
-        ctx.beginPath(); ctx.arc(x,finalY,radius,0,Math.PI*2); ctx.fillStyle=cosGrad; ctx.globalAlpha=0.4; ctx.fill(); ctx.globalAlpha=1;
+        // Full rainbow/cosmic look
+        const t = Date.now()/800;
+        ctx.shadowColor=`hsl(${(t*60)%360},100%,60%)`; ctx.shadowBlur=22;
+        const cg = ctx.createRadialGradient(x-radius*0.3,finalY-radius*0.3,radius*0.1,x,finalY,radius);
+        cg.addColorStop(0,`hsl(${(t*80)%360},100%,90%)`);
+        cg.addColorStop(0.4,`hsl(${(t*80+120)%360},100%,60%)`);
+        cg.addColorStop(1,`hsl(${(t*80+240)%360},100%,35%)`);
+        ctx.beginPath(); ctx.arc(x,finalY,radius,0,Math.PI*2); ctx.fillStyle=cg; ctx.fill();
         ctx.beginPath(); ctx.arc(x,finalY,radius-1,0,Math.PI*2);
-        ctx.strokeStyle=`hsl(${(t*90)%360},100%,70%)`; ctx.lineWidth=2.5; ctx.stroke();
-        ctx.shadowColor=`hsl(${(t*60)%360},100%,60%)`; ctx.shadowBlur=20;
+        ctx.strokeStyle=`hsl(${(t*90)%360},100%,80%)`; ctx.lineWidth=3; ctx.stroke();
+        // Star symbol
+        ctx.save(); ctx.font=`${radius*1.0}px Arial`; ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.fillText('✦',x,finalY); ctx.restore();
+        if (isDamaged) {
+            ctx.strokeStyle='rgba(255,255,255,0.7)'; ctx.lineWidth=2;
+            ctx.beginPath(); ctx.moveTo(x-radius*0.5,finalY-radius*0.7); ctx.lineTo(x+radius*0.3,finalY+radius*0.5); ctx.stroke();
+        }
 
     } else {
-        // Normal: star ✶
+        // ── NORMAL BALL — full colorful glossy ──────────────────
+        ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 5;
+        const grad = ctx.createRadialGradient(x-radius*0.35,finalY-radius*0.35,radius*0.05,x,finalY,radius);
+        grad.addColorStop(0,'#fff'); grad.addColorStop(0.2,shadeColor(color,30));
+        grad.addColorStop(0.5,color); grad.addColorStop(1,shadeColor(color,-60));
+        ctx.beginPath(); ctx.arc(x,finalY,radius,0,Math.PI*2); ctx.fillStyle=grad; ctx.fill();
         ctx.save();
         ctx.font=`${radius*1.2}px Arial`; ctx.textAlign='center'; ctx.textBaseline='middle';
         ctx.fillStyle='rgba(255,255,255,0.7)';
-        ctx.fillText('✶', x, finalY+(radius*0.08));
+        ctx.fillText('✶',x,finalY+(radius*0.08));
         ctx.restore();
     }
 
-    // ── Universal shine (top-left highlight) ─────────────────
+    // ── Universal highlight ──────────────────────────────────
     ctx.shadowColor='transparent'; ctx.shadowBlur=0;
     ctx.beginPath();
-    ctx.ellipse(x-radius*0.4, finalY-radius*0.4, radius*0.4, radius*0.25, Math.PI/4, 0, Math.PI*2);
-    ctx.fillStyle='rgba(255,255,255,0.45)'; ctx.fill();
+    ctx.ellipse(x-radius*0.4,finalY-radius*0.4,radius*0.4,radius*0.25,Math.PI/4,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,0.4)'; ctx.fill();
 
     ctx.restore();
 }
