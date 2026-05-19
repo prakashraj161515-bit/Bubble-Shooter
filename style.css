@@ -518,32 +518,38 @@ button#toggleSoundBtn:not(.off)::after, button#toggleMusicBtn:not(.off)::after {
     box-shadow: 0 2px 0 #b31a10, 0 5px 10px rgba(255, 59, 48, 0.45) !important;
 }
 
-/* Fire Badges */
+/* Fire Badges (Transparent, Floating Large Glowing Flames) */
 .fire-badge {
     position: absolute;
-    right: -10px;
-    top: 15px;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
+    right: -16px; /* Offset it nicely next to the 56px level circle */
+    top: 10px;
+    width: 32px;
+    height: 32px;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 13px;
-    border: 1.5px solid #fff;
     z-index: 5;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
 }
-.hard-badge {
-    background: linear-gradient(135deg, #ffe480, #ffcc00);
-    box-shadow: 0 2px 8px rgba(255, 204, 0, 0.6);
+
+/* Glowing Heat Filter for SVG Flame Icons */
+.fire-svg {
+    filter: drop-shadow(0 2px 5px var(--flame-glow));
+    transition: transform 0.2s;
 }
-.very-hard-badge {
-    background: linear-gradient(135deg, #ffb366, #ff8800);
-    box-shadow: 0 2px 8px rgba(255, 136, 0, 0.6);
+.fire-badge:hover .fire-svg {
+    transform: scale(1.15);
 }
-.super-hard-badge {
-    background: linear-gradient(135deg, #ff9994, #ff3b30);
-    box-shadow: 0 2px 8px rgba(255, 59, 48, 0.6);
+
+.hard-badge .fire-svg {
+    --flame-glow: rgba(255, 204, 0, 0.85);
+}
+.very-hard-badge .fire-svg {
+    --flame-glow: rgba(255, 136, 0, 0.85);
+}
+.super-hard-badge .fire-svg {
+    --flame-glow: rgba(255, 59, 48, 0.85);
 }
 
