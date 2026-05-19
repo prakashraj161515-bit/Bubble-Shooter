@@ -216,13 +216,13 @@ body { background: #dce1ff; display: flex; justify-content: center; align-items:
     transition: transform 0.1s, box-shadow 0.1s;
 }
 .node-premium.unlocked {
-    background: radial-gradient(circle at 18px 18px, #54a6ff, #007aff); /* Glossy Royal Blue */
+    background: radial-gradient(circle at 18px 18px, #c084fc, #7c3aed); /* Glossy Royal Purple/Violet Sphere */
     border: 2.5px solid #ffe880; /* Gold shine border */
-    box-shadow: 0 6px 0 #005ecb, 0 10px 20px rgba(0, 122, 255, 0.35); /* 3D bottom extrusion and shadow! */
+    box-shadow: 0 6px 0 #5b21b6, 0 10px 20px rgba(124, 58, 237, 0.35); /* 3D dark violet extrusion and shadow! */
 }
 .node-premium:active {
     transform: translateY(4px) !important;
-    box-shadow: 0 2px 0 #005ecb, 0 5px 10px rgba(0, 122, 255, 0.35) !important;
+    box-shadow: 0 2px 0 #5b21b6, 0 5px 10px rgba(124, 58, 237, 0.35) !important;
 }
 .node-premium:not(.unlocked):active {
     transform: translateY(4px) !important;

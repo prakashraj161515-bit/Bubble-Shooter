@@ -139,10 +139,41 @@ function renderMap() {
     if (!path) return;
     path.innerHTML = '';
     const totalLevels = 5000;
-    const center = 155, amplitude = 100, frequency = 300;
+    
+    // Increased curves: wider amplitude (115) and tighter frequency (260)
+    const center = 165, amplitude = 115, frequency = 260;
     const totalHeight = totalLevels * 140 + 150;
     path.style.height = `${totalHeight}px`;
     
+    // ── STEP 1: Generate smooth SVG winding road ribbon behind nodes ──
+    const svgNS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("style", "position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;");
+    
+    let pathD = "";
+    // Sample wave coordinates every 10px to draw a perfectly smooth highway/ribbon
+    for (let y = totalHeight; y >= 0; y -= 10) {
+        const nodeXCenter = center + Math.sin(y / frequency) * amplitude + 30; // 30px is half of node width (60px)
+        if (y === totalHeight) {
+            pathD += `M ${nodeXCenter} ${y}`;
+        } else {
+            pathD += ` L ${nodeXCenter} ${y}`;
+        }
+    }
+    
+    const roadPath = document.createElementNS(svgNS, "path");
+    roadPath.setAttribute("d", pathD);
+    roadPath.setAttribute("fill", "none");
+    // Soft transparent royal purple-blue winding road ribbon
+    roadPath.setAttribute("stroke", "rgba(129, 140, 248, 0.4)"); 
+    roadPath.setAttribute("stroke-width", "80"); 
+    roadPath.setAttribute("stroke-linecap", "round");
+    roadPath.setAttribute("stroke-linejoin", "round");
+    
+    svg.appendChild(roadPath);
+    path.appendChild(svg);
+    
+    // ── STEP 2: Generate Level Circles (Nodes) ──
     const fragment = document.createDocumentFragment();
     for (let i = 1; i <= totalLevels; i++) {
         const node = document.createElement('div');
@@ -151,15 +182,18 @@ function renderMap() {
         const yPos = totalHeight - (i * 140); 
         const xPos = center + Math.sin(yPos / frequency) * amplitude;
         node.style.top = `${yPos}px`; node.style.left = `${xPos}px`;
+        
         if (i <= S.unlockedLevels) {
             node.classList.add('unlocked');
             let stars = S.levelStars[i] || 0;
-            // First level or newly unlocked gets 0 stars, but we show at least 1 star if completed before.
-            // If it's unlocked but not completed (i == S.unlockedLevels), show empty stars or 1 star.
             let starStr = stars > 0 ? "⭐".repeat(stars) : "⭐"; 
-            node.innerHTML = `<span>${i}</span><div style="position:absolute;bottom:-22px;width:100%;text-align:center;font-size:14px;color:#ffcf3e;">${starStr}</div>`;
+            // Position stars at the TOP of the circle just like in the screenshot
+            node.innerHTML = `<span>${i}</span><div style="position:absolute;top:-25px;width:100%;text-align:center;font-size:14px;color:#ffcf3e;text-shadow:0 2px 4px rgba(0,0,0,0.3);">${starStr}</div>`;
             node.onclick = () => { S.currentLevel = i; startGame(); };
-        } else { node.innerHTML = `<span>${i}</span><div style="position:absolute;bottom:-20px;width:100%;text-align:center;color:#999;font-size:14px;">🔒🔒🔒</div>`; }
+        } else { 
+            // Position lock at the TOP of the circle
+            node.innerHTML = `<span>${i}</span><div style="position:absolute;top:-23px;width:100%;text-align:center;font-size:14px;text-shadow:0 1px 3px rgba(0,0,0,0.4);">🔒</div>`; 
+        }
         fragment.appendChild(node);
     }
     path.appendChild(fragment);
