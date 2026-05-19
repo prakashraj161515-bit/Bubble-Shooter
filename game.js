@@ -21,20 +21,21 @@ const COLORS_MAP = {
 const GEN_COLORS = ['red', 'blue', 'green', 'yellow', 'purple'];
 
 // ──────── SMART LEVEL GENERATOR ────────
-function getDifficulty(level) {
-    if (level < 20)  return { rows: 5,  cols: 8,  colors: 3, hardChance: 0.0 };
-    if (level < 80)  return { rows: 7,  cols: 9,  colors: 4, hardChance: 0.0 };
-    if (level < 160) return { rows: 8,  cols: 10, colors: 5, hardChance: 0.1 };
-    return               { rows: 10, cols: 11, colors: 5, hardChance: 0.2 };
-}
+const MECHANIC_GROUPS = [
+  { start: 1, end: 80, colors: 3, rows: 5, cols: 8, hardChance: 0.0, features: [] },
+  { start: 81, end: 160, colors: 4, rows: 7, cols: 9, hardChance: 0.1, features: ['stone'] },
+  { start: 161, end: 240, colors: 4, rows: 8, cols: 10, hardChance: 0.15, features: ['stone', 'ice'] },
+  { start: 241, end: 320, colors: 5, rows: 9, cols: 11, hardChance: 0.2, features: ['stone', 'ice', 'chain'] },
+  { start: 321, end: 400, colors: 5, rows: 10, cols: 11, hardChance: 0.22, features: ['stone', 'ice', 'chain', 'fire'] },
+  { start: 401, end: 480, colors: 5, rows: 10, cols: 12, hardChance: 0.25, features: ['stone', 'ice', 'chain', 'fire', 'void'] },
+  { start: 481, end: 5000, colors: 5, rows: 11, cols: 12, hardChance: 0.25, features: ['stone', 'ice', 'chain', 'fire', 'void', 'cosmic'] }
+];
 
-// ──────── CUMULATIVE THEMES (new one added every 80 levels) ────────
-const ALL_THEMES = ['stone', 'ice', 'chain', 'fire', 'void', 'cosmic'];
-
-function getAvailableThemes(level) {
-    // Each 80 levels unlocks one more theme (cumulative)
-    const count = Math.min(Math.floor(level / 80), ALL_THEMES.length);
-    return count === 0 ? [] : ALL_THEMES.slice(0, count);
+function getLevelConfig(level) {
+    for (let group of MECHANIC_GROUPS) {
+        if (level >= group.start && level <= group.end) return group;
+    }
+    return MECHANIC_GROUPS[MECHANIC_GROUPS.length - 1];
 }
 
 function pickRandomTheme(availableThemes) {
@@ -54,10 +55,13 @@ function shouldPlaceBubble(pattern, row, col, rows, cols){
 }
 
 function generateLevel(level, playerFails = 0) {
-    let { rows, cols, colors, hardChance } = getDifficulty(level);
+    let config = getLevelConfig(level);
+    let { rows, cols, colors, hardChance, features } = config;
+    
     if (playerFails >= 3) { hardChance = 0; colors = Math.max(2, colors - 1); }
     const selectedColors = GEN_COLORS.slice(0, colors);
-    const availableThemes = getAvailableThemes(level);
+    const availableThemes = features;
+    
     // Max 15% hard balls to avoid frustration
     const hardRate = Math.min(hardChance, 0.15);
     const pattern = getPattern(level);
