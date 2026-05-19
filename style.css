@@ -204,12 +204,12 @@ body { background: #dce1ff; display: flex; justify-content: center; align-items:
 }
 .node-premium {
     position: absolute;
-    width: 60px; height: 60px;
+    width: 56px; height: 56px;
     border-radius: 50%;
     background: radial-gradient(circle at 18px 18px, #aeaeaf, #8e8e93); /* Glossy Locked Gray */
     border: 2px solid #e5e5ea;
     display: flex; justify-content: center; align-items: center;
-    font-weight: 900; font-size: 22px; color: #fff;
+    font-weight: 900; font-size: 20px; color: #fff;
     box-shadow: 0 6px 0 #636366, 0 10px 20px rgba(0,0,0,0.15);
     cursor: pointer;
     z-index: 2;

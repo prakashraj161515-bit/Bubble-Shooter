@@ -153,7 +153,7 @@ function renderMap() {
     let pathD = "";
     // Sample wave coordinates every 10px to draw a perfectly smooth highway/ribbon
     for (let y = totalHeight; y >= 0; y -= 10) {
-        const nodeXCenter = center + Math.sin(y / frequency) * amplitude + 30; // 30px is half of node width (60px)
+        const nodeXCenter = center + Math.sin(y / frequency) * amplitude + 28; // 28px is half of node width (56px)
         if (y === totalHeight) {
             pathD += `M ${nodeXCenter} ${y}`;
         } else {
@@ -166,7 +166,7 @@ function renderMap() {
     roadPath.setAttribute("fill", "none");
     // Soft transparent royal purple-blue winding road ribbon
     roadPath.setAttribute("stroke", "rgba(129, 140, 248, 0.4)"); 
-    roadPath.setAttribute("stroke-width", "80"); 
+    roadPath.setAttribute("stroke-width", "85"); // Wider road ribbon (85px) to fit 56px nodes snugly inside
     roadPath.setAttribute("stroke-linecap", "round");
     roadPath.setAttribute("stroke-linejoin", "round");
     
@@ -180,7 +180,8 @@ function renderMap() {
         node.className = 'node-premium';
         // Invert Y coordinate so Level 1 is at the bottom (130px spacing)
         const yPos = totalHeight - (i * 130); 
-        const xPos = center + Math.sin(yPos / frequency) * amplitude;
+        // Align horizontal placement precisely using the node's vertical center (yPos + 28)
+        const xPos = center + Math.sin((yPos + 28) / frequency) * amplitude;
         node.style.top = `${yPos}px`; node.style.left = `${xPos}px`;
         
         if (i <= S.unlockedLevels) {
