@@ -140,8 +140,8 @@ function renderMap() {
     path.innerHTML = '';
     const totalLevels = 5000;
     
-    // Spaced out levels: spacious vertical height (130px) to prevent overlap, with a highly curvy spiral wave (amplitude 75, frequency 160)
-    const center = 165, amplitude = 75, frequency = 160;
+    // Extremely wavy levels: spacious height (130px) with dramatic wavy loops (amplitude 95, frequency 150)
+    const center = 165, amplitude = 95, frequency = 150;
     const totalHeight = totalLevels * 130 + 150;
     path.style.height = `${totalHeight}px`;
     
