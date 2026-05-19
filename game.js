@@ -256,7 +256,7 @@ function startGame() {
 
     const width = canvas.width;
     // ── Smart Level Generator ──────────────────────────────
-    const diff = getDifficulty(S.currentLevel);
+    const diff = getLevelConfig(S.currentLevel);
     let { rows, cols, colors, hardChance } = diff;
 
     // Adaptive Easy Mode: if player failed 3+ times, reduce difficulty
