@@ -140,8 +140,8 @@ function renderMap() {
     path.innerHTML = '';
     const totalLevels = 5000;
     
-    // Extremely wavy levels: spacious height (130px) with dramatic wavy loops (amplitude 95, frequency 150)
-    const center = 165, amplitude = 95, frequency = 150;
+    // Extremely wavy levels with exactly 4 turns (bends) per page (viewport) (amplitude 80, frequency 65)
+    const center = 165, amplitude = 80, frequency = 65;
     const totalHeight = totalLevels * 130 + 150;
     path.style.height = `${totalHeight}px`;
     
