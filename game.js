@@ -286,7 +286,25 @@ function startGame() {
             });
         });
     });
-    prepNext();
+
+    // Helpful Groups logic for Anti-Frustration
+    if (S.playerFails >= 3) {
+        for(let i=0; i<6; i++){
+            const normals = bubbles.filter(b => b.alive && b.theme === 'normal');
+            if (normals.length > 0) {
+                const centerB = normals[Math.floor(Math.random() * normals.length)];
+                bubbles.forEach(b => {
+                    if (b.alive && b.theme === 'normal' && Math.hypot(b.x - centerB.x, b.targetY - centerB.targetY) < spacingX * 1.5) {
+                        b.color = centerB.color;
+                    }
+                });
+            }
+        }
+    }
+
+    activeColor = getSmartShooterColor();
+    reserveColor = getSmartShooterColor();
+
     updateUI();
 }
 
@@ -493,8 +511,11 @@ function checkEnd() {
     if (remaining.length === 0 || S.objective.count >= S.objective.total) {
         if (S.currentLevel === S.unlockedLevels) S.unlockedLevels++;
         
-        // Calculate and save stars
-        const newStars = S.score >= 3000 ? 3 : (S.score >= 1500 ? 2 : 1);
+        // Calculate and save stars based on ammo
+        let newStars = 1;
+        if (S.ammo >= 15) newStars = 3;
+        else if (S.ammo >= 7) newStars = 2;
+        
         S.levelStars[S.currentLevel] = Math.max(newStars, S.levelStars[S.currentLevel] || 0);
         S.playerFails = 0;
         saveState();
@@ -567,8 +588,32 @@ function updateUI() {
 }
 
 
+function getBestMatchingColor() {
+    const colorCount = {};
+    bubbles.forEach(b => {
+        if (!b.alive || b.theme !== 'normal') return;
+        colorCount[b.color] = (colorCount[b.color] || 0) + 1;
+    });
+    const sorted = Object.keys(colorCount).sort((a,b) => colorCount[b] - colorCount[a]);
+    return sorted[0] || COLORS[0];
+}
+
+function getSmartShooterColor() {
+    const alive = bubbles.filter(b => b.alive && b.theme === 'normal');
+    if (alive.length === 0) return COLORS[0];
+    
+    // Anti-frustration or Near Win
+    if (S.playerFails >= 3 || alive.length <= 8) {
+        return getBestMatchingColor();
+    }
+
+    const existingColors = [...new Set(alive.map(b => b.color))];
+    return existingColors[Math.floor(Math.random() * existingColors.length)];
+}
+
 function prepNext() {
-    activeColor = reserveColor; reserveColor = COLORS[Math.floor(Math.random()*COLORS.length)];
+    activeColor = reserveColor; 
+    reserveColor = getSmartShooterColor();
     updateUI();
 }
 
