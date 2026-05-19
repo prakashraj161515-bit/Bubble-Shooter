@@ -286,7 +286,7 @@ function startGame() {
         rowData.forEach((cell, col) => {
             if (!cell) return; // null = gap
             const x = startX + col * spacingX + (spacingX / 2);
-            const targetY = row * spacingY + (spacingX / 2);
+            const targetY = row * spacingY + (spacingX / 2) + 105; // 105px offset to clear top iOS HUD
             bubbles.push({
                 x, targetY,
                 y: canvas.height + 100,
@@ -373,13 +373,9 @@ function shoot(e) {
     updateUI();
 }
 
-
-
-
 function snap() {
     if (!projectile) return;
     const curR = window.activeR || 18;
-    // Use the actual numCols set by the level generator — this was the root bug
     const numCols = window.numCols || 10;
     const spacingX = canvas.width / numCols;
     const spacingY = spacingX * 0.866;
@@ -387,7 +383,8 @@ function snap() {
     let bestDist = Infinity;
     let bestCell = null;
 
-    const estRow = Math.round((projectile.y - clusterOffset - (spacingX / 2)) / spacingY);
+    const TOP_HUD_OFFSET = 105;
+    const estRow = Math.round((projectile.y - clusterOffset - TOP_HUD_OFFSET - (spacingX / 2)) / spacingY);
     
     for (let r = Math.max(0, estRow - 2); r <= estRow + 2; r++) {
         const isOffset = r % 2 !== 0;
@@ -396,7 +393,7 @@ function snap() {
         
         for (let c = 0; c < rowWidth; c++) {
             const nx = startX + c * spacingX + (spacingX / 2);
-            const ny = r * spacingY + (spacingX / 2);
+            const ny = r * spacingY + (spacingX / 2) + TOP_HUD_OFFSET;
             const absoluteNy = ny + clusterOffset;
             
             let occupied = false;
@@ -941,7 +938,7 @@ function animate() {
                 stepVx *= -1; // Reflect current step
             }
             
-            if (projectile.y < curR + 20 + clusterOffset) hit = true; 
+            if (projectile.y < curR + 20 + clusterOffset + 105) hit = true; 
             else {
                 for (let b of bubbles) {
                     if (b.alive && !b.falling && Math.hypot(b.x - projectile.x, (b.targetY + clusterOffset) - projectile.y) < curR * 1.8) {
