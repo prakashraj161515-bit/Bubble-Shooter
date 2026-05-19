@@ -140,9 +140,9 @@ function renderMap() {
     path.innerHTML = '';
     const totalLevels = 5000;
     
-    // Highly curved and wave-dense: amplitude (75) and tight frequency (175) for a gorgeous winding road spiral
-    const center = 165, amplitude = 75, frequency = 175;
-    const totalHeight = totalLevels * 140 + 150;
+    // Highly compact, tight spiral winding: gentler amplitude (65), tight wave frequency (115) and 90px height steps
+    const center = 165, amplitude = 65, frequency = 115;
+    const totalHeight = totalLevels * 90 + 150;
     path.style.height = `${totalHeight}px`;
     
     // ── STEP 1: Generate smooth SVG winding road ribbon behind nodes ──
@@ -178,8 +178,8 @@ function renderMap() {
     for (let i = 1; i <= totalLevels; i++) {
         const node = document.createElement('div');
         node.className = 'node-premium';
-        // Invert Y coordinate so Level 1 is at the bottom
-        const yPos = totalHeight - (i * 140); 
+        // Invert Y coordinate so Level 1 is at the bottom (90px spacing)
+        const yPos = totalHeight - (i * 90); 
         const xPos = center + Math.sin(yPos / frequency) * amplitude;
         node.style.top = `${yPos}px`; node.style.left = `${xPos}px`;
         
