@@ -177,7 +177,23 @@ function renderMap() {
     const fragment = document.createDocumentFragment();
     for (let i = 1; i <= totalLevels; i++) {
         const node = document.createElement('div');
-        node.className = 'node-premium';
+        
+        // Determine difficulty type and classes
+        let difficultyClass = '';
+        let fireBadgeHtml = '';
+        if (i % 60 === 0) {
+            difficultyClass = 'difficulty-super-hard';
+            fireBadgeHtml = `<div class="fire-badge super-hard-badge">🔥</div>`;
+        } else if (i % 30 === 0) {
+            difficultyClass = 'difficulty-very-hard';
+            fireBadgeHtml = `<div class="fire-badge very-hard-badge">🔥</div>`;
+        } else if (i % 15 === 0) {
+            difficultyClass = 'difficulty-hard';
+            fireBadgeHtml = `<div class="fire-badge hard-badge">🔥</div>`;
+        }
+        
+        node.className = `node-premium ${difficultyClass}`;
+        
         // Invert Y coordinate so Level 1 is at the bottom (130px spacing)
         const yPos = totalHeight - (i * 130); 
         // Align horizontal placement precisely using the node's vertical center (yPos + 28)
@@ -189,11 +205,15 @@ function renderMap() {
             let stars = S.levelStars[i] || 0;
             let starStr = stars > 0 ? "⭐".repeat(stars) : "⭐"; 
             // Position stars at the TOP of the circle just like in the screenshot
-            node.innerHTML = `<span>${i}</span><div style="position:absolute;top:-25px;width:100%;text-align:center;font-size:14px;color:#ffcf3e;text-shadow:0 2px 4px rgba(0,0,0,0.3);">${starStr}</div>`;
+            node.innerHTML = `<span>${i}</span>
+                              <div style="position:absolute;top:-25px;width:100%;text-align:center;font-size:14px;color:#ffcf3e;text-shadow:0 2px 4px rgba(0,0,0,0.3);">${starStr}</div>
+                              ${fireBadgeHtml}`;
             node.onclick = () => { S.currentLevel = i; startGame(); };
         } else { 
             // Position lock at the TOP of the circle
-            node.innerHTML = `<span>${i}</span><div style="position:absolute;top:-23px;width:100%;text-align:center;font-size:14px;text-shadow:0 1px 3px rgba(0,0,0,0.4);">🔒</div>`; 
+            node.innerHTML = `<span>${i}</span>
+                              <div style="position:absolute;top:-23px;width:100%;text-align:center;font-size:14px;text-shadow:0 1px 3px rgba(0,0,0,0.4);">🔒</div>
+                              ${fireBadgeHtml}`; 
         }
         fragment.appendChild(node);
     }
@@ -293,6 +313,25 @@ function startGame() {
     // ── Smart Level Generator ──────────────────────────────
     const diff = getLevelConfig(S.currentLevel);
     let { rows, cols, colors, hardChance } = diff;
+
+    // Apply Hard / Very Hard / Super Hard gameplay difficulty scaling
+    if (S.currentLevel % 60 === 0) {
+        // Super Hard: +3 rows, +1 color (max 6), +15% hardChance
+        rows += 3;
+        colors = Math.min(6, colors + 1);
+        hardChance = Math.min(0.4, hardChance + 0.15);
+        console.log(`[Super Hard Level] Level: ${S.currentLevel} | Rows: ${rows} | Colors: ${colors} | HardChance: ${hardChance}`);
+    } else if (S.currentLevel % 30 === 0) {
+        // Very Hard: +2 rows, +10% hardChance
+        rows += 2;
+        hardChance = Math.min(0.35, hardChance + 0.1);
+        console.log(`[Very Hard Level] Level: ${S.currentLevel} | Rows: ${rows} | HardChance: ${hardChance}`);
+    } else if (S.currentLevel % 15 === 0) {
+        // Hard: +1 row, +5% hardChance
+        rows += 1;
+        hardChance = Math.min(0.3, hardChance + 0.05);
+        console.log(`[Hard Level] Level: ${S.currentLevel} | Rows: ${rows} | HardChance: ${hardChance}`);
+    }
 
     // Adaptive Easy Mode: if player failed 3+ times, reduce difficulty
     if (S.playerFails >= 3) {

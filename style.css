@@ -490,3 +490,60 @@ button#toggleSoundBtn:not(.off)::after, button#toggleMusicBtn:not(.off)::after {
 }
 .pu-glass-btn::before { display: none; }
 
+/* Special Difficulty Levels */
+.node-premium.unlocked.difficulty-hard {
+    background: radial-gradient(circle at 16px 16px, #ffe480, #ffcc00) !important;
+    border: 2.5px solid #fff !important;
+    box-shadow: 0 6px 0 #b38f00, 0 10px 20px rgba(255, 204, 0, 0.45) !important;
+}
+.node-premium.unlocked.difficulty-hard:active {
+    box-shadow: 0 2px 0 #b38f00, 0 5px 10px rgba(255, 204, 0, 0.45) !important;
+}
+
+.node-premium.unlocked.difficulty-very-hard {
+    background: radial-gradient(circle at 16px 16px, #ffb366, #ff8800) !important;
+    border: 2.5px solid #fff !important;
+    box-shadow: 0 6px 0 #b35f00, 0 10px 20px rgba(255, 136, 0, 0.45) !important;
+}
+.node-premium.unlocked.difficulty-very-hard:active {
+    box-shadow: 0 2px 0 #b35f00, 0 5px 10px rgba(255, 136, 0, 0.45) !important;
+}
+
+.node-premium.unlocked.difficulty-super-hard {
+    background: radial-gradient(circle at 16px 16px, #ff9994, #ff3b30) !important;
+    border: 2.5px solid #fff !important;
+    box-shadow: 0 6px 0 #b31a10, 0 10px 20px rgba(255, 59, 48, 0.45) !important;
+}
+.node-premium.unlocked.difficulty-super-hard:active {
+    box-shadow: 0 2px 0 #b31a10, 0 5px 10px rgba(255, 59, 48, 0.45) !important;
+}
+
+/* Fire Badges */
+.fire-badge {
+    position: absolute;
+    right: -10px;
+    top: 15px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 13px;
+    border: 1.5px solid #fff;
+    z-index: 5;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+.hard-badge {
+    background: linear-gradient(135deg, #ffe480, #ffcc00);
+    box-shadow: 0 2px 8px rgba(255, 204, 0, 0.6);
+}
+.very-hard-badge {
+    background: linear-gradient(135deg, #ffb366, #ff8800);
+    box-shadow: 0 2px 8px rgba(255, 136, 0, 0.6);
+}
+.super-hard-badge {
+    background: linear-gradient(135deg, #ff9994, #ff3b30);
+    box-shadow: 0 2px 8px rgba(255, 59, 48, 0.6);
+}
+
