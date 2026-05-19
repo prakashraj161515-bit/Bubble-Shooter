@@ -140,8 +140,8 @@ function renderMap() {
     path.innerHTML = '';
     const totalLevels = 5000;
     
-    // Reduced curves steepness: gentler amplitude (65) and frequency (280) to decrease diagonal angles
-    const center = 165, amplitude = 65, frequency = 280;
+    // Highly curved and wave-dense: amplitude (75) and tight frequency (175) for a gorgeous winding road spiral
+    const center = 165, amplitude = 75, frequency = 175;
     const totalHeight = totalLevels * 140 + 150;
     path.style.height = `${totalHeight}px`;
     
