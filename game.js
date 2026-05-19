@@ -140,8 +140,8 @@ function renderMap() {
     path.innerHTML = '';
     const totalLevels = 5000;
     
-    // Increased curves: wider amplitude (115) and tighter frequency (260)
-    const center = 165, amplitude = 115, frequency = 260;
+    // Reduced curves steepness: gentler amplitude (65) and frequency (280) to decrease diagonal angles
+    const center = 165, amplitude = 65, frequency = 280;
     const totalHeight = totalLevels * 140 + 150;
     path.style.height = `${totalHeight}px`;
     
