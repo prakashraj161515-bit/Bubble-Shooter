@@ -46,21 +46,11 @@ function createHardBubble(color, theme='normal') { return { color, type: 'hard',
 
 // ──────── PATTERN SYSTEM ────────
 function getPattern(level){
-    const patterns = ["full", "triangle", "diamond", "checker", "zigzag", "cross", "spiral", "tunnel"];
-    return patterns[level % patterns.length];
+    return "full"; // User requested no spaces, solid lines of bubbles
 }
 
 function shouldPlaceBubble(pattern, row, col, rows, cols){
-    switch(pattern){
-        case "triangle": return col <= row;
-        case "diamond": return Math.abs(col - cols/2) < row;
-        case "checker": return (row + col) % 2 === 0;
-        case "zigzag": return row % 2 === col % 2;
-        case "cross": return row === Math.floor(rows/2) || col === Math.floor(cols/2);
-        case "spiral": return Math.random() > 0.35;
-        case "tunnel": return col !== Math.floor(cols/2) && col !== Math.floor(cols/2)-1;
-        default: return true;
-    }
+    return true; // No pattern gaps
 }
 
 function generateLevel(level, playerFails = 0) {
@@ -79,7 +69,7 @@ function generateLevel(level, playerFails = 0) {
                 currentRow.push(null);
                 continue;
             }
-            if (level > 30 && Math.random() < 0.08) { currentRow.push(null); continue; }
+            // User requested no random gaps
             const color = selectedColors[Math.floor(Math.random() * selectedColors.length)];
             const isHard = availableThemes.length > 0 && Math.random() < hardRate;
             currentRow.push(isHard
@@ -257,7 +247,7 @@ function startGame() {
     const levelGrid = generateLevel(S.currentLevel, S.playerFails);
     const numCols = cols;
     const spacingX = width / numCols;
-    const dynamicR = (spacingX / 2) * 0.95;
+    const dynamicR = spacingX / 2; // User requested tight lines, no visual gaps
     window.activeR = dynamicR;
     window.numCols = numCols;
 
@@ -485,6 +475,17 @@ function snap() {
                         if (window.screenShake) screenShake();
                         return;
                     }
+                    if (b.theme === 'chain') {
+                        b.hp--;
+                        if (b.hp <= 1) {
+                            b.theme = 'normal'; // Chain breaks, becomes normal!
+                            createParticles(b.x, b.y, '#778899');
+                            S.score += 100;
+                            if (window.showPoints) showPoints(b.x, b.y - 20, 'UNLOCKED!');
+                            if (window.screenShake) screenShake();
+                            return; // Stop here so it doesn't break entirely
+                        }
+                    }
                     b.hp--;
                     createParticles(b.x, b.y, '#ccccff');
                     if (b.hp <= 0) {
@@ -691,15 +692,48 @@ function drawBall(x, y, color, r, hp, theme) {
         drawBubbleDamage(x, finalY, radius, hp, 2);
 
     } else if (theme === 'chain') {
-        // Base color is already drawn in STEP 1. Add chains on top.
-        ctx.strokeStyle = "#d0d0d0"; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.moveTo(x-radius*0.6, finalY-radius*0.6); ctx.lineTo(x+radius*0.6, finalY+radius*0.6);
-        ctx.moveTo(x+radius*0.6, finalY-radius*0.6); ctx.lineTo(x-radius*0.6, finalY+radius*0.6); ctx.stroke();
-        // metallic shine
-        ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 1; ctx.stroke();
-        // center lock
-        ctx.beginPath(); ctx.arc(x, finalY, radius*0.3, 0, Math.PI * 2); ctx.fillStyle = "#888"; ctx.fill();
-        ctx.strokeStyle = "#444"; ctx.stroke();
+        // Realistic Iron Chain & Lock
+        ctx.save();
+        
+        // 1. Cross Chains (Metallic Iron)
+        const chainGrad = ctx.createLinearGradient(x-radius, finalY-radius, x+radius, finalY+radius);
+        chainGrad.addColorStop(0, "#4a4a4a"); chainGrad.addColorStop(0.5, "#a0a0a0"); chainGrad.addColorStop(1, "#2a2a2a");
+        ctx.strokeStyle = chainGrad; ctx.lineWidth = radius * 0.4;
+        ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(x-radius*0.7, finalY-radius*0.7); ctx.lineTo(x+radius*0.7, finalY+radius*0.7); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x+radius*0.7, finalY-radius*0.7); ctx.lineTo(x-radius*0.7, finalY+radius*0.7); ctx.stroke();
+        
+        // Chain link inner shadows for 3D realism
+        ctx.strokeStyle = "rgba(0,0,0,0.6)"; ctx.lineWidth = radius * 0.15;
+        ctx.beginPath(); ctx.moveTo(x-radius*0.7, finalY-radius*0.7); ctx.lineTo(x+radius*0.7, finalY+radius*0.7); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x+radius*0.7, finalY-radius*0.7); ctx.lineTo(x-radius*0.7, finalY+radius*0.7); ctx.stroke();
+
+        // 2. Heavy Iron Padlock
+        const lockW = radius * 0.6;
+        const lockH = radius * 0.5;
+        const lockY = finalY + radius * 0.1;
+        
+        // Lock body (Dark Steel)
+        const lockGrad = ctx.createLinearGradient(x, lockY-lockH/2, x, lockY+lockH/2);
+        lockGrad.addColorStop(0, "#555"); lockGrad.addColorStop(0.3, "#999"); lockGrad.addColorStop(1, "#222");
+        ctx.fillStyle = lockGrad;
+        ctx.shadowColor = "rgba(0,0,0,0.8)"; ctx.shadowBlur = 6; ctx.shadowOffsetY = 3;
+        ctx.fillRect(x - lockW/2, lockY - lockH/2, lockW, lockH);
+        
+        // Lock shackle (Top loop)
+        ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+        ctx.strokeStyle = "#888"; ctx.lineWidth = radius * 0.15;
+        ctx.beginPath(); ctx.arc(x, lockY - lockH/2, lockW * 0.35, Math.PI, 0); ctx.stroke();
+        
+        // Keyhole
+        ctx.fillStyle = "#111";
+        ctx.beginPath(); ctx.arc(x, lockY - radius*0.05, radius*0.08, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(x - radius*0.06, lockY - radius*0.05);
+        ctx.lineTo(x + radius*0.06, lockY - radius*0.05);
+        ctx.lineTo(x + radius*0.1, lockY + radius*0.15);
+        ctx.lineTo(x - radius*0.1, lockY + radius*0.15); ctx.fill();
+        
+        ctx.restore();
         drawBubbleDamage(x, finalY, radius, hp, 2);
 
     } else if (theme === 'fire') {
