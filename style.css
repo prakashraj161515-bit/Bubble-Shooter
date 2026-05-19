@@ -198,7 +198,7 @@ body { background: #dce1ff; display: flex; justify-content: center; align-items:
 .map-scroller {
     flex: 1;
     overflow-y: auto;
-    background: linear-gradient(180deg, #6c8cff 0%, #a2b9ff 40%, #fff 100%) !important;
+    background: linear-gradient(180deg, #0f1e36 0%, #1a365d 30%, #2b6cb0 70%, #4299e1 100%) !important;
     scrollbar-width: none;
     position: relative;
 }
