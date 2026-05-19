@@ -198,13 +198,7 @@ body { background: #dce1ff; display: flex; justify-content: center; align-items:
 .map-scroller {
     flex: 1;
     overflow-y: auto;
-    background: 
-        radial-gradient(circle at 10% 20%, rgba(255, 182, 193, 0.45) 0%, transparent 45%),
-        radial-gradient(circle at 90% 15%, rgba(160, 196, 255, 0.5) 0%, transparent 45%),
-        radial-gradient(circle at 85% 85%, rgba(202, 255, 191, 0.45) 0%, transparent 45%),
-        radial-gradient(circle at 15% 80%, rgba(255, 214, 165, 0.45) 0%, transparent 45%),
-        radial-gradient(circle at 50% 50%, rgba(255, 209, 220, 0.4) 0%, transparent 60%),
-        #ffffff;
+    background: #dce1ff;
     scrollbar-width: none;
     position: relative;
 }
