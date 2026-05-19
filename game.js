@@ -266,16 +266,20 @@ function renderMap() {
         if (i <= S.unlockedLevels) {
             node.classList.add('unlocked');
             let stars = S.levelStars[i] || 0;
-            let starStr = stars > 0 ? "⭐".repeat(stars) : "⭐"; 
-            // Position stars at the TOP of the circle just like in the screenshot
+            let starHtml = '';
+            if (stars > 0) {
+                let starStr = "⭐".repeat(stars);
+                // Stars are 1.5x larger (font-size 21px) and overlap 40% above the level circle (top -8px)
+                starHtml = `<div style="position:absolute;top:-8px;width:100%;text-align:center;font-size:21px;line-height:21px;color:#ffcf3e;text-shadow:0 2px 5px rgba(0,0,0,0.5);z-index:4;pointer-events:none;">${starStr}</div>`;
+            }
             node.innerHTML = `<span>${i}</span>
-                              <div style="position:absolute;top:-25px;width:100%;text-align:center;font-size:14px;color:#ffcf3e;text-shadow:0 2px 4px rgba(0,0,0,0.3);">${starStr}</div>
+                              ${starHtml}
                               ${fireBadgeHtml}`;
             node.onclick = () => { S.currentLevel = i; startGame(); };
         } else { 
             // Position lock at the TOP of the circle
             node.innerHTML = `<span>${i}</span>
-                              <div style="position:absolute;top:-23px;width:100%;text-align:center;font-size:14px;text-shadow:0 1px 3px rgba(0,0,0,0.4);">🔒</div>
+                              <div style="position:absolute;top:-23px;width:100%;text-align:center;font-size:14px;text-shadow:0 1px 3px rgba(0,0,0,0.4);z-index:4;pointer-events:none;">🔒</div>
                               ${fireBadgeHtml}`; 
         }
         fragment.appendChild(node);
