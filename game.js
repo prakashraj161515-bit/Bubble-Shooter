@@ -161,16 +161,45 @@ function renderMap() {
         }
     }
     
+    // 1. Neon Outer Glow Border
+    const roadBorder = document.createElementNS(svgNS, "path");
+    roadBorder.setAttribute("d", pathD);
+    roadBorder.setAttribute("fill", "none");
+    roadBorder.setAttribute("stroke", "rgba(99, 102, 241, 0.25)"); 
+    roadBorder.setAttribute("stroke-width", "95"); 
+    roadBorder.setAttribute("stroke-linecap", "round");
+    roadBorder.setAttribute("stroke-linejoin", "round");
+    svg.appendChild(roadBorder);
+
+    // 2. Main Road Ribbon Track
     const roadPath = document.createElementNS(svgNS, "path");
     roadPath.setAttribute("d", pathD);
     roadPath.setAttribute("fill", "none");
-    // Soft transparent royal purple-blue winding road ribbon
-    roadPath.setAttribute("stroke", "rgba(129, 140, 248, 0.4)"); 
-    roadPath.setAttribute("stroke-width", "85"); // Wider road ribbon (85px) to fit 56px nodes snugly inside
+    roadPath.setAttribute("stroke", "rgba(129, 140, 248, 0.45)"); 
+    roadPath.setAttribute("stroke-width", "85"); 
     roadPath.setAttribute("stroke-linecap", "round");
     roadPath.setAttribute("stroke-linejoin", "round");
-    
     svg.appendChild(roadPath);
+
+    // 3. Inner Rich Royal Road Core
+    const roadCore = document.createElementNS(svgNS, "path");
+    roadCore.setAttribute("d", pathD);
+    roadCore.setAttribute("fill", "none");
+    roadCore.setAttribute("stroke", "rgba(49, 46, 129, 0.4)"); 
+    roadCore.setAttribute("stroke-width", "75"); 
+    roadCore.setAttribute("stroke-linecap", "round");
+    roadCore.setAttribute("stroke-linejoin", "round");
+    svg.appendChild(roadCore);
+
+    // 4. White Dashed Center Lane Marker
+    const roadCenter = document.createElementNS(svgNS, "path");
+    roadCenter.setAttribute("d", pathD);
+    roadCenter.setAttribute("fill", "none");
+    roadCenter.setAttribute("stroke", "rgba(255, 255, 255, 0.7)"); 
+    roadCenter.setAttribute("stroke-width", "4"); 
+    roadCenter.setAttribute("stroke-dasharray", "12, 16"); 
+    roadCenter.setAttribute("stroke-linecap", "round");
+    svg.appendChild(roadCenter);
     path.appendChild(svg);
     
     // ── STEP 2: Generate Level Circles (Nodes) ──
