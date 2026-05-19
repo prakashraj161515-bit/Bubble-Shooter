@@ -35,7 +35,17 @@ function getLevelConfig(level) {
     for (let group of MECHANIC_GROUPS) {
         if (level >= group.start && level <= group.end) return group;
     }
-    return MECHANIC_GROUPS[MECHANIC_GROUPS.length - 1];
+    // Beyond 480: dynamically scale every 80 levels up to 5000
+    const phase = Math.floor((level - 401) / 80);
+    const colors = Math.min(6, 5 + Math.floor(phase / 10)); // Caps at 6 colors
+    const hardChance = Math.min(0.35, 0.25 + (phase * 0.01)); // Increases up to 35% hard balls
+    const features = ['stone', 'ice', 'chain', 'fire', 'void', 'cosmic', 'metal', 'spike'];
+    const activeCount = Math.min(features.length, 5 + Math.floor(phase / 2));
+    
+    return {
+        start: level, end: level, colors, rows: 11, cols: 12,
+        hardChance, features: features.slice(0, activeCount)
+    };
 }
 
 function pickRandomTheme(availableThemes) {
@@ -43,7 +53,15 @@ function pickRandomTheme(availableThemes) {
 }
 
 function createBubble(color, theme='normal')     { return { color, type: 'normal', hp: 1, theme }; }
-function createHardBubble(color, theme='normal') { return { color, type: 'hard',   hp: 2, theme }; }
+function createHardBubble(color, theme='normal') {
+    let hp = 2; // ice, chain
+    if (theme === 'fire') hp = 3;
+    else if (theme === 'void') hp = 4;
+    else if (theme === 'cosmic') hp = 5;
+    else if (theme === 'metal') hp = 6;
+    else if (theme === 'spike') hp = 2; // Spike breaks normally but hurts the shooter
+    return { color, type: 'hard', hp, theme }; 
+}
 
 // ──────── PATTERN SYSTEM ────────
 function getPattern(level){
@@ -428,6 +446,23 @@ function snap() {
     }
 
     const finalVisualY = bestCell.ny + clusterOffset;
+    
+    // Check if player hit a Spike bubble directly
+    let hitSpike = false;
+    for(let b of bubbles) {
+        if(b.alive && b.theme === 'spike' && Math.hypot(b.x - bestCell.nx, b.targetY - bestCell.ny) < spacingX) {
+            hitSpike = true; break;
+        }
+    }
+    
+    if (hitSpike) {
+        // Spike destroys the projectile instantly, no matching!
+        createParticles(bestCell.nx, bestCell.ny, projectile.color);
+        if(S.settings.sound) playSFX('pop');
+        if (window.screenShake) screenShake();
+        projectile = null; checkEnd(); updateUI(); return;
+    }
+
     const newB = { 
         x: bestCell.nx, targetY: bestCell.ny, y: finalVisualY, 
         color: projectile.color, alive: true, falling: false, 
@@ -487,11 +522,21 @@ function snap() {
                             S.score += 100;
                             if (window.showPoints) showPoints(b.x, b.y - 20, 'UNLOCKED!');
                             if (window.screenShake) screenShake();
-                            return; // Stop here so it doesn't break entirely
+                            return; 
                         }
                     }
+                    
                     b.hp--;
-                    createParticles(b.x, b.y, '#ccccff');
+                    
+                    // Specific particles based on theme
+                    let pColor = '#ccccff';
+                    if (b.theme === 'fire') pColor = '#ff6600';
+                    if (b.theme === 'void') pColor = '#cc00ff';
+                    if (b.theme === 'cosmic') pColor = '#00ffff';
+                    if (b.theme === 'metal') pColor = '#555555';
+                    if (b.theme === 'spike') pColor = '#222222';
+                    createParticles(b.x, b.y, pColor);
+                    
                     if (b.hp <= 0) {
                         b.alive = false;
                         S.score += 150; // Bonus for clearing a blocker
@@ -749,6 +794,7 @@ function drawBall(x, y, color, r, hp, theme) {
         ctx.beginPath(); ctx.moveTo(x,finalY-radius*0.7); ctx.bezierCurveTo(x+radius*0.5,finalY-radius*0.2,x-radius*0.4,finalY+radius*0.2,x,finalY+radius*0.65); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(x-radius*0.3,finalY-radius*0.5); ctx.bezierCurveTo(x+radius*0.3,finalY,x-radius*0.2,finalY+radius*0.3,x+radius*0.1,finalY+radius*0.65); ctx.stroke();
         ctx.beginPath(); ctx.arc(x,finalY,radius-1,0,Math.PI*2); ctx.strokeStyle='rgba(255,100,0,0.9)'; ctx.lineWidth=2.5; ctx.stroke();
+        drawBubbleDamage(x, finalY, radius, hp, 3);
 
     } else if (theme === 'void') {
         // Dark purple energy overlay
@@ -760,6 +806,7 @@ function drawBall(x, y, color, r, hp, theme) {
         ctx.strokeStyle='rgba(200,80,255,0.4)'; ctx.lineWidth=1.2;
         ctx.beginPath(); ctx.moveTo(x-radius*0.55,finalY); ctx.lineTo(x+radius*0.55,finalY); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(x,finalY-radius*0.55); ctx.lineTo(x,finalY+radius*0.55); ctx.stroke();
+        drawBubbleDamage(x, finalY, radius, hp, 4);
 
     } else if (theme === 'cosmic') {
         // Rainbow shimmer overlay
@@ -772,6 +819,35 @@ function drawBall(x, y, color, r, hp, theme) {
         ctx.beginPath(); ctx.arc(x,finalY,radius,0,Math.PI*2); ctx.fillStyle=cg; ctx.fill();
         ctx.beginPath(); ctx.arc(x,finalY,radius-1,0,Math.PI*2);
         ctx.strokeStyle=`hsl(${(t*90)%360},100%,75%)`; ctx.lineWidth=2.5; ctx.stroke();
+        drawBubbleDamage(x, finalY, radius, hp, 5);
+
+    } else if (theme === 'metal') {
+        // Heavy Tungsten Metal
+        const mGrad = ctx.createRadialGradient(x-radius*0.4, finalY-radius*0.4, radius*0.1, x, finalY, radius);
+        mGrad.addColorStop(0, "#fff"); mGrad.addColorStop(0.3, "#888"); mGrad.addColorStop(0.8, "#333"); mGrad.addColorStop(1, "#111");
+        ctx.beginPath(); ctx.arc(x, finalY, radius, 0, Math.PI * 2); ctx.fillStyle = mGrad; ctx.fill();
+        ctx.beginPath(); ctx.arc(x, finalY, radius-1, 0, Math.PI * 2); ctx.strokeStyle = "#555"; ctx.lineWidth=2; ctx.stroke();
+        // Heavy bolts
+        ctx.fillStyle="#000";
+        ctx.beginPath(); ctx.arc(x-radius*0.4, finalY-radius*0.4, 2, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x+radius*0.4, finalY-radius*0.4, 2, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x, finalY+radius*0.5, 2, 0, Math.PI*2); ctx.fill();
+        drawBubbleDamage(x, finalY, radius, hp, 6);
+
+    } else if (theme === 'spike') {
+        // Dangerous Spikes (kills projectile)
+        ctx.beginPath(); ctx.arc(x, finalY, radius, 0, Math.PI * 2); ctx.fillStyle = "#222"; ctx.fill();
+        ctx.fillStyle = "#ff0000"; ctx.shadowColor = "#ff0000"; ctx.shadowBlur = 10;
+        for(let i=0; i<8; i++){
+            const angle = (i * Math.PI) / 4;
+            ctx.beginPath();
+            ctx.moveTo(x + Math.cos(angle)*radius*0.5, finalY + Math.sin(angle)*radius*0.5);
+            ctx.lineTo(x + Math.cos(angle+0.2)*radius*0.5, finalY + Math.sin(angle+0.2)*radius*0.5);
+            ctx.lineTo(x + Math.cos(angle+0.1)*radius*1.2, finalY + Math.sin(angle+0.1)*radius*1.2);
+            ctx.fill();
+        }
+        ctx.shadowBlur = 0;
+        drawBubbleDamage(x, finalY, radius, hp, 2);
 
     } else {
         // Normal: just add star ✶
