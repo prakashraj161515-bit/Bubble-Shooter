@@ -184,7 +184,7 @@ function renderMap() {
         if (i % 60 === 0) {
             difficultyClass = 'difficulty-super-hard';
             fireBadgeHtml = `<div class="fire-badge super-hard-badge">
-                               <svg class="fire-svg" viewBox="0 0 24 24" style="width:34px; height:40px; display:block;">
+                               <svg class="fire-svg" viewBox="0 0 24 24" style="width:68px; height:80px; display:block;">
                                  <path d="M12 2C12 2 7.5 6.5 7.5 10.5C7.5 14 10 16 12 16C14 16 16.5 14 16.5 10.5C16.5 6.5 12 2 12 2Z" fill="#ffffff"/>
                                  <path d="M12 6.5C12 6.5 9.5 9 9.5 11.5C9.5 13.5 11 14.5 12 14.5C13 14.5 14.5 13.5 14.5 11.5C14.5 9 12 6.5 12 6.5Z" fill="#ff3b30"/>
                                </svg>
@@ -192,7 +192,7 @@ function renderMap() {
         } else if (i % 30 === 0) {
             difficultyClass = 'difficulty-very-hard';
             fireBadgeHtml = `<div class="fire-badge very-hard-badge">
-                               <svg class="fire-svg" viewBox="0 0 24 24" style="width:34px; height:40px; display:block;">
+                               <svg class="fire-svg" viewBox="0 0 24 24" style="width:68px; height:80px; display:block;">
                                  <path d="M12 2C12 2 7.5 6.5 7.5 10.5C7.5 14 10 16 12 16C14 16 16.5 14 16.5 10.5C16.5 6.5 12 2 12 2Z" fill="#ffffff"/>
                                  <path d="M12 6.5C12 6.5 9.5 9 9.5 11.5C9.5 13.5 11 14.5 12 14.5C13 14.5 14.5 13.5 14.5 11.5C14.5 9 12 6.5 12 6.5Z" fill="#ff8800"/>
                                </svg>
@@ -200,7 +200,7 @@ function renderMap() {
         } else if (i % 15 === 0) {
             difficultyClass = 'difficulty-hard';
             fireBadgeHtml = `<div class="fire-badge hard-badge">
-                               <svg class="fire-svg" viewBox="0 0 24 24" style="width:34px; height:40px; display:block;">
+                               <svg class="fire-svg" viewBox="0 0 24 24" style="width:68px; height:80px; display:block;">
                                  <path d="M12 2C12 2 7.5 6.5 7.5 10.5C7.5 14 10 16 12 16C14 16 16.5 14 16.5 10.5C16.5 6.5 12 2 12 2Z" fill="#ffffff"/>
                                  <path d="M12 6.5C12 6.5 9.5 9 9.5 11.5C9.5 13.5 11 14.5 12 14.5C13 14.5 14.5 13.5 14.5 11.5C14.5 9 12 6.5 12 6.5Z" fill="#ffcc00"/>
                                </svg>
