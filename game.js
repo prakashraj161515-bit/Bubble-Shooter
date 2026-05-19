@@ -633,11 +633,19 @@ function updateUI() {
     const bf = document.getElementById('badge-fireball');
     if(bf && S.powerups) bf.innerText = S.powerups.fireball;
 
-    // Update settings buttons
+    // Update settings buttons (iOS Switch Style)
     const sBtn = document.getElementById('toggleSoundBtn');
-    if(sBtn) { sBtn.innerText = S.settings.sound ? "ON" : "OFF"; sBtn.style.background = S.settings.sound ? "#3ddc84" : "#ccc"; }
+    if(sBtn) {
+        sBtn.innerText = ""; 
+        if (S.settings.sound) sBtn.classList.remove('off');
+        else sBtn.classList.add('off');
+    }
     const mBtn = document.getElementById('toggleMusicBtn');
-    if(mBtn) { mBtn.innerText = S.settings.music ? "ON" : "OFF"; mBtn.style.background = S.settings.music ? "#3ddc84" : "#ccc"; }
+    if(mBtn) {
+        mBtn.innerText = "";
+        if (S.settings.music) mBtn.classList.remove('off');
+        else mBtn.classList.add('off');
+    }
 
     saveState();
 }
@@ -1061,6 +1069,17 @@ window.resetProgress = function() {
 
 // ──────── LEVEL START ANIMATION ────────
 window.startLevelAnimation = function(level) {
+    const island = document.getElementById('dynamicIsland');
+    const islandText = document.getElementById('island-text');
+    if (island && islandText) {
+        islandText.innerText = `⚡ LEVEL ${level} STARTING`;
+        island.classList.add('expanded');
+        setTimeout(() => {
+            islandText.innerText = `Level ${level}`;
+            island.classList.remove('expanded');
+        }, 2200);
+    }
+
     const div = document.createElement("div");
     div.innerText = `LEVEL ${level}`;
     div.style.cssText = "position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:50px;color:#fff;font-weight:900;text-shadow:0 10px 30px rgba(0,0,0,0.5);z-index:9999;pointer-events:none;";

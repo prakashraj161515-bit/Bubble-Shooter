@@ -12,12 +12,25 @@
 
 <div class="game-container">
 
+  <!-- iOS OVERLAYS (SHARED) -->
+  <div class="ios-status-bar">
+    <span class="time">9:41</span>
+    <div class="dynamic-island" id="dynamicIsland">
+      <span id="island-text">Omega 5000</span>
+    </div>
+    <div class="status-icons">
+      <span>📶</span>
+      <span>5G</span>
+      <span>🔋 100%</span>
+    </div>
+  </div>
+
   <!-- MAP SCREEN (RESTORED FOREST) -->
   <div id="mapScreen" class="screen map-screen">
-    <header class="hud-top-premium" style="background:#fff; padding: 50px 20px 15px;">
-      <div class="hud-item" style="background:#eef2ff; padding:8px 15px; border-radius:20px; font-weight:800;">❤️ 5 <span>FULL</span></div>
-      <div class="hud-item" style="background:#eef2ff; padding:8px 15px; border-radius:20px; font-weight:800; color:#ffb300;">🪙 <span id="map-coins">1250</span></div>
-      <button class="hud-btn-p" style="width:45px; height:45px;" onclick="showScreen('settingsScreen')">⚙️</button>
+    <header class="hud-top-premium" style="background:rgba(255,255,255,0.75); backdrop-filter:blur(20px); padding: 60px 20px 15px; border-bottom:1px solid rgba(0,0,0,0.05);">
+      <div class="hud-item" style="background:rgba(0,122,255,0.1); color:#007aff; padding:8px 15px; border-radius:20px; font-weight:800; font-size:13px;">❤️ 5 <span>FULL</span></div>
+      <div class="hud-item" style="background:rgba(255,179,0,0.1); color:#ff9500; padding:8px 15px; border-radius:20px; font-weight:800; font-size:13px;">🪙 <span id="map-coins">1250</span></div>
+      <button class="hud-btn-p" style="width:40px; height:40px; border-radius:12px; background:rgba(0,0,0,0.05); border:none; display:flex; justify-content:center; align-items:center; font-size:18px;" onclick="showScreen('settingsScreen')">⚙️</button>
     </header>
     <div class="map-scroller" id="mapScrollArea"><div id="levelPath" style="position:relative;"></div></div>
     
@@ -349,12 +362,26 @@ window.increaseCombo = function() {
 // ── Level Complete Modal ──────────────────────────────────
 // ── Level Complete / Failed Modals ──────────────────────────
 window.showLevelComplete = function() {
+  const island = document.getElementById('dynamicIsland');
+  const islandText = document.getElementById('island-text');
+  if (island && islandText) {
+      islandText.innerText = `🎉 LEVEL CLEARED!`;
+      island.classList.add('expanded');
+  }
+
   const modal = document.getElementById('levelComplete');
   modal.style.display = 'flex';
   if(window.gsap) gsap.from(modal.querySelector('.complete-card'), {scale:0.5, duration:0.4, ease:'back.out(1.7)'});
 };
 
 window.showLevelFailed = function() {
+  const island = document.getElementById('dynamicIsland');
+  const islandText = document.getElementById('island-text');
+  if (island && islandText) {
+      islandText.innerText = `😢 OUT OF MOVES`;
+      island.classList.add('expanded');
+  }
+
   const modal = document.getElementById('levelFailed');
   modal.style.display = 'flex';
   if(window.gsap) gsap.from(modal.querySelector('.complete-card'), {scale:0.5, duration:0.4, ease:'back.out(1.7)'});
@@ -362,6 +389,8 @@ window.showLevelFailed = function() {
 
 document.getElementById('nextLevelBtn').addEventListener('click', () => {
   document.getElementById('levelComplete').style.display = 'none';
+  const island = document.getElementById('dynamicIsland');
+  if (island) island.classList.remove('expanded');
   if(window.S) {
     S.currentLevel = Math.min(S.currentLevel + 1, 5000);
   }
@@ -370,6 +399,8 @@ document.getElementById('nextLevelBtn').addEventListener('click', () => {
 
 document.getElementById('retryLevelBtn').addEventListener('click', () => {
   document.getElementById('levelFailed').style.display = 'none';
+  const island = document.getElementById('dynamicIsland');
+  if (island) island.classList.remove('expanded');
   if(window.startGame) startGame();
 });
 

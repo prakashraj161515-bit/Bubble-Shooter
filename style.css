@@ -213,3 +213,250 @@ body { background: #dce1ff; display: flex; justify-content: center; align-items:
     opacity: 0; pointer-events: none; transform: translateY(20px);
 }
 
+/* ==========================================
+    HYPER-PREMIUM iOS 17 DESIGN SYSTEM OVERRIDES
+   ========================================== */
+
+/* Overriding typography with iOS system standard */
+* {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+  letter-spacing: -0.2px;
+}
+
+/* iOS Status Bar & Dynamic Island */
+.ios-status-bar {
+  position: absolute; top: 0; left: 0; width: 100%; height: 47px;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 24px; z-index: 9999; pointer-events: none;
+  font-size: 13px; font-weight: 600; color: #000;
+  mix-blend-mode: difference; filter: invert(1); /* Auto light/dark text contrast */
+}
+.ios-status-bar .time { font-weight: 700; letter-spacing: -0.1px; }
+.ios-status-bar .status-icons { display: flex; gap: 6px; align-items: center; font-size: 11px; }
+
+/* Dynamic Island */
+.dynamic-island {
+  width: 110px; height: 30px; background: #000; border-radius: 20px;
+  display: flex; justify-content: center; align-items: center;
+  color: #fff; font-size: 11px; font-weight: 700;
+  transition: width 0.4s cubic-bezier(0.19, 1, 0.22, 1), height 0.4s cubic-bezier(0.19, 1, 0.22, 1), border-radius 0.4s;
+  pointer-events: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  border: 0.5px solid rgba(255,255,255,0.08);
+}
+.dynamic-island span {
+  opacity: 0.85; transition: opacity 0.3s;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 90%;
+}
+.dynamic-island.expanded {
+  width: 280px; height: 65px; border-radius: 26px;
+  flex-direction: column; justify-content: space-around;
+  padding: 10px;
+}
+.dynamic-island.expanded span { font-size: 14px; font-weight: 800; color: #ffcc00; }
+
+/* iOS Home Indicator */
+.ios-home-indicator {
+  position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+  width: 140px; height: 5px; background: rgba(0,0,0,0.3); border-radius: 10px;
+  z-index: 9999; pointer-events: none;
+}
+.play-bg ~ .ios-home-indicator {
+  background: rgba(255,255,255,0.5);
+}
+
+/* Translucent iOS Tabbar / Footers */
+footer {
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(30px) !important;
+  -webkit-backdrop-filter: blur(30px) !important;
+  border-top: 0.5px solid rgba(0,0,0,0.08) !important;
+  box-shadow: none !important;
+}
+
+/* Modern iOS 17 Settings style layouts */
+#settingsScreen, #shopScreen {
+  background: #f2f2f7 !important; /* iOS Light Gray */
+}
+#settingsScreen header, #shopScreen header {
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(25px) !important;
+  -webkit-backdrop-filter: blur(25px) !important;
+  border-bottom: 0.5px solid rgba(0,0,0,0.08) !important;
+}
+#settingsScreen > div, #shopScreen > div {
+  background: transparent !important;
+  padding: 85px 16px 30px !important;
+}
+
+/* iOS 17 Rounded Grouped Table Cell Styles */
+#settingsScreen > div > div, #shopScreen > div > div {
+  background: #ffffff !important;
+  border-radius: 12px !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02) !important;
+  border: 0.5px solid rgba(0,0,0,0.05) !important;
+  margin-bottom: 12px !important;
+  padding: 14px 18px !important;
+  transition: background-color 0.2s;
+}
+#settingsScreen > div > div:active, #shopScreen > div > div:active {
+  background: #f2f2f7 !important;
+}
+
+/* Clean iOS Switches */
+button#toggleSoundBtn, button#toggleMusicBtn {
+  position: relative;
+  width: 51px !important; height: 31px !important;
+  border-radius: 16px !important;
+  background: #34c759 !important; /* iOS system green */
+  border: none !important;
+  box-shadow: none !important;
+  transition: background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  cursor: pointer;
+  padding: 0 !important;
+  outline: none;
+}
+button#toggleSoundBtn::after, button#toggleMusicBtn::after {
+  content: '';
+  position: absolute; top: 2px; left: 2px;
+  width: 27px; height: 27px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.15), 0 1px 1px rgba(0,0,0,0.05);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+button#toggleSoundBtn.off, button#toggleMusicBtn.off {
+  background: #e9e9ea !important;
+}
+button#toggleSoundBtn.off::after, button#toggleMusicBtn.off::after {
+  transform: translateX(0) !important;
+}
+button#toggleSoundBtn:not(.off)::after, button#toggleMusicBtn:not(.off)::after {
+  transform: translateX(20px) !important;
+}
+
+/* Apple Pay style Coin Badges & Buttons */
+#shopScreen button {
+  background: #007aff !important; /* Apple blue */
+  border-radius: 18px !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  padding: 6px 14px !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+#shopScreen button:active { opacity: 0.8; }
+
+/* Settings Reset Button */
+#settingsScreen button:last-child {
+  background: #ff3b30 !important; /* iOS system red */
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  border-radius: 12px !important;
+  border: none !important;
+  box-shadow: none !important;
+  margin-top: 15px !important;
+}
+
+/* Beautiful iOS Frosted Glass Modals */
+.level-complete {
+  background: rgba(0,0,0,0.2) !important;
+  backdrop-filter: blur(35px) !important;
+  -webkit-backdrop-filter: blur(35px) !important;
+  display: none;
+}
+.complete-card {
+  width: 320px !important;
+  padding: 30px 24px !important;
+  border-radius: 28px !important;
+  background: rgba(255, 255, 255, 0.85) !important;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.15) !important;
+  border: 0.5px solid rgba(255,255,255,0.4) !important;
+  text-align: center;
+}
+.complete-card h1 {
+  font-size: 26px !important;
+  font-weight: 800 !important;
+  color: #000 !important;
+  letter-spacing: -0.5px !important;
+}
+.complete-card p {
+  color: #555 !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  margin-bottom: 25px !important;
+}
+.complete-btn {
+  width: 100% !important;
+  height: 52px !important;
+  border-radius: 14px !important;
+  background: #34c759 !important; /* iOS Green */
+  color: #fff !important;
+  font-weight: 600 !important;
+  font-size: 17px !important;
+  box-shadow: 0 4px 12px rgba(52,199,89,0.3) !important;
+}
+.failed-btn {
+  width: 100% !important;
+  height: 52px !important;
+  border-radius: 14px !important;
+  background: #ff3b30 !important; /* iOS Red */
+  color: #fff !important;
+  font-weight: 600 !important;
+  font-size: 17px !important;
+  box-shadow: 0 4px 12px rgba(255,59,48,0.3) !important;
+}
+
+/* Translucent Gameplay Glass HUD */
+.hud-top-premium {
+  background: rgba(255,255,255,0.15) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-bottom: 0.5px solid rgba(255,255,255,0.1) !important;
+  padding: 55px 16px 12px !important;
+}
+.score-pill, .star-progress-track {
+  background: rgba(255,255,255,0.2) !important;
+  border: 0.5px solid rgba(255,255,255,0.1) !important;
+  box-shadow: none !important;
+}
+.star-progress-fill {
+  background: linear-gradient(90deg, #34c759, #30b0c7) !important;
+  box-shadow: none !important;
+}
+.hamburger-btn {
+  background: rgba(255,255,255,0.2) !important;
+  border: 0.5px solid rgba(255,255,255,0.15) !important;
+  box-shadow: none !important;
+  border-radius: 12px !important;
+}
+.hamburger-btn .line {
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+/* Premium bottom glass launcher */
+.hud-bottom-p {
+  background: rgba(255,255,255,0.12) !important;
+  backdrop-filter: blur(25px) !important;
+  -webkit-backdrop-filter: blur(25px) !important;
+  border-top: 0.5px solid rgba(255,255,255,0.15) !important;
+  padding-bottom: 30px !important;
+}
+.ammo-pill {
+  background: rgba(255,255,255,0.25) !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+  box-shadow: none !important;
+  border: 0.5px solid rgba(255,255,255,0.2) !important;
+}
+.pu-glass-btn {
+  background: rgba(255,255,255,0.2) !important;
+  border: 0.5px solid rgba(255,255,255,0.15) !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+.pu-glass-btn::before { display: none; }
+
