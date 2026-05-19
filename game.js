@@ -29,7 +29,7 @@ function getDifficulty(level) {
 }
 
 // ──────── CUMULATIVE THEMES (new one added every 80 levels) ────────
-const ALL_THEMES = ['stone', 'ice', 'fire', 'void', 'cosmic'];
+const ALL_THEMES = ['stone', 'ice', 'chain', 'fire', 'void', 'cosmic'];
 
 function getAvailableThemes(level) {
     // Each 80 levels unlocks one more theme (cumulative)
@@ -480,6 +480,11 @@ function snap() {
                     Math.hypot(b.x - p.x, b.targetY - p.targetY) < spacingX * 1.3
                 );
                 if (isAdjacentToPop) {
+                    if (b.theme === 'stone') {
+                        // Stone never breaks from adjacent damage, just shake
+                        if (window.screenShake) screenShake();
+                        return;
+                    }
                     b.hp--;
                     createParticles(b.x, b.y, '#ccccff');
                     if (b.hp <= 0) {
@@ -646,31 +651,56 @@ function drawBall(x, y, color, r, hp, theme) {
     grad.addColorStop(0.5,color); grad.addColorStop(1,shadeColor(color,-60));
     ctx.beginPath(); ctx.arc(x,finalY,radius,0,Math.PI*2); ctx.fillStyle=grad; ctx.fill();
 
-    // ── STEP 2: Theme overlay (semi-transparent so color shows) ─
+    // ── STEP 2: Theme overlay ─
     ctx.shadowColor='transparent'; ctx.shadowBlur=0;
 
+    function drawBubbleDamage(dx, dy, dr, dHp, maxHp) {
+        if (dHp >= maxHp) return;
+        const damage = 1 - (dHp / maxHp);
+        ctx.strokeStyle = "rgba(255,255,255,0.7)";
+        ctx.lineWidth = 2;
+        if(damage > 0.2){ ctx.beginPath(); ctx.moveTo(dx-dr*0.3, dy-dr*0.3); ctx.lineTo(dx+dr*0.25, dy+dr*0.15); ctx.stroke(); }
+        if(damage > 0.5){ ctx.beginPath(); ctx.moveTo(dx+dr*0.2, dy-dr*0.35); ctx.lineTo(dx-dr*0.2, dy+dr*0.3); ctx.stroke(); }
+        if(damage > 0.7){ ctx.beginPath(); ctx.moveTo(dx-dr*0.4, dy+dr*0.1); ctx.lineTo(dx+dr*0.3, dy-dr*0.15); ctx.stroke(); }
+    }
+
     if (theme === 'stone') {
-        // Grey cracked overlay
-        ctx.beginPath(); ctx.arc(x,finalY,radius,0,Math.PI*2);
-        ctx.fillStyle='rgba(60,60,60,0.45)'; ctx.fill();
-        ctx.strokeStyle='rgba(255,255,255,0.6)'; ctx.lineWidth=1.5;
-        ctx.beginPath(); ctx.moveTo(x-radius*0.3,finalY-radius*0.6); ctx.lineTo(x+radius*0.1,finalY+radius*0.1); ctx.lineTo(x+radius*0.5,finalY+radius*0.5); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(x+radius*0.2,finalY-radius*0.4); ctx.lineTo(x-radius*0.3,finalY+radius*0.3); ctx.stroke();
-        ctx.beginPath(); ctx.arc(x,finalY,radius-1,0,Math.PI*2); ctx.strokeStyle='rgba(150,150,150,0.8)'; ctx.lineWidth=2.5; ctx.stroke();
+        const sGrad = ctx.createRadialGradient(x-radius*0.25, finalY-radius*0.25, radius*0.2, x, finalY, radius);
+        sGrad.addColorStop(0, "#9e9e9e"); sGrad.addColorStop(0.5, "#666"); sGrad.addColorStop(1, "#2e2e2e");
+        ctx.beginPath(); ctx.arc(x, finalY, radius, 0, Math.PI * 2); ctx.fillStyle = sGrad; ctx.fill();
+        // rock cracks
+        ctx.strokeStyle = "#222"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(x-radius*0.35, finalY-radius*0.3); ctx.lineTo(x+radius*0.2, finalY+radius*0.1); ctx.lineTo(x-radius*0.15, finalY+radius*0.4); ctx.stroke();
+        // rock texture
+        ctx.fillStyle = "rgba(255,255,255,0.1)";
+        ctx.beginPath(); ctx.arc(x-radius*0.25, finalY-radius*0.2, radius*0.15, 0, Math.PI * 2); ctx.fill();
+        drawBubbleDamage(x, finalY, radius, hp, 2);
 
     } else if (theme === 'ice') {
-        // Frosty crystal overlay — cyan glow
-        ctx.shadowColor='rgba(100,220,255,0.7)'; ctx.shadowBlur=14;
-        ctx.beginPath(); ctx.arc(x,finalY,radius,0,Math.PI*2);
-        ctx.fillStyle='rgba(180,240,255,0.3)'; ctx.fill();
-        ctx.strokeStyle='rgba(255,255,255,0.85)'; ctx.lineWidth=1.4;
-        for(let a=0;a<6;a++){
-            ctx.save(); ctx.translate(x,finalY); ctx.rotate(a*Math.PI/3);
-            ctx.beginPath(); ctx.moveTo(0,-radius*0.72); ctx.lineTo(0,radius*0.72); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(-radius*0.25,-radius*0.42); ctx.lineTo(0,-radius*0.58); ctx.lineTo(radius*0.25,-radius*0.42); ctx.stroke();
-            ctx.restore();
-        }
-        ctx.beginPath(); ctx.arc(x,finalY,radius-1,0,Math.PI*2); ctx.strokeStyle='rgba(150,230,255,0.85)'; ctx.lineWidth=2.5; ctx.stroke();
+        const iGrad = ctx.createRadialGradient(x-radius*0.3, finalY-radius*0.3, radius*0.2, x, finalY, radius);
+        iGrad.addColorStop(0, "rgba(255,255,255,0.95)"); iGrad.addColorStop(0.4, "rgba(180,220,255,0.8)"); iGrad.addColorStop(1, "rgba(100,180,255,0.45)");
+        ctx.beginPath(); ctx.arc(x, finalY, radius, 0, Math.PI * 2); ctx.fillStyle = iGrad; ctx.fill();
+        // icy glow
+        ctx.strokeStyle = "rgba(255,255,255,0.6)"; ctx.lineWidth = 2; ctx.stroke();
+        // shine
+        ctx.beginPath(); ctx.arc(x-radius*0.4, finalY-radius*0.4, radius*0.25, 0, Math.PI * 2); ctx.fillStyle = "rgba(255,255,255,0.8)"; ctx.fill();
+        // frost texture
+        ctx.strokeStyle = "rgba(255,255,255,0.4)"; ctx.beginPath();
+        ctx.moveTo(x-radius*0.4, finalY); ctx.lineTo(x+radius*0.4, finalY);
+        ctx.moveTo(x, finalY-radius*0.4); ctx.lineTo(x, finalY+radius*0.4); ctx.stroke();
+        drawBubbleDamage(x, finalY, radius, hp, 2);
+
+    } else if (theme === 'chain') {
+        // Base color is already drawn in STEP 1. Add chains on top.
+        ctx.strokeStyle = "#d0d0d0"; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(x-radius*0.6, finalY-radius*0.6); ctx.lineTo(x+radius*0.6, finalY+radius*0.6);
+        ctx.moveTo(x+radius*0.6, finalY-radius*0.6); ctx.lineTo(x-radius*0.6, finalY+radius*0.6); ctx.stroke();
+        // metallic shine
+        ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 1; ctx.stroke();
+        // center lock
+        ctx.beginPath(); ctx.arc(x, finalY, radius*0.3, 0, Math.PI * 2); ctx.fillStyle = "#888"; ctx.fill();
+        ctx.strokeStyle = "#444"; ctx.stroke();
+        drawBubbleDamage(x, finalY, radius, hp, 2);
 
     } else if (theme === 'fire') {
         // Flame glow overlay — orange
