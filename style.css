@@ -521,10 +521,10 @@ button#toggleSoundBtn:not(.off)::after, button#toggleMusicBtn:not(.off)::after {
 /* Fire Badges (Transparent, Floating Large Glowing Flames) */
 .fire-badge {
     position: absolute;
-    right: -42px; /* Perfect offset next to the 56px bubble to let the massive 68px wide flame fit beautifully */
-    top: -12px;
-    width: 80px;
-    height: 100px;
+    right: -24px; /* Offset beautifully next to the 56px bubble to let the 34px wide flame fit perfectly */
+    top: 6px;
+    width: 44px;
+    height: 44px;
     display: flex;
     justify-content: center;
     align-items: center;

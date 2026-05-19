@@ -184,7 +184,7 @@ function renderMap() {
         if (i % 60 === 0) {
             difficultyClass = 'difficulty-super-hard';
             fireBadgeHtml = `<div class="fire-badge super-hard-badge">
-                               <svg class="fire-svg" viewBox="0 0 24 24" style="width:68px; height:80px; display:block;">
+                               <svg class="fire-svg" viewBox="0 0 24 24" style="width:34px; height:40px; display:block;">
                                  <defs>
                                    <linearGradient id="superGrad-${i}" x1="0%" y1="100%" x2="0%" y2="0%">
                                      <stop offset="0%" stop-color="#4a0000" />
@@ -199,7 +199,7 @@ function renderMap() {
         } else if (i % 30 === 0) {
             difficultyClass = 'difficulty-very-hard';
             fireBadgeHtml = `<div class="fire-badge very-hard-badge">
-                               <svg class="fire-svg" viewBox="0 0 24 24" style="width:68px; height:80px; display:block;">
+                               <svg class="fire-svg" viewBox="0 0 24 24" style="width:34px; height:40px; display:block;">
                                  <defs>
                                    <linearGradient id="veryHardGrad-${i}" x1="0%" y1="100%" x2="0%" y2="0%">
                                      <stop offset="0%" stop-color="#cc0000" />
@@ -213,7 +213,7 @@ function renderMap() {
         } else if (i % 15 === 0) {
             difficultyClass = 'difficulty-hard';
             fireBadgeHtml = `<div class="fire-badge hard-badge">
-                               <svg class="fire-svg" viewBox="0 0 24 24" style="width:68px; height:80px; display:block;">
+                               <svg class="fire-svg" viewBox="0 0 24 24" style="width:34px; height:40px; display:block;">
                                  <defs>
                                    <linearGradient id="hardGrad-${i}" x1="0%" y1="100%" x2="0%" y2="0%">
                                      <stop offset="0%" stop-color="#ff6600" />
