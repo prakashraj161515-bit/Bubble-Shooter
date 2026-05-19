@@ -185,24 +185,43 @@ function renderMap() {
             difficultyClass = 'difficulty-super-hard';
             fireBadgeHtml = `<div class="fire-badge super-hard-badge">
                                <svg class="fire-svg" viewBox="0 0 24 24" style="width:68px; height:80px; display:block;">
-                                 <path d="M12 2C12 2 7.5 6.5 7.5 10.5C7.5 14 10 16 12 16C14 16 16.5 14 16.5 10.5C16.5 6.5 12 2 12 2Z" fill="#ffffff"/>
-                                 <path d="M12 6.5C12 6.5 9.5 9 9.5 11.5C9.5 13.5 11 14.5 12 14.5C13 14.5 14.5 13.5 14.5 11.5C14.5 9 12 6.5 12 6.5Z" fill="#ff3b30"/>
+                                 <defs>
+                                   <linearGradient id="superGrad-${i}" x1="0%" y1="100%" x2="0%" y2="0%">
+                                     <stop offset="0%" stop-color="#4a0000" />
+                                     <stop offset="35%" stop-color="#cc0000" />
+                                     <stop offset="75%" stop-color="#ff3b30" />
+                                     <stop offset="100%" stop-color="#ff8800" />
+                                   </linearGradient>
+                                 </defs>
+                                 <path d="M17.55 11.2C17.3 10.3 16.5 9.5 15.7 9.1c-1.4-.7-2-.8-3.1-1.6c-.7-.5-1.2-1.3-1-2.2c0-.1 0-.2.1-.3c.1-.4.4-.7.8-.8c.1 0 .2 0 .2-.1c-.7-.3-1.4-.4-2.2-.4C8.4 3.7 6.7 5.6 6.7 8c0 .3 0 .7.1 1c.1.6.3 1.1.7 1.5c.1.1.2.2.2.3c.4.4.9.7 1.4.9c.5.2.9.5 1.2 1c.5.7.4 1.7-.2 2.3c-.4.4-.9.6-1.5.6c-.5 0-1-.2-1.4-.5c-.9-.7-1.2-1.9-.9-2.9c-.3.2-.6.5-.9.9c-.7.9-1.1 2.1-1.1 3.3c0 3.3 2.7 6 6 6s6-2.7 6-6c0-1.8-.7-3.4-1.9-4.5c.3-.1.6-.2.8-.4c.7-.6 1.2-1.4 1.3-2.3z" fill="url(#superGrad-${i})"/>
                                </svg>
                              </div>`;
         } else if (i % 30 === 0) {
             difficultyClass = 'difficulty-very-hard';
             fireBadgeHtml = `<div class="fire-badge very-hard-badge">
                                <svg class="fire-svg" viewBox="0 0 24 24" style="width:68px; height:80px; display:block;">
-                                 <path d="M12 2C12 2 7.5 6.5 7.5 10.5C7.5 14 10 16 12 16C14 16 16.5 14 16.5 10.5C16.5 6.5 12 2 12 2Z" fill="#ffffff"/>
-                                 <path d="M12 6.5C12 6.5 9.5 9 9.5 11.5C9.5 13.5 11 14.5 12 14.5C13 14.5 14.5 13.5 14.5 11.5C14.5 9 12 6.5 12 6.5Z" fill="#ff8800"/>
+                                 <defs>
+                                   <linearGradient id="veryHardGrad-${i}" x1="0%" y1="100%" x2="0%" y2="0%">
+                                     <stop offset="0%" stop-color="#cc0000" />
+                                     <stop offset="50%" stop-color="#ff8800" />
+                                     <stop offset="100%" stop-color="#ffcc00" />
+                                   </linearGradient>
+                                 </defs>
+                                 <path d="M17.55 11.2C17.3 10.3 16.5 9.5 15.7 9.1c-1.4-.7-2-.8-3.1-1.6c-.7-.5-1.2-1.3-1-2.2c0-.1 0-.2.1-.3c.1-.4.4-.7.8-.8c.1 0 .2 0 .2-.1c-.7-.3-1.4-.4-2.2-.4C8.4 3.7 6.7 5.6 6.7 8c0 .3 0 .7.1 1c.1.6.3 1.1.7 1.5c.1.1.2.2.2.3c.4.4.9.7 1.4.9c.5.2.9.5 1.2 1c.5.7.4 1.7-.2 2.3c-.4.4-.9.6-1.5.6c-.5 0-1-.2-1.4-.5c-.9-.7-1.2-1.9-.9-2.9c-.3.2-.6.5-.9.9c-.7.9-1.1 2.1-1.1 3.3c0 3.3 2.7 6 6 6s6-2.7 6-6c0-1.8-.7-3.4-1.9-4.5c.3-.1.6-.2.8-.4c.7-.6 1.2-1.4 1.3-2.3z" fill="url(#veryHardGrad-${i})"/>
                                </svg>
                              </div>`;
         } else if (i % 15 === 0) {
             difficultyClass = 'difficulty-hard';
             fireBadgeHtml = `<div class="fire-badge hard-badge">
                                <svg class="fire-svg" viewBox="0 0 24 24" style="width:68px; height:80px; display:block;">
-                                 <path d="M12 2C12 2 7.5 6.5 7.5 10.5C7.5 14 10 16 12 16C14 16 16.5 14 16.5 10.5C16.5 6.5 12 2 12 2Z" fill="#ffffff"/>
-                                 <path d="M12 6.5C12 6.5 9.5 9 9.5 11.5C9.5 13.5 11 14.5 12 14.5C13 14.5 14.5 13.5 14.5 11.5C14.5 9 12 6.5 12 6.5Z" fill="#ffcc00"/>
+                                 <defs>
+                                   <linearGradient id="hardGrad-${i}" x1="0%" y1="100%" x2="0%" y2="0%">
+                                     <stop offset="0%" stop-color="#ff6600" />
+                                     <stop offset="60%" stop-color="#ffcc00" />
+                                     <stop offset="100%" stop-color="#ffe680" />
+                                   </linearGradient>
+                                 </defs>
+                                 <path d="M17.55 11.2C17.3 10.3 16.5 9.5 15.7 9.1c-1.4-.7-2-.8-3.1-1.6c-.7-.5-1.2-1.3-1-2.2c0-.1 0-.2.1-.3c.1-.4.4-.7.8-.8c.1 0 .2 0 .2-.1c-.7-.3-1.4-.4-2.2-.4C8.4 3.7 6.7 5.6 6.7 8c0 .3 0 .7.1 1c.1.6.3 1.1.7 1.5c.1.1.2.2.2.3c.4.4.9.7 1.4.9c.5.2.9.5 1.2 1c.5.7.4 1.7-.2 2.3c-.4.4-.9.6-1.5.6c-.5 0-1-.2-1.4-.5c-.9-.7-1.2-1.9-.9-2.9c-.3.2-.6.5-.9.9c-.7.9-1.1 2.1-1.1 3.3c0 3.3 2.7 6 6 6s6-2.7 6-6c0-1.8-.7-3.4-1.9-4.5c.3-.1.6-.2.8-.4c.7-.6 1.2-1.4 1.3-2.3z" fill="url(#hardGrad-${i})"/>
                                </svg>
                              </div>`;
         }
